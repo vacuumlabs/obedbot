@@ -25,6 +25,7 @@ const token = _config2.default.slack.token;
 const channelId = _config2.default.slack.channelId;
 const botUserId = _config2.default.slack.botId;
 const atObedbot = new RegExp("^<@" + botUserId + ">");
+const reaction = _config2.default.slack.reaction;
 
 let veglife = [];
 let jpn = [];
@@ -41,7 +42,6 @@ const lastCallStep = _config2.default.lastCall.step;
 const port = _config2.default.port;
 let rtm;
 let web;
-let app;
 
 /**
  * Makes the last call for orders
@@ -74,11 +74,25 @@ function makeLastCall() {
 }
 
 /**
+ * Strips the @obedbot part of the message
+ *
+ * @param {string} order - message with the order
+ * @returns {string} - order message without the @obedbot mention
+ */
+
+function stripMention(order) {
+  //check if user used full colon after @obedbot
+  const orderStart = order.charAt(12) === ':' ? 14 : 13;
+
+  return order.substring(orderStart);
+}
+
+/**
  * Checks the incoming order and assigns it to the correct restaurant
  *
  * @param {string} order - order message
  * @param {string} ts - timestamp of the order message
- *
+ * @returns {bool} - true if order matches, false if not identified
  */
 function processOrder(order, ts) {
   order = order.toLowerCase();
@@ -96,8 +110,11 @@ function processOrder(order, ts) {
     console.log('andy chce kura a', order.substring(6));
     nakup.push({ ts: ts, order: order.substring(6) });
   } else {
-    console.log('wtf');
+    console.log('ziadna restika');
+    return false;
   }
+
+  return true;
 }
 
 /**
@@ -123,6 +140,17 @@ function updateOrder(newOrder, ts) {
 }
 
 /**
+ * Adds reaction to the message to confirm the order
+ *
+ * @param {string} ts - timestamp of the order message
+ *
+ */
+
+function confirmOrder(ts) {
+  web.reactions.add(reaction, { channel: channelId, timestamp: ts });
+}
+
+/**
  * Pads and sorts the array to length 'size' with empty orders at the end.
  * Orders are sorted by arr[].order 
  *
@@ -143,10 +171,55 @@ function padArray(orders, size) {
 }
 
 /**
+ * Function called by slack api after receiving message event
+ *
+ * @param {Object} res - response slack api received
+ *
+ */
+
+function messageReceived(res) {
+  console.log('Message Arrived:\n', JSON.stringify(res, null, 2));
+  if ((0, _lodash.isNil)(res.subtype)) {
+    let order = res.text;
+    if (order.match(atObedbot)) {
+      order = stripMention(order);
+
+      if (processOrder(order, res.ts)) {
+        confirmOrder(res.ts);
+      }
+    }
+  } else if (res.subtype === _client.RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
+    console.log('Received an edited message');
+    // edited last call message came in
+    if (!(0, _lodash.isNull)(lastCall.ts) && res.previous_message.ts === lastCall.ts) {
+      console.log('Received last call message edited by obedbot.');
+    } else {
+      console.log('Received edited message.');
+      let order = res.message.text;
+
+      if (order.match(atObedbot)) {
+        order = stripMention(order);
+
+        if (updateOrder(order, res.message.ts)) {
+          console.log('Updated some order.');
+        } else {
+          console.log('Order with such id does not exist.');
+
+          if (processOrder(order, res.message.ts)) {
+            confirmOrder(res.message.ts);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
  * Loads the orders since the last noon
  */
 function loadTodayOrders() {
-  console.log('Loading today\'s orders');
+  console.log('Loading today\'s orders from', channelId);
+
   let lastNoon = new Date();
   let now = lastNoon.getTime();
 
@@ -154,29 +227,62 @@ function loadTodayOrders() {
     lastNoon.setDate(lastNoon.getDate() - 1);
   }
 
-  //TODO delete this line
-  //lastNoon.setDate(21);
   lastNoon.setHours(12);
   lastNoon.setMinutes(0);
   lastNoon.setSeconds(0);
 
-  console.log(lastNoon, lastNoon.getTime(), now);
-  console.log('Channel id:', channelId);
-
-  let messages = web.channels.history(channelId, { latest: now / 1000, oldest: lastNoon.getTime() / 1000 }).then(data => {
+  let messages = web.channels.history(channelId, {
+    latest: now / 1000,
+    oldest: lastNoon.getTime() / 1000
+  }).then(data => {
     for (let message of data.messages) {
       let order = message.text;
+
       if (order.match(atObedbot)) {
-        // 13 characters is the @obedbot string
-        order = order.substring(13);
-        // if someone used full colon
-        if (order.charAt(0) === ' ') {
-          order = order.substring(1);
+        order = stripMention(order);
+
+        if (processOrder(order, message.ts)) {
+          web.reactions.get({ channel: channelId, timestamp: message.ts, full: true }).then(res => {
+            console.log('Checking order confirmation:', JSON.stringify(res, null, 2));
+
+            if ((0, _lodash.isNil)(res.message.reactions)) {
+              confirmOrder(res.message.ts);
+            } else {
+              console.log('Reactions:', JSON.stringify(res.message.reactions, null, 2));
+
+              // if order hasn't been confirmed
+              if (res.message.reactions.filter(r => r.name === reaction).length === 0) {
+                confirmOrder(res.message.ts);
+              }
+            }
+          });
         }
-        processOrder(order, message.ts);
       }
     }
     console.log('Loaded today\'s orders');
+  });
+}
+
+function renderOrders(req, res) {
+  const maxOrders = Math.max(veglife.length, jpn.length, spaghetti.length);
+  /*console.log('Orders:');
+  console.log('Veglife:', veglife);
+  console.log('Jedlo pod nos:', jpn);
+  console.log('Leviathan:', spaghetti);
+   console.log('Veglife:', padArray(veglife.slice(), maxOrders));
+  console.log('Jedlo pod nos:', padArray(jpn.slice(), maxOrders));
+  console.log('Leviathan:', padArray(spaghetti.slice(), maxOrders));
+  */
+  res.render('index', {
+    title: 'Obedbot page',
+    tableName: 'Dne\u0161n\u00E9 objedn\u00E1vky',
+    maxOrders: maxOrders,
+    allOrders: {
+      'Jedlo pod nos': padArray(jpn.slice(), maxOrders),
+      'Veglife': padArray(veglife.slice(), maxOrders),
+      'Spaghetti': padArray(spaghetti.slice(), maxOrders),
+      'Nakup': padArray(nakup.slice(), maxOrders)
+    }
   });
 }
 
@@ -184,86 +290,27 @@ function loadTodayOrders() {
  * Starts the bot server
  */
 function runServer() {
+  const app = (0, _express2.default)();
   rtm = new _client.RtmClient(token, { logLevel: 'error' });
   web = new _client.WebClient(token);
-  app = (0, _express2.default)();
 
   app.set('view engine', 'pug');
   app.use(_express2.default.static('public'));
 
-  app.get('/', (req, res) => {
-    const maxOrders = Math.max(veglife.length, jpn.length, spaghetti.length);
-    /*console.log('Orders:');
-    console.log('Veglife:', veglife);
-    console.log('Jedlo pod nos:', jpn);
-    console.log('Leviathan:', spaghetti);
-     console.log('Veglife:', padArray(veglife.slice(), maxOrders));
-    console.log('Jedlo pod nos:', padArray(jpn.slice(), maxOrders));
-    console.log('Leviathan:', padArray(spaghetti.slice(), maxOrders));
-    */
-    res.render('index', {
-      title: 'Obedbot page',
-      tableName: 'Dne\u0161n\u00E9 objedn\u00E1vky',
-      maxOrders: maxOrders,
-      allOrders: {
-        'Jedlo pod nos': padArray(jpn.slice(), maxOrders),
-        'Veglife': padArray(veglife.slice(), maxOrders),
-        'Spaghetti': padArray(spaghetti.slice(), maxOrders),
-        'Nakup': padArray(nakup.slice(), maxOrders)
-      }
-    });
-  });
+  app.get('/', renderOrders);
 
   app.listen(port, () => {
     console.log('Server listening on port', port);
   });
 
   rtm.start();
-  console.log('server started');
+  console.log('slack server started');
 
-  rtm.on(_client.RTM_EVENTS.MESSAGE, function (res) {
-    console.log('Message Arrived:\n', res);
-    if ((0, _lodash.isNil)(res.subtype)) {
-      let order = res.text;
-      if (order.match(atObedbot)) {
-        // 13 characters is the @obedbot string
-        order = order.substring(13);
-        // if someone used full colon
-        if (order.charAt(0) === ' ') {
-          order = order.substring(1);
-        }
-        processOrder(order, res.ts);
-      }
-    } else if (res.subtype === _client.RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
-      console.log('Received an edited message');
-      // edited last call message came in
-      if (!(0, _lodash.isNull)(lastCall.ts) && res.previous_message.ts === lastCall.ts) {
-        console.log('Received last call message edited by obedbot.');
-      } else {
-        console.log('Received edited message.');
-        let order = res.message.text;
-        if (order.match(atObedbot)) {
-          // 13 characters is the @obedbot string
-          order = order.substring(13);
-          // if someone used full colon
-          if (order.charAt(0) === ' ') {
-            order = order.substring(1);
-          }
-          if (updateOrder(order, res.message.ts)) {
-            console.log('Update some order.');
-          } else {
-            console.log('Order with such id does not exist.');
-            processOrder(order, res.message.ts);
-          }
-        }
-      }
-    }
-  });
+  rtm.on(_client.RTM_EVENTS.MESSAGE, messageReceived);
 
   rtm.on(_client.CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
     console.log('Connected');
-    // the timeout is here to go around a bug where connection is opened
-    // but not properly established
+    // the timeout is here to go around a bug where connection is opened, but not properly established
     setTimeout(loadTodayOrders, 3000);
   });
 }
