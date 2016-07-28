@@ -25,17 +25,14 @@ const token = _config2.default.slack.token;
 const channelId = _config2.default.slack.channelId;
 const botUserId = _config2.default.slack.botId;
 const atObedbot = new RegExp("^<@" + botUserId + ">");
-const reaction = _config2.default.slack.reaction;
+const reactions = ['jedlopodnos', 'veglife', 'spaghetti', 'nakup'];
 
 let veglife = [];
 let jpn = [];
 let spaghetti = [];
 let nakup = [];
 // ts = timestamp
-let lastCall = {
-  ts: null,
-  timeLeft: null
-};
+let lastCall = { ts: null, timeLeft: null };
 const lastCallLength = _config2.default.lastCall.length;
 const lastCallStep = _config2.default.lastCall.step;
 
@@ -125,12 +122,31 @@ function processOrder(order, ts) {
  * @returns {bool} - true if order with supplied ts is found, false otherwise
  */
 function updateOrder(newOrder, ts) {
+  const orders = [...jpn, ...veglife, ...spaghetti];
+
+  for (let order of orders) {
+    if (order.ts === ts) {
+      order.order = newOrder;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Removes the order with the given ts
+ *
+ * @param {string} ts - timestamp of the order message
+ * @returns {bool} - true if order with supplied ts is deleted, false otherwise
+ */
+function removeOrder(ts) {
   const restaurants = [jpn, veglife, spaghetti];
 
   for (let restaurant of restaurants) {
-    for (let order of restaurant) {
-      if (order.ts === ts) {
-        order.order = newOrder;
+    for (let order in restaurant) {
+      if (restaurant[order].ts === ts) {
+        restaurant.splice(order, 1);
         return true;
       }
     }
@@ -147,7 +163,24 @@ function updateOrder(newOrder, ts) {
  */
 
 function confirmOrder(ts) {
-  web.reactions.add(reaction, { channel: channelId, timestamp: ts });
+  // key of the object is the reaction to the order on slack
+  // reactions are custom/aliases of slack reactions
+  const restaurants = {
+    jedlopodnos: jpn,
+    veglife: veglife,
+    spaghetti: spaghetti,
+    nakup: nakup
+  };
+
+  for (let key in restaurants) {
+    if (restaurants.hasOwnProperty(key)) {
+      for (let order of restaurants[key]) {
+        if (order.ts === ts) {
+          web.reactions.add(key, { channel: channelId, timestamp: ts });
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -214,17 +247,25 @@ function messageReceived(res) {
         }
       }
     }
+  } else if (res.subtype === _client.RTM_MESSAGE_SUBTYPES.MESSAGE_DELETED) {
+    console.log('Deleting order:', res.previous_message.text);
+    removeOrder(res.previous_message.ts);
   }
 }
 
-function orderExists(ts) {
-  const restaurants = [jpn, veglife, spaghetti];
+/**
+ * Checks whether the order with given timestamp exists
+ *
+ * @param {string} ts - timestamp of the order
+ * @returns {bool} - true if order exists, false otherwise
+ */
 
-  for (let restaurant of restaurants) {
-    for (let order of restaurant) {
-      if (order.ts === ts) {
-        return true;
-      }
+function orderExists(ts) {
+  const orders = [...jpn, ...veglife, ...spaghetti];
+
+  for (let order of orders) {
+    if (order.ts === ts) {
+      return true;
     }
   }
 
@@ -234,6 +275,7 @@ function orderExists(ts) {
 /**
  * Loads the orders since the last noon
  */
+
 function loadTodayOrders() {
   console.log('Loading today\'s orders from', channelId);
 
@@ -272,7 +314,8 @@ function loadTodayOrders() {
                 console.log('Reactions:', JSON.stringify(res.message.reactions, null, 2));
 
                 // if order hasn't been confirmed
-                if (res.message.reactions.filter(r => r.name === reaction).length === 0) {
+                if (res.message.reactions.filter(r => reactions.indexOf(r.name) > -1).length === 0) {
+                  console.log('did not react yet');
                   confirmOrder(res.message.ts);
                 }
               }
