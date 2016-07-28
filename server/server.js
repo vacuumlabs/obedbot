@@ -26,6 +26,7 @@ const lastCallStep = config.lastCall.step;
 const port = config.port;
 let rtm;
 let web;
+let initialOrdersLoaded = false;
 
 /**
  * Makes the last call for orders
@@ -313,8 +314,15 @@ export function runServer() {
   rtm.on(RTM_EVENTS.MESSAGE, messageReceived);
 
   rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
-    console.log('Connected');
     // the timeout is here to go around a bug where connection is opened, but not properly established
-    setTimeout(loadTodayOrders, 3000);
+    if (!initialOrdersLoaded) {
+      console.log('Connected');
+
+      initialOrdersLoaded = true;
+      
+      setTimeout(loadTodayOrders, 3000);
+    } else {
+      console.log('Reconnected after disconnect');
+    }
   });
 }
