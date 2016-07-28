@@ -89,7 +89,7 @@ function processOrder(order, ts) {
   } else if (order.match(/[1-8]\+[pk]/)) {
     console.log('Jedlo pod nos');
     jpn.push({ts: ts, order: order});
-  } else if (order.match(/[a-zA-Z]((300)|(400)|(450)|(600)|(800))[ps]?\+[pt]/)) {
+  } else if (order.match(/[a-zA-Z]((300)|(400)|(450)|(600)|(800))([pscPSC]{1,2})?\+?[ptPT]?/)) {
     console.log('Spaghetti');
     spaghetti.push({ts: ts, order: order});
   } else if (order.match(/^nakup/)) {
