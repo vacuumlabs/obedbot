@@ -179,8 +179,10 @@ function padArray(orders, size) {
 
 function messageReceived(res) {
   console.log('Message Arrived:\n', JSON.stringify(res, null, 2));
+
   if ((0, _lodash.isNil)(res.subtype)) {
     let order = res.text;
+
     if (order.match(atObedbot)) {
       order = stripMention(order);
 
@@ -190,6 +192,7 @@ function messageReceived(res) {
     }
   } else if (res.subtype === _client.RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
     console.log('Received an edited message');
+
     // edited last call message came in
     if (!(0, _lodash.isNull)(lastCall.ts) && res.previous_message.ts === lastCall.ts) {
       console.log('Received last call message edited by obedbot.');
@@ -212,6 +215,20 @@ function messageReceived(res) {
       }
     }
   }
+}
+
+function orderExists(ts) {
+  const restaurants = [jpn, veglife, spaghetti];
+
+  for (let restaurant of restaurants) {
+    for (let order of restaurant) {
+      if (order.ts === ts) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -237,25 +254,30 @@ function loadTodayOrders() {
   }).then(data => {
     for (let message of data.messages) {
       let order = message.text;
+      if (!orderExists(message.ts)) {
+        if (order.match(atObedbot)) {
+          order = stripMention(order);
 
-      if (order.match(atObedbot)) {
-        order = stripMention(order);
+          if (processOrder(order, message.ts)) {
+            web.reactions.get({
+              channel: channelId,
+              timestamp: message.ts,
+              full: true
+            }).then(res => {
+              console.log('Checking order confirmation:', JSON.stringify(res, null, 2));
 
-        if (processOrder(order, message.ts)) {
-          web.reactions.get({ channel: channelId, timestamp: message.ts, full: true }).then(res => {
-            console.log('Checking order confirmation:', JSON.stringify(res, null, 2));
-
-            if ((0, _lodash.isNil)(res.message.reactions)) {
-              confirmOrder(res.message.ts);
-            } else {
-              console.log('Reactions:', JSON.stringify(res.message.reactions, null, 2));
-
-              // if order hasn't been confirmed
-              if (res.message.reactions.filter(r => r.name === reaction).length === 0) {
+              if ((0, _lodash.isNil)(res.message.reactions)) {
                 confirmOrder(res.message.ts);
+              } else {
+                console.log('Reactions:', JSON.stringify(res.message.reactions, null, 2));
+
+                // if order hasn't been confirmed
+                if (res.message.reactions.filter(r => r.name === reaction).length === 0) {
+                  confirmOrder(res.message.ts);
+                }
               }
-            }
-          });
+            });
+          }
         }
       }
     }
@@ -309,8 +331,9 @@ function runServer() {
   rtm.on(_client.RTM_EVENTS.MESSAGE, messageReceived);
 
   rtm.on(_client.CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
-    console.log('Connected');
     // the timeout is here to go around a bug where connection is opened, but not properly established
+    console.log('Connected');
+
     setTimeout(loadTodayOrders, 3000);
   });
 }

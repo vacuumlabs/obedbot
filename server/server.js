@@ -26,7 +26,6 @@ const lastCallStep = config.lastCall.step;
 const port = config.port;
 let rtm;
 let web;
-let initialOrdersLoaded = false;
 
 /**
  * Makes the last call for orders
@@ -204,6 +203,20 @@ function messageReceived(res) {
   }
 }
 
+function orderExists(ts) {
+  const restaurants = [jpn, veglife, spaghetti];
+
+  for (let restaurant of restaurants) {
+    for (let order of restaurant) {
+      if (order.ts === ts) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 /**
  * Loads the orders since the last noon
  */
@@ -230,36 +243,37 @@ function loadTodayOrders() {
   ).then((data) => {
     for (let message of data.messages) {
       let order = message.text;
-      
-      if (order.match(atObedbot)) {
-        order = stripMention(order);
+      if (!orderExists(message.ts)) {
+        if (order.match(atObedbot)) {
+          order = stripMention(order);
 
-        if (processOrder(order, message.ts)) {
-          web.reactions.get(
-            {
-              channel: channelId,
-              timestamp: message.ts,
-              full: true
-            }
-          ).then((res) => {
-            console.log(
-              'Checking order confirmation:',
-              JSON.stringify(res, null, 2)
-            );
-
-            if (isNil(res.message.reactions)) {
-              confirmOrder(res.message.ts);
-            } else {
-              console.log('Reactions:',
-                JSON.stringify(res.message.reactions, null, 2)
+          if (processOrder(order, message.ts)) {
+            web.reactions.get(
+              {
+                channel: channelId,
+                timestamp: message.ts,
+                full: true
+              }
+            ).then((res) => {
+              console.log(
+                'Checking order confirmation:',
+                JSON.stringify(res, null, 2)
               );
 
-              // if order hasn't been confirmed
-              if (res.message.reactions.filter((r) => r.name === reaction).length === 0) {
+              if (isNil(res.message.reactions)) {
                 confirmOrder(res.message.ts);
+              } else {
+                console.log('Reactions:',
+                  JSON.stringify(res.message.reactions, null, 2)
+                );
+
+                // if order hasn't been confirmed
+                if (res.message.reactions.filter((r) => r.name === reaction).length === 0) {
+                  confirmOrder(res.message.ts);
+                }
               }
-            }
-          });
+            });
+          }
         }
       }
     }
@@ -315,14 +329,8 @@ export function runServer() {
 
   rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
     // the timeout is here to go around a bug where connection is opened, but not properly established
-    if (!initialOrdersLoaded) {
-      console.log('Connected');
+    console.log('Connected');
 
-      initialOrdersLoaded = true;
-      
-      setTimeout(loadTodayOrders, 3000);
-    } else {
-      console.log('Reconnected after disconnect');
-    }
+    setTimeout(loadTodayOrders, 3000);
   });
 }
