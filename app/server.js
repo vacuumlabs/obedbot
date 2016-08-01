@@ -24,8 +24,8 @@ const token = _config2.default.slack.token;
 //const channelId = 'G1TT0TBAA';
 const channelId = _config2.default.slack.channelId;
 const botUserId = _config2.default.slack.botId;
-const atObedbot = new RegExp("^<@" + botUserId + ">");
-const reactions = ['jedlopodnos', 'veglife', 'spaghetti', 'nakup'];
+const atObedbot = new RegExp("<@" + botUserId + ">");
+const reactions = ['jedlopodnos', 'corn', 'spaghetti', 'shopping_bags'];
 
 let veglife = [];
 let jpn = [];
@@ -39,6 +39,16 @@ const lastCallStep = _config2.default.lastCall.step;
 const port = _config2.default.port;
 let rtm;
 let web;
+
+/**
+ * Returns string with pretty printed json object
+ *
+ * @param {Object} json - json object
+ * @returns {string} - pretty printed json string
+ */
+function prettyPrint(json) {
+  return JSON.stringify(json, null, 2);
+}
 
 /**
  * Makes the last call for orders
@@ -100,14 +110,14 @@ function processOrder(order, ts) {
   } else if (order.match(/[1-8]\+[pk]/)) {
     console.log('Jedlo pod nos');
     jpn.push({ ts: ts, order: order });
-  } else if (order.match(/[a-zA-Z]((300)|(400)|(450)|(600)|(800))([pscPSC]{1,2})?\+?[ptPT]?/)) {
+  } else if (order.match(/[a-z]((300)|(400)|(450)|(600)|(800))([psc]{1,2})?\+?[pt]?/)) {
     console.log('Spaghetti');
     spaghetti.push({ ts: ts, order: order });
   } else if (order.match(/^nakup/)) {
-    console.log('andy chce kura a', order.substring(6));
+    console.log('Nakup', order.substring(6));
     nakup.push({ ts: ts, order: order.substring(6) });
   } else {
-    console.log('ziadna restika');
+    console.log('ziadna restika, plany poplach');
     return false;
   }
 
@@ -211,7 +221,7 @@ function padArray(orders, size) {
  */
 
 function messageReceived(res) {
-  console.log('Message Arrived:\n', JSON.stringify(res, null, 2));
+  console.log('Message Arrived:\n', prettyPrint(res));
 
   if ((0, _lodash.isNil)(res.subtype)) {
     let order = res.text;
@@ -219,7 +229,7 @@ function messageReceived(res) {
     if (order.match(atObedbot)) {
       order = stripMention(order);
 
-      if (processOrder(order, res.ts)) {
+      if (processOrder(order.toLowerCase(), res.ts)) {
         confirmOrder(res.ts);
       }
     }
@@ -241,7 +251,7 @@ function messageReceived(res) {
         } else {
           console.log('Order with such id does not exist.');
 
-          if (processOrder(order, res.message.ts)) {
+          if (processOrder(order.toLowerCase(), res.message.ts)) {
             confirmOrder(res.message.ts);
           }
         }
@@ -295,23 +305,25 @@ function loadTodayOrders() {
     oldest: lastNoon.getTime() / 1000
   }).then(data => {
     for (let message of data.messages) {
+      console.log(prettyPrint(message));
+
       let order = message.text;
       if (!orderExists(message.ts)) {
         if (order.match(atObedbot)) {
           order = stripMention(order);
 
-          if (processOrder(order, message.ts)) {
+          if (processOrder(order.toLowerCase(), message.ts)) {
             web.reactions.get({
               channel: channelId,
               timestamp: message.ts,
               full: true
             }).then(res => {
-              console.log('Checking order confirmation:', JSON.stringify(res, null, 2));
+              console.log('Checking order confirmation:', prettyPrint(res));
 
               if ((0, _lodash.isNil)(res.message.reactions)) {
                 confirmOrder(res.message.ts);
               } else {
-                console.log('Reactions:', JSON.stringify(res.message.reactions, null, 2));
+                console.log('Reactions:', prettyPrint(res.message.reactions));
 
                 // if order hasn't been confirmed
                 if (res.message.reactions.filter(r => reactions.indexOf(r.name) > -1).length === 0) {
