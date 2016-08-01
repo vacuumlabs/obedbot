@@ -122,7 +122,7 @@ function processOrder(order, ts) {
  * @returns {bool} - true if order with supplied ts is found, false otherwise
  */
 function updateOrder(newOrder, ts) {
-  const orders = [...jpn, ...veglife, ...spaghetti];
+  const orders = [...jpn, ...veglife, ...spaghetti, ...nakup];
 
   for (let order of orders) {
     if (order.ts === ts) {
@@ -141,7 +141,7 @@ function updateOrder(newOrder, ts) {
  * @returns {bool} - true if order with supplied ts is deleted, false otherwise
  */
 function removeOrder(ts) {
-  const restaurants = [jpn, veglife, spaghetti];
+  const restaurants = [jpn, veglife, spaghetti, nakup];
 
   for (let restaurant of restaurants) {
     for (let order in restaurant) {
@@ -261,7 +261,7 @@ function messageReceived(res) {
  */
 
 function orderExists(ts) {
-  const orders = [...jpn, ...veglife, ...spaghetti];
+  const orders = [...jpn, ...veglife, ...spaghetti, ...nakup];
 
   for (let order of orders) {
     if (order.ts === ts) {
@@ -315,7 +315,6 @@ function loadTodayOrders() {
 
                 // if order hasn't been confirmed
                 if (res.message.reactions.filter(r => reactions.indexOf(r.name) > -1).length === 0) {
-                  console.log('did not react yet');
                   confirmOrder(res.message.ts);
                 }
               }
@@ -329,7 +328,7 @@ function loadTodayOrders() {
 }
 
 function renderOrders(req, res) {
-  const maxOrders = Math.max(veglife.length, jpn.length, spaghetti.length);
+  const maxOrders = Math.max(veglife.length, jpn.length, spaghetti.length, nakup.length);
   /*console.log('Orders:');
   console.log('Veglife:', veglife);
   console.log('Jedlo pod nos:', jpn);
