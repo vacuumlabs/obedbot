@@ -11,8 +11,54 @@ html
             th= restaurant
         - for (var i = 0; i < maxOrders; ++i) {
             tr
-              td= allOrders['Jedlo pod nos'][i].order
-              td= allOrders['Veglife'][i].order
-              td= allOrders['Spaghetti'][i].order
-              td= allOrders['Nakup'][i].order
+              td= allOrders['Jedlo pod nos'][i].text
+              td= allOrders['Veglife'][i].text
+              td= allOrders['Spaghetti'][i].text
+              td= allOrders['Nakup'][i].text
+        - }
+
+      p
+        b Jedlo Pod Nos
+      table
+        tr
+          td
+          - for (var i = 0; i < 8; ++i) {
+            td= i + 1
+          - }
+        tr
+          td Jedlo pod nos
+          - for (var i = 0; i < 8; ++i) {
+            if shortOrders.jpn.orders[i] !== 0
+              td
+                b= shortOrders.jpn.orders[i]
+            else
+              td
+          - }
+      p Treba kupit #{shortOrders.jpn.soup} polievok a #{shortOrders.jpn.chocolate} keksov
+
+      p
+        b Veglife
+      table
+        tr
+          th
+          - for (var i = 0; i < 4; ++i) {
+            th= i + 1
+          - }
+          th Polievky
+        tr
+          td Veglife
+          - for (var i = 0; i < 4; ++i) {
+            if shortOrders.veglife[i] !== 0
+              td
+                b= shortOrders.veglife[i]
+          - }
+          td= shortOrders.veglife.reduce(function(a, b) { return a + b; }, 0)
+
+      p
+        b Spaghetti
+      table
+        - for (var key in shortOrders.spaghetti) {
+            tr
+              td= key
+              td= shortOrders.spaghetti[key]
         - }
