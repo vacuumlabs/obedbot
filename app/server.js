@@ -299,7 +299,6 @@ function loadTodayOrders() {
     lastNoon.setDate(lastNoon.getDate() - 1);
   }
 
-  lastNoon.setDate(lastNoon.getDate() - 1);
   lastNoon.setHours(12);
   lastNoon.setMinutes(0);
   lastNoon.setSeconds(0);
@@ -369,8 +368,9 @@ function renderOrders(req, res) {
   }
 
   for (let order of veglife) {
+    console.log('Taking veglife order,', order.text);
     const mainMealNum = order.text.charCodeAt(3) - 48;
-
+    console.log(mainMealNum);
     compoundOrders.veglife[mainMealNum - 1]++;
   }
 

@@ -51,6 +51,8 @@ html
             if shortOrders.veglife[i] !== 0
               td
                 b= shortOrders.veglife[i]
+            else
+              td
           - }
           td= shortOrders.veglife.reduce(function(a, b) { return a + b; }, 0)
 
