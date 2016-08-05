@@ -287,7 +287,6 @@ function loadTodayOrders() {
     lastNoon.setDate(lastNoon.getDate() - 1);
   }
 
-  lastNoon.setDate(lastNoon.getDate() - 1);
   lastNoon.setHours(12);
   lastNoon.setMinutes(0);
   lastNoon.setSeconds(0);
