@@ -1,9 +1,9 @@
-import {RtmClient, RTM_EVENTS, RTM_MESSAGE_SUBTYPES, CLIENT_EVENTS, WebClient} from '@slack/client';
+import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
 import {isNil, isNull} from 'lodash';
-import express from 'express';
+import {slack, orders} from './resources';
+import {prettyPrint, stripMention} from './utils';
 import config from '../config';
 
-const token = config.slack.token;
 // #obedbot-testing id - 'G1TT0TBAA'
 //const channelId = 'G1TT0TBAA';
 const channelId = config.slack.channelId;
@@ -14,76 +14,19 @@ const reactions = ['jedlopodnos', 'corn', 'spaghetti', 'shopping_bags'];
 /*
  * orders are of form {ts: 'string with timestamp, order: 'string with order'}
  */
-let veglife = [];
-let jpn = [];
-let spaghetti = [];
-let nakup = [];
+let veglife = orders.veglife;
+let jpn = orders.jedloPodNos;
+let spaghetti = orders.spaghetti;
+let nakup = orders.nakup;
+
 // ts = timestamp
 let lastCall = { ts: null, timeLeft: null };
 const lastCallLength = config.lastCall.length;
 const lastCallStep = config.lastCall.step;
 
+const rtm = slack.rtm;
+const web = slack.web;
 
-const port = config.port;
-let rtm;
-let web;
-
-
-/**
- * Returns string with pretty printed json object
- *
- * @param {Object} json - json object
- * @returns {string} - pretty printed json string
- */
-function prettyPrint(json) {
-  return JSON.stringify(json, null, 2);
-}
-
-/**
- * Makes the last call for orders
- */
-function makeLastCall() {
-  if (isNull(lastCall.ts)) {
-    lastCall.timeLeft = lastCallLength;
-    rtm.sendMessage('Last call ' + lastCall.timeLeft, channelId,
-      function messageSent(err, msg) {
-        console.log('Sent last call message', err, msg);
-
-        lastCall.ts = msg.ts;
-        lastCall.timeLeft = lastCallLength;
-
-        setTimeout(makeLastCall, lastCallStep * 1000);
-      }
-    );
-  } else if (lastCall.timeLeft > 0 && lastCall.timeLeft <= lastCallLength) {
-    lastCall.timeLeft -= lastCallStep;
-
-    web.chat.update(lastCall.ts, channelId, 'Last call ' + lastCall.timeLeft);
-
-    setTimeout(makeLastCall, lastCallStep * 1000);
-  } else if (lastCall.timeLeft <= 0) {
-    web.chat.update(lastCall.ts, channelId, 'Koniec objednavok');
-
-    lastCall.timeLeft = null;
-    lastCall.ts = null;
-  } else {
-    console.log('This should not happen');
-  }
-}
-
-/**
- * Strips the @obedbot part of the message
- *
- * @param {string} order - message with the order
- * @returns {string} - order message without the @obedbot mention
- */
-
-function stripMention(order) {
-  //check if user used full colon after @obedbot
-  const orderStart = (order.charAt(12) === ':') ? 14 : 13;
-
-  return order.substring(orderStart);
-}
 
 /**
  * Checks the incoming order and assigns it to the correct restaurant
@@ -92,9 +35,10 @@ function stripMention(order) {
  * @param {string} ts - timestamp of the order message
  * @returns {bool} - true if order matches, false if not identified
  */
-function processOrder(order, ts) {
+export function processOrder(order, ts) {
   order = order.toLowerCase().trim();
   console.log('Processing order:', order);
+
   if (order.match(/^veg[1-4]\+?[ps]?/)) {
     console.log('Veglife', order);
     veglife.push({ts: ts, text: order});
@@ -122,7 +66,7 @@ function processOrder(order, ts) {
  * @param {string} ts - timestamp of the order message
  * @returns {bool} - true if order with supplied ts is found, false otherwise
  */
-function updateOrder(newOrder, ts) {
+export function updateOrder(newOrder, ts) {
   const orders = [...jpn, ...veglife, ...spaghetti, ...nakup];
 
   for (let order of orders) {
@@ -141,7 +85,7 @@ function updateOrder(newOrder, ts) {
  * @param {string} ts - timestamp of the order message
  * @returns {bool} - true if order with supplied ts is deleted, false otherwise
  */
-function removeOrder(ts) {
+export function removeOrder(ts) {
   const restaurants = [jpn, veglife, spaghetti, nakup];
 
   for (let restaurant of restaurants) {
@@ -163,7 +107,7 @@ function removeOrder(ts) {
  *
  */
 
-function confirmOrder(ts) {
+export function confirmOrder(ts) {
   // key of the object is the reaction to the order on slack
   // reactions are custom/aliases of slack reactions
   const restaurants = {
@@ -185,23 +129,32 @@ function confirmOrder(ts) {
 }
 
 /**
- * Pads and sorts the array to length 'size' with empty orders at the end.
- * Orders are sorted by arr[].order
+ * Checks whether the order with given timestamp exists
  *
- * @param {Object[]} orders - Array with orders
- * @param {string} orders[].ts - Slack timestamp of the order message
- * @param {string} orders[].order - Message with the order
- * @param {number} size - desired length of the array
- * @returns {Object[]} - padded array with alphabetically ordered orders
+ * @param {string} ts - timestamp of the order
+ * @returns {bool} - true if order exists, false otherwise
  */
-function padArray(orders, size) {
-  orders.sort((a, b) => a.text.localeCompare(b.text));
 
-  while (orders.length !== size) {
-    orders.push({ts: 'fake time', order: ''});
+export function orderExists(ts) {
+  const orders = [...jpn, ...veglife, ...spaghetti, ...nakup];
+
+  for (let order of orders) {
+    if (order.ts === ts) {
+      return true;
+    }
   }
 
-  return orders;
+  return false;
+}
+
+/**
+ * Deletes and archives all the orders
+ */
+
+export function dropOrders() {
+  for (let restaurant in orders) {
+    orders[restaurant] = [];
+  }
 }
 
 /**
@@ -211,7 +164,7 @@ function padArray(orders, size) {
  *
  */
 
-function messageReceived(res) {
+export function messageReceived(res) {
   console.log('Message Arrived:\n', prettyPrint(res));
 
   if (isNil(res.subtype)) {
@@ -255,29 +208,10 @@ function messageReceived(res) {
 }
 
 /**
- * Checks whether the order with given timestamp exists
- *
- * @param {string} ts - timestamp of the order
- * @returns {bool} - true if order exists, false otherwise
- */
-
-function orderExists(ts) {
-  const orders = [...jpn, ...veglife, ...spaghetti, ...nakup];
-
-  for (let order of orders) {
-    if (order.ts === ts) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/**
  * Loads the orders since the last noon
  */
 
-function loadTodayOrders() {
+export function loadTodayOrders() {
   console.log('Loading today\'s orders from', channelId);
 
   let lastNoon = new Date();
@@ -335,90 +269,40 @@ function loadTodayOrders() {
   });
 }
 
-function renderOrders(req, res) {
-  const maxOrders = Math.max(veglife.length, jpn.length, spaghetti.length, nakup.length);
-  const compoundOrders = {
-    jpn: {
-      orders: [0, 0, 0, 0, 0, 0, 0, 0],
-      soup: 0,
-      chocolate: 0,
-    },
-    veglife: [0, 0, 0, 0],
-    spaghetti: {},
-  };
-
-  for (let order of jpn) {
-    const mainMealNum = order.text.charCodeAt(0) - 48;
-    const secondMeal = order.text.charAt(2);
-
-    compoundOrders.jpn.orders[mainMealNum - 1]++;
-
-    if (secondMeal === 'p') {
-      compoundOrders.jpn.soup++;
-    } else if (secondMeal === 'k') {
-      compoundOrders.jpn.chocolate++;
-    }
-  }
-
-  for (let order of veglife) {
-    const mainMealNum = order.text.charCodeAt(3) - 48;
-
-    compoundOrders.veglife[mainMealNum - 1]++;
-  }
-
-  for (let order of spaghetti) {
-    if (compoundOrders.spaghetti[order.text] === undefined) {
-      compoundOrders.spaghetti[order.text] = 1;
-    } else {
-      compoundOrders.spaghetti[order.text]++;
-    }
-  }
-
-  console.log(padArray(jpn.slice(), maxOrders),
-  padArray(veglife.slice(), maxOrders),
-  padArray(spaghetti.slice(), maxOrders),
-  padArray(nakup.slice(), maxOrders));
-
-  res.render('index', {
-    title: 'Obedbot page',
-    tableName: 'Dne\u0161n\u00E9 objedn\u00E1vky',
-    maxOrders: maxOrders,
-    allOrders: {
-      'Jedlo pod nos': padArray(jpn.slice(), maxOrders),
-      'Veglife': padArray(veglife.slice(), maxOrders),
-      'Spaghetti': padArray(spaghetti.slice(), maxOrders),
-      'Nakup': padArray(nakup.slice(), maxOrders)
-    },
-    shortOrders: compoundOrders,
-  });
-}
-
 /**
- * Starts the bot server
+ * Makes the last call for orders
  */
-export function runServer() {
-  const app = express();
-  rtm = new RtmClient(token, {logLevel: 'error'});
-  web = new WebClient(token);
+export function makeLastCall(restaurant) {
+  if (isNull(lastCall.ts)) {
+    // no last call ongoing, start one
+    lastCall.timeLeft = lastCallLength;
+    rtm.sendMessage(`@channel Last call ${restaurant}: ${lastCall.timeLeft}`, channelId,
+      function messageSent(err, msg) {
+        if (err) {
+          console.error(err)
+        }
+        console.log('Sent last call message', err, msg);
 
-  app.set('view engine', 'pug');
-  app.use(express.static('public'));
+        lastCall.ts = msg.ts;
+        lastCall.timeLeft = lastCallLength;
 
-  app.get('/', renderOrders);
+        setTimeout(() => { makeLastCall(restaurant) }, lastCallStep * 1000);
+      }
+    );
+  } else if (lastCall.timeLeft > 0 && lastCall.timeLeft <= lastCallLength) {
+    // last call ongoing, update it
+    lastCall.timeLeft -= lastCallStep;
 
-  app.listen(port, () => {
-    console.log('Server listening on port', port);
-  });
+    web.chat.update(lastCall.ts, channelId, `@channel Last call ${restaurant}: ${lastCall.timeLeft}`);
 
-  rtm.start();
-  console.log('slack server started');
+    setTimeout(() => { makeLastCall(restaurant) }, lastCallStep * 1000);
+  } else if (lastCall.timeLeft <= 0) {
+    // end of last call
+    web.chat.update(lastCall.ts, channelId, '@channel Koniec objednavok ' + restaurant);
 
-  rtm.on(RTM_EVENTS.MESSAGE, messageReceived);
-
-  rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
-    // the timeout is here to go around a bug where connection is opened, but not properly established
-    console.log('Connected');
-
-    setTimeout(loadTodayOrders, 3000);
-  });
+    lastCall.timeLeft = null;
+    lastCall.ts = null;
+  } else {
+    console.log('This should not happen');
+  }
 }
