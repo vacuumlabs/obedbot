@@ -42,7 +42,7 @@ export function processOrder(order, ts) {
   if (order.match(/^veg[1-4]\+?[ps]?/)) {
     console.log('Veglife', order);
     veglife.push({ts: ts, text: order});
-  } else if (order.match(/^[1-8]\+[pk]/)) {
+  } else if (order.match(/^[1-8]\+[psk]/)) {
     console.log('Jedlo pod nos');
     jpn.push({ts: ts, text: order});
   } else if (order.match(/^[a-z]((300)|(400)|(450)|(600)|(800))([psc]{1,2})?\+?[pt]?/)) {
