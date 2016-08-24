@@ -40,17 +40,17 @@ function runServer() {
 
   // set up last calls for each restaurant
   let lastCallSchedule = {
-    jedloPodNos: _nodeSchedule2.default.scheduleJob('30 9 * * *', () => {
+    jedloPodNos: _nodeSchedule2.default.scheduleJob('20 9 * * 1-5', () => {
       (0, _orders.makeLastCall)('jedlo pod nos');
     }),
-    veglife: _nodeSchedule2.default.scheduleJob('50 9 * * *', () => {
+    veglife: _nodeSchedule2.default.scheduleJob('50 9 * * 1-5', () => {
       (0, _orders.makeLastCall)('veglife');
     }),
-    spaghetti: _nodeSchedule2.default.scheduleJob('50 10 * * *', () => {
+    spaghetti: _nodeSchedule2.default.scheduleJob('50 10 * * 1-5', () => {
       (0, _orders.makeLastCall)('spaghetti');
     })
   };
 
-  let resetSchedule = _nodeSchedule2.default.scheduleJob('0 12 * * *', _orders.dropOrders);
+  let resetSchedule = _nodeSchedule2.default.scheduleJob('0 12 * * 1-5', _orders.dropOrders);
 }
 //# sourceMappingURL=server.js.map

@@ -153,7 +153,7 @@ export function orderExists(ts) {
 
 export function dropOrders() {
   for (let restaurant in orders) {
-    orders[restaurant] = [];
+    orders[restaurant].length = 0;
   }
 }
 

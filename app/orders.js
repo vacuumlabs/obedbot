@@ -175,7 +175,7 @@ function orderExists(ts) {
 
 function dropOrders() {
   for (let restaurant in _resources.orders) {
-    _resources.orders[restaurant] = [];
+    _resources.orders[restaurant].length = 0;
   }
 }
 

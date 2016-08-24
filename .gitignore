@@ -39,3 +39,6 @@ jspm_packages
 
 # User settings
 config.js
+
+# Mongodb folder
+data
