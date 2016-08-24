@@ -25,16 +25,16 @@ export function runServer() {
 
   // set up last calls for each restaurant
   let lastCallSchedule = {
-    jedloPodNos: schedule.scheduleJob('30 9 * * *', () => {
+    jedloPodNos: schedule.scheduleJob('20 9 * * 1-5', () => {
       makeLastCall('jedlo pod nos');
     }),
-    veglife: schedule.scheduleJob('50 9 * * *', () => {
+    veglife: schedule.scheduleJob('50 9 * * 1-5', () => {
       makeLastCall('veglife');
     }),
-    spaghetti: schedule.scheduleJob('50 10 * * *', () => {
+    spaghetti: schedule.scheduleJob('50 10 * * 1-5', () => {
       makeLastCall('spaghetti');
     }),
   };
 
-  let resetSchedule = schedule.scheduleJob('0 12 * * *', dropOrders);
+  let resetSchedule = schedule.scheduleJob('0 12 * * 1-5', dropOrders);
 }
