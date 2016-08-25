@@ -1,6 +1,6 @@
 import express from 'express';
-import config from '../config';
-import {orders} from './resources.js';
+import config from '../config'; // eslint-disable-line import/no-unresolved
+import {orders} from './resources';
 import {padArray} from './utils';
 
 function renderOrders(req, res) {

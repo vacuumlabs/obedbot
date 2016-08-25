@@ -2,7 +2,7 @@ import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
 import {isNil, isNull} from 'lodash';
 import {slack, orders} from './resources';
 import {prettyPrint, stripMention} from './utils';
-import config from '../config';
+import config from '../config'; // eslint-disable-line import/no-unresolved
 
 // #obedbot-testing id - 'G1TT0TBAA'
 //const channelId = 'G1TT0TBAA';
