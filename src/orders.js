@@ -276,6 +276,13 @@ export function loadTodayOrders() {
  * Makes the last call for orders
  */
 export function makeLastCall(restaurant) {
+  const dayOfWeek = new Date().getDay()
+
+  // ignore weekends, 0 is Sunday
+  if ((dayOfWeek === 0) || (dayOfWeek === 6)) {
+    return;
+  }
+
   if (isNull(lastCall.ts)) {
     // no last call ongoing, start one
     lastCall.timeLeft = lastCallLength;
