@@ -31,7 +31,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //const channelId = 'G1TT0TBAA';
 const channelId = _config2.default.slack.channelId;
 const botUserId = _config2.default.slack.botId;
-const atObedbot = new RegExp("<@" + botUserId + ">");
+const atObedbot = new RegExp(`<@${ botUserId }>`);
 const reactions = ['jedlopodnos', 'corn', 'spaghetti', 'shopping_bags'];
 
 /*
@@ -64,7 +64,7 @@ function processOrder(order, ts) {
   if (order.match(/^veg[1-4]\+?[ps]?/)) {
     console.log('Veglife', order);
     veglife.push({ ts: ts, text: order });
-  } else if (order.match(/^[1-8]\+[pk]/)) {
+  } else if (order.match(/^[1-8]\+[psk]/)) {
     console.log('Jedlo pod nos');
     jpn.push({ ts: ts, text: order });
   } else if (order.match(/^[a-z]((300)|(400)|(450)|(600)|(800))([psc]{1,2})?\+?[pt]?/)) {
@@ -175,7 +175,9 @@ function orderExists(ts) {
 
 function dropOrders() {
   for (let restaurant in _resources.orders) {
-    _resources.orders[restaurant].length = 0;
+    if (_resources.orders.hasOwnProperty(restaurant)) {
+      _resources.orders[restaurant].length = 0;
+    }
   }
 }
 
@@ -284,6 +286,7 @@ function loadTodayOrders() {
     }
     console.log('Loaded today\'s orders');
   });
+  console.log('messages', messages);
 }
 
 /**
@@ -293,7 +296,7 @@ function makeLastCall(restaurant) {
   if ((0, _lodash.isNull)(lastCall.ts)) {
     // no last call ongoing, start one
     lastCall.timeLeft = lastCallLength;
-    rtm.sendMessage(`@channel Last call ${ restaurant }: ${ lastCall.timeLeft }`, channelId, function messageSent(err, msg) {
+    rtm.sendMessage(`@channel Last call ${ restaurant }: ${ lastCall.timeLeft }`, channelId, (err, msg) => {
       if (err) {
         console.error(err);
       }

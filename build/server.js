@@ -39,18 +39,17 @@ function runServer() {
   });
 
   // set up last calls for each restaurant
-  let lastCallSchedule = {
-    jedloPodNos: _nodeSchedule2.default.scheduleJob('20 9 * * 1-5', () => {
-      (0, _orders.makeLastCall)('jedlo pod nos');
-    }),
-    veglife: _nodeSchedule2.default.scheduleJob('50 9 * * 1-5', () => {
-      (0, _orders.makeLastCall)('veglife');
-    }),
-    spaghetti: _nodeSchedule2.default.scheduleJob('50 10 * * 1-5', () => {
-      (0, _orders.makeLastCall)('spaghetti');
-    })
-  };
+  _nodeSchedule2.default.scheduleJob('20 9 * * 1-5', () => {
+    (0, _orders.makeLastCall)('jedlo pod nos');
+  });
+  _nodeSchedule2.default.scheduleJob('50 9 * * 1-5', () => {
+    (0, _orders.makeLastCall)('veglife');
+  });
+  _nodeSchedule2.default.scheduleJob('50 10 * * 1-5', () => {
+    (0, _orders.makeLastCall)('spaghetti');
+  });
 
-  let resetSchedule = _nodeSchedule2.default.scheduleJob('0 12 * * 1-5', _orders.dropOrders);
+  // delete all the orders for the new day
+  _nodeSchedule2.default.scheduleJob('0 12 * * 1-5', _orders.dropOrders);
 }
 //# sourceMappingURL=server.js.map

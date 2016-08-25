@@ -23,7 +23,9 @@ function renderOrders(req, res) {
   let maxOrders = 0;
 
   for (let restaurant in _resources.orders) {
-    maxOrders = Math.max(_resources.orders[restaurant].length, maxOrders);
+    if (_resources.orders.hasOwnProperty(restaurant)) {
+      maxOrders = Math.max(_resources.orders[restaurant].length, maxOrders);
+    }
   }
 
   const compoundOrders = {

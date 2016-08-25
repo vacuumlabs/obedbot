@@ -7,7 +7,9 @@ function renderOrders(req, res) {
   let maxOrders = 0;
 
   for (let restaurant in orders) {
-    maxOrders = Math.max(orders[restaurant].length, maxOrders);
+    if (orders.hasOwnProperty(restaurant)) {
+      maxOrders = Math.max(orders[restaurant].length, maxOrders);
+    }
   }
 
   const compoundOrders = {
@@ -60,7 +62,7 @@ function renderOrders(req, res) {
       'Jedlo pod nos': padArray(orders.jedloPodNos.slice(), maxOrders),
       'Veglife': padArray(orders.veglife.slice(), maxOrders),
       'Spaghetti': padArray(orders.spaghetti.slice(), maxOrders),
-      'Nakup': padArray(orders.nakup.slice(), maxOrders)
+      'Nakup': padArray(orders.nakup.slice(), maxOrders),
     },
     shortOrders: compoundOrders,
   });
