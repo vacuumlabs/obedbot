@@ -38,7 +38,9 @@ jspm_packages
 .node_repl_history
 
 # User settings
-config.js
+
+# Build folder
+build
 
 # Mongodb folder
 data
