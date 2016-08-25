@@ -10,6 +10,7 @@ var config = {
     length: 10,
     step: 1,
   },
+  dbUrl: 'url to your mongodb database',
 };
 
 module.exports = config;

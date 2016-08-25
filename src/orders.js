@@ -2,13 +2,13 @@ import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
 import {isNil, isNull} from 'lodash';
 import {slack, orders} from './resources';
 import {prettyPrint, stripMention} from './utils';
-import config from '../config';
+import config from '../config'; // eslint-disable-line import/no-unresolved
 
 // #obedbot-testing id - 'G1TT0TBAA'
 //const channelId = 'G1TT0TBAA';
 const channelId = config.slack.channelId;
 const botUserId = config.slack.botId;
-const atObedbot = new RegExp("<@" + botUserId + ">");
+const atObedbot = new RegExp(`<@${botUserId}>`);
 const reactions = ['jedlopodnos', 'corn', 'spaghetti', 'shopping_bags'];
 
 /*
@@ -20,7 +20,7 @@ let spaghetti = orders.spaghetti;
 let nakup = orders.nakup;
 
 // ts = timestamp
-let lastCall = { ts: null, timeLeft: null };
+let lastCall = {ts: null, timeLeft: null};
 const lastCallLength = config.lastCall.length;
 const lastCallStep = config.lastCall.step;
 
@@ -153,7 +153,9 @@ export function orderExists(ts) {
 
 export function dropOrders() {
   for (let restaurant in orders) {
-    orders[restaurant].length = 0;
+    if (orders.hasOwnProperty(restaurant)) {
+      orders[restaurant].length = 0;
+    }
   }
 }
 
@@ -202,7 +204,7 @@ export function messageReceived(res) {
       }
     }
   } else if (res.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_DELETED) {
-    console.log('Deleting order:', res.previous_message.text)
+    console.log('Deleting order:', res.previous_message.text);
     removeOrder(res.previous_message.ts);
   }
 }
@@ -229,7 +231,7 @@ export function loadTodayOrders() {
     channelId,
     {
       latest: now / 1000,
-      oldest: lastNoon.getTime() / 1000
+      oldest: lastNoon.getTime() / 1000,
     }
   ).then((data) => {
     for (let message of data.messages) {
@@ -245,10 +247,10 @@ export function loadTodayOrders() {
               {
                 channel: channelId,
                 timestamp: message.ts,
-                full: true
+                full: true,
               }
             ).then((res) => {
-              console.log( 'Checking order confirmation:', prettyPrint(res));
+              console.log('Checking order confirmation:', prettyPrint(res));
 
               if (isNil(res.message.reactions)) {
                 confirmOrder(res.message.ts);
@@ -267,6 +269,7 @@ export function loadTodayOrders() {
     }
     console.log('Loaded today\'s orders');
   });
+  console.log('messages', messages);
 }
 
 /**
@@ -277,16 +280,16 @@ export function makeLastCall(restaurant) {
     // no last call ongoing, start one
     lastCall.timeLeft = lastCallLength;
     rtm.sendMessage(`@channel Last call ${restaurant}: ${lastCall.timeLeft}`, channelId,
-      function messageSent(err, msg) {
+      (err, msg) => {
         if (err) {
-          console.error(err)
+          console.error(err);
         }
         console.log('Sent last call message', err, msg);
 
         lastCall.ts = msg.ts;
         lastCall.timeLeft = lastCallLength;
 
-        setTimeout(() => { makeLastCall(restaurant) }, lastCallStep * 1000);
+        setTimeout(() => {makeLastCall(restaurant);}, lastCallStep * 1000);
       }
     );
   } else if (lastCall.timeLeft > 0 && lastCall.timeLeft <= lastCallLength) {
@@ -295,7 +298,7 @@ export function makeLastCall(restaurant) {
 
     web.chat.update(lastCall.ts, channelId, `@channel Last call ${restaurant}: ${lastCall.timeLeft}`);
 
-    setTimeout(() => { makeLastCall(restaurant) }, lastCallStep * 1000);
+    setTimeout(() => {makeLastCall(restaurant);}, lastCallStep * 1000);
   } else if (lastCall.timeLeft <= 0) {
     // end of last call
     web.chat.update(lastCall.ts, channelId, '@channel Koniec objednavok ' + restaurant);

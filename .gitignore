@@ -40,5 +40,8 @@ jspm_packages
 # User settings
 config.js
 
+# Build folder
+build
+
 # Mongodb folder
 data

@@ -4,14 +4,19 @@
   "description": "Lunch bot for Vacuumlabs lunch orders in Slack",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "babel src/ -d app/ -s"
+    "test": "eslint src/**",
+    "build": "babel src/ -d build/ -s",
+    "eslint": "eslint src/**"
   },
   "author": "Jakub Simo",
   "license": "ISC",
   "dependencies": {
     "@slack/client": "^3.5.3",
+    "babel-eslint": "^6.1.2",
     "babel-preset-node6": "^11.0.0",
+    "eslint": "^3.3.1",
+    "eslint-plugin-babel": "^3.3.0",
+    "eslint-plugin-import": "^1.14.0",
     "express": "^4.14.0",
     "mongoose": "^4.5.9",
     "node-schedule": "^1.1.1",

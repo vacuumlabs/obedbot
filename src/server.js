@@ -1,5 +1,5 @@
 import {RTM_EVENTS, CLIENT_EVENTS} from '@slack/client';
-import schedule from 'node-schedule'
+import schedule from 'node-schedule';
 import {slack} from './resources';
 import {startExpress} from './routes';
 import {messageReceived, loadTodayOrders, makeLastCall, dropOrders} from './orders';
@@ -24,17 +24,16 @@ export function runServer() {
   });
 
   // set up last calls for each restaurant
-  let lastCallSchedule = {
-    jedloPodNos: schedule.scheduleJob('20 9 * * 1-5', () => {
-      makeLastCall('jedlo pod nos');
-    }),
-    veglife: schedule.scheduleJob('50 9 * * 1-5', () => {
-      makeLastCall('veglife');
-    }),
-    spaghetti: schedule.scheduleJob('50 10 * * 1-5', () => {
-      makeLastCall('spaghetti');
-    }),
-  };
+  schedule.scheduleJob('20 9 * * 1-5', () => {
+    makeLastCall('jedlo pod nos');
+  });
+  schedule.scheduleJob('50 9 * * 1-5', () => {
+    makeLastCall('veglife');
+  });
+  schedule.scheduleJob('50 10 * * 1-5', () => {
+    makeLastCall('spaghetti');
+  });
 
-  let resetSchedule = schedule.scheduleJob('0 12 * * 1-5', dropOrders);
+  // delete all the orders for the new day
+  schedule.scheduleJob('0 12 * * 1-5', dropOrders);
 }
