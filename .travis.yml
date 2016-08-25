@@ -1,11 +1,16 @@
+notifications:
+  email: false
+
 language: node_js
 node_js:
   - "6"
 
-notifications:
-  email: false
+cache:
+  directories:
+  - node_modules
 
 install:
-  npm install
+  - npm install
+
 script:
-  npm run eslint
+  - npm run eslint
