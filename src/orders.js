@@ -1,5 +1,6 @@
 import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
 import {isNil, isNull} from 'lodash';
+import {Order} from './models';
 import {slack, orders} from './resources';
 import {prettyPrint, stripMention} from './utils';
 import config from '../config'; // eslint-disable-line import/no-unresolved
@@ -238,7 +239,16 @@ export function loadTodayOrders() {
       console.log(prettyPrint(message));
 
       let order = message.text;
-      if (!orderExists(message.ts)) {
+      Order.find({timestamp: message.ts}).exec().then((results) => {
+        console.log('I am in then', results);
+        if (!results.length) {
+          console.log('order does not exist in db');
+          new Order({timestamp: message.ts, text: order, userId: message.user}).save();
+        }
+      }).catch((err) => {
+        console.log('I got caught', err)
+      })
+      if (false) {
         if (order.match(atObedbot)) {
           order = stripMention(order);
 
