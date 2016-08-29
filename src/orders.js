@@ -1,5 +1,6 @@
 import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
 import {isNil, isNull} from 'lodash';
+import moment from 'moment';
 import {Order} from './models';
 import {slack, orders} from './resources';
 import {prettyPrint, stripMention} from './utils';
@@ -217,22 +218,25 @@ export function messageReceived(res) {
 export function loadTodayOrders() {
   console.log('Loading today\'s orders from', channelId);
 
-  let lastNoon = new Date();
-  let now = lastNoon.getTime();
+  let lastNoon = moment();
+  let now = moment();
 
-  if (lastNoon.getHours() < 12) {
-    lastNoon.setDate(lastNoon.getDate() - 1);
+  // set the date to last Friday if it is Saturday (6), Sunday (0) or Monday (1)
+  if (now.day() === 0 || now.day() === 1 || now.day() === 6) {
+    lastNoon.day(-2);
+  } else if (now.hours() < 12) {
+    lastNoon.subtract(1, 'day');
   }
 
-  lastNoon.setHours(12);
-  lastNoon.setMinutes(0);
-  lastNoon.setSeconds(0);
+  lastNoon.hours(12);
+  lastNoon.minutes(0);
+  lastNoon.seconds(0);
 
   let messages = web.channels.history(
     channelId,
     {
-      latest: now / 1000,
-      oldest: lastNoon.getTime() / 1000,
+      latest: now.valueOf() / 1000,
+      oldest: lastNoon.valueOf() / 1000,
     }
   ).then((data) => {
     for (let message of data.messages) {
@@ -246,8 +250,8 @@ export function loadTodayOrders() {
           new Order({timestamp: message.ts, text: order, userId: message.user}).save();
         }
       }).catch((err) => {
-        console.log('I got caught', err)
-      })
+        console.log('I got caught', err);
+      });
       if (false) {
         if (order.match(atObedbot)) {
           order = stripMention(order);
