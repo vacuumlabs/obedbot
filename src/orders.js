@@ -45,7 +45,7 @@ export function processOrder(order, ts) {
   } else if (order.match(/^[1-8]\+[psk]/)) {
     console.log('Jedlo pod nos');
     jpn.push({ts: ts, text: order});
-  } else if (order.match(/^[a-z]((300)|(400)|(450)|(600)|(800))([psc]{1,2})?\+?[pt]?/)) {
+  } else if (order.match(/^[a-z]{1,2}((300)|(400)|(450)|(600)|(800))([psc]{1,2})?\+?[pt]?/)) {
     console.log('Spaghetti');
     spaghetti.push({ts: ts, text: order});
   } else if (order.match(/^nakup/)) {
