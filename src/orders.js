@@ -168,46 +168,53 @@ export function dropOrders() {
  *
  */
 
-export function messageReceived(res) {
-  console.log('Message Arrived:\n', prettyPrint(res));
+export function messageReceived(msg) {
+  console.log('Message received');
 
-  if (isNil(res.subtype)) {
-    let order = res.text;
+  if (isNil(msg.subtype)) {
+    console.log('A new message:', prettyPrint(msg));
 
-    if (order.match(atObedbot)) {
-      order = stripMention(order);
+    // first letter of the channel denotes its type
+    // D = direct message, C = basic public channel
+    if (msg.channel.charAt(0) === 'D' && processOrder(msg.text, msg.ts)) {
+      confirmOrder(msg.ts);
 
-      if (processOrder(order.toLowerCase(), res.ts)) {
-        confirmOrder(res.ts);
-      }
+      new Order({
+        timestamp: msg.ts,
+        text: msg.text,
+        userId: msg.user,
+      }).save()
+      .then((order) => {
+        console.log(`Order ${order.text} successfully saved in database`);
+      }).catch((error) => {
+        console.log('Could not insert order into database', error);
+      });
     }
-  } else if (res.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
+  } else if (msg.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
     console.log('Received an edited message');
 
     // edited last call message came in
-    if (!isNull(lastCall.ts) && res.previous_message.ts === lastCall.ts) {
+    if (!isNull(lastCall.ts) && msg.previous_message.ts === lastCall.ts) {
       console.log('Received last call message edited by obedbot.');
     } else {
       console.log('Received edited message.');
-      let order = res.message.text;
+      const order = msg.message.text;
 
-      if (order.match(atObedbot)) {
-        order = stripMention(order);
-
-        if (updateOrder(order, res.message.ts)) {
+      if (msg.channel.charAt(0) === 'D') {
+        if (updateOrder(order, msg.message.ts)) {
           console.log('Updated some order.');
         } else {
           console.log('Order with such id does not exist.');
 
-          if (processOrder(order.toLowerCase(), res.message.ts)) {
-            confirmOrder(res.message.ts);
+          if (processOrder(order.toLowerCase(), msg.message.ts)) {
+            confirmOrder(msg.message.ts);
           }
         }
       }
     }
-  } else if (res.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_DELETED) {
-    console.log('Deleting order:', res.previous_message.text);
-    removeOrder(res.previous_message.ts);
+  } else if (msg.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_DELETED) {
+    console.log('Deleting order:', msg.previous_message.text);
+    removeOrder(msg.previous_message.ts);
   }
 }
 

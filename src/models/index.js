@@ -1,7 +1,2 @@
-import {User} from './User.js';
-import {Order} from './Order.js';
-
-export {
-  User,
-  Order,
-};
+export {User} from './User.js';
+export {Order} from './Order.js';
