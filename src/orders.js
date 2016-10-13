@@ -198,7 +198,7 @@ function processMessages(history) {
         if (!result && isOrder(order)) {
           console.log('Order with such id does not exist in the database, inserting');
           saveOrder(order, timestamp, user);
-        } else {
+        } else if (isOrder(order)) {
           orders.push({ts: timestamp, text: order, userId: user});
           if (!message.reactions) {
             confirmOrder(timestamp);
