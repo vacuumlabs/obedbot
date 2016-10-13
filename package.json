@@ -2,7 +2,7 @@
   "name": "obedbot",
   "version": "0.0.1",
   "description": "Lunch bot for Vacuumlabs lunch orders in Slack",
-  "main": "src/index.js",
+  "start": "npm run build && node server.js",
   "scripts": {
     "test": "eslint src/**",
     "build": "babel src/ -d build/ -s",
@@ -23,7 +23,8 @@
     "moment": "^2.14.1",
     "mongoose": "^4.5.9",
     "node-schedule": "^1.1.1",
-    "pug": "^2.0.0-beta4"
+    "pug": "^2.0.0-beta4",
+    "sqlite": "^2.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",

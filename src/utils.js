@@ -1,3 +1,9 @@
+import database from 'sqlite';
+import {find} from 'lodash';
+
+import {slack, users} from './resources';
+import config from '../config';
+
 /**
  * Returns string with pretty printed json object
  *
@@ -5,7 +11,7 @@
  * @returns {string} - pretty printed json string
  */
 
-export function prettyPrint(json) {
+function prettyPrint(json) {
   return JSON.stringify(json, null, 2);
 }
 
@@ -16,7 +22,7 @@ export function prettyPrint(json) {
  * @returns {string} - order message without the @obedbot mention
  */
 
-export function stripMention(order) {
+function stripMention(order) {
   //check if user used full colon after @obedbot
   const orderStart = (order.charAt(12) === ':') ? 14 : 13;
 
@@ -24,21 +30,71 @@ export function stripMention(order) {
 }
 
 /**
- * Pads and sorts the array to length 'size' with empty orders at the end.
- * Orders are sorted by arr[].order
+ * Returns the name of the restaurant to which the order belongs to
  *
- * @param {Object[]} orders - Array with orders
- * @param {string} orders[].ts - Slack timestamp of the order message
- * @param {string} orders[].order - Message with the order
- * @param {number} size - desired length of the array
- * @returns {Object[]} - padded array with alphabetically ordered orders
+ * @param {string} order - message with the order
+ * @returns {string} - name of the restaurant
  */
-export function padArray(orders, size) {
-  orders.sort((a, b) => a.text.localeCompare(b.text));
 
-  while (orders.length !== size) {
-    orders.push({ts: 'fake time', order: ''});
-  }
+const restaurants = {
+  presto: 'presto',
+  pizza: 'pizza',
+  veglife: 'veglife',
+  spaghetti: 'spaghetti',
+  shop: 'shop',
+};
 
-  return orders;
+function identifyRestaurant(order) {
+  const regexes = config.orderRegex;
+  const values = [
+    {regex: regexes.presto, name: restaurants.presto},
+    {regex: regexes.pizza, name: restaurants.pizza},
+    {regex: regexes.veglife, name: restaurants.veglife},
+    {regex: regexes.spaghetti, name: restaurants.spaghetti},
+    {regex: regexes.shop, name: restaurants.shop},
+  ];
+  let ans;
+
+  values.forEach((restaurant) => {
+    if (restaurant.regex.test(order)) {
+      ans = restaurant.name;
+    }
+  });
+  return ans;
 }
+
+function getOrderFromMessage(msg, restaurant) {
+  const regex = config.orderRegex[restaurant];
+  return msg.match(regex)[0];
+}
+
+function saveUser(userId, channelId) {
+  slack.web.users.info(userId).then((userInfo) => {
+    const realname = userInfo.user.profile.real_name;
+    database.run(
+      'INSERT INTO users(user_id, channel_id, username) VALUES($userId, $channelId, $username)',
+      {
+        $userId: userId,
+        $channelId: channelId,
+        $username: realname,
+      }
+    ).then(() => {
+      console.log(`User ${realname} has been added to database`);
+      users.push({user_id: userId, channel_id: channelId, username: realname});
+    }).catch((err) => console.log(`User ${realname} is already in the database. Error: ${err}`));
+  });
+}
+
+function userExists(userId) {
+  return !!find(users, (user) => user.user_id === userId);
+}
+
+export {
+  restaurants,
+  prettyPrint,
+  stripMention,
+  identifyRestaurant,
+  getOrderFromMessage,
+  saveUser,
+  userExists,
+};

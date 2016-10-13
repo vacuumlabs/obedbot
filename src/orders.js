@@ -1,64 +1,54 @@
 import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
-import {isNil, isNull} from 'lodash';
+import {isNil, find} from 'lodash';
 import moment from 'moment';
-import {Order} from './models';
-import {slack, orders} from './resources';
-import {prettyPrint, stripMention} from './utils';
+import database from 'sqlite';
+
+import {slack, orders, users} from './resources';
+import {prettyPrint, userExists, saveUser, identifyRestaurant} from './utils';
 import config from '../config'; // eslint-disable-line import/no-unresolved
 
-// #obedbot-testing id - 'G1TT0TBAA'
-//const channelId = 'G1TT0TBAA';
-const channelId = config.slack.channelId;
-const botUserId = config.slack.botId;
-const atObedbot = new RegExp(`<@${botUserId}>`);
-const reactions = ['jedlopodnos', 'corn', 'spaghetti', 'shopping_bags'];
-
-/*
- * orders are of form {ts: 'string with timestamp, order: 'string with order'}
- */
-let veglife = orders.veglife;
-let jpn = orders.jedloPodNos;
-let spaghetti = orders.spaghetti;
-let nakup = orders.nakup;
-
-// ts = timestamp
-let lastCall = {ts: null, timeLeft: null};
-const lastCallLength = config.lastCall.length;
-const lastCallStep = config.lastCall.step;
-
-const rtm = slack.rtm;
-const web = slack.web;
-
-
 /**
- * Checks the incoming order and assigns it to the correct restaurant
+ * Checks if the given message is an order
  *
  * @param {string} order - order message
- * @param {string} ts - timestamp of the order message
  * @returns {bool} - true if order matches, false if not identified
  */
-export function processOrder(order, ts) {
+function isOrder(order) {
+  const regexes = config.orderRegex;
   order = order.toLowerCase().trim();
-  console.log('Processing order:', order);
 
-  if (order.match(/^veg[1-4]\+?[ps]?/)) {
-    console.log('Veglife', order);
-    veglife.push({ts: ts, text: order});
-  } else if (order.match(/^[1-8]\+[psk]/)) {
-    console.log('Jedlo pod nos');
-    jpn.push({ts: ts, text: order});
-  } else if (order.match(/^[a-z]{1,2}((300)|(400)|(450)|(600)|(800))([psc]{1,2})?\+?[pt]?/)) {
-    console.log('Spaghetti');
-    spaghetti.push({ts: ts, text: order});
-  } else if (order.match(/^nakup/)) {
-    console.log('Nakup', order.substring(6));
-    nakup.push({ts: ts, text: order.substring(6)});
-  } else {
-    console.log('ziadna restika, plany poplach');
-    return false;
+  console.log('Checking order:', order);
+
+  for (let regexKey in regexes) {
+    if (regexes.hasOwnProperty(regexKey)) {
+      if (regexes[regexKey].test(order)) {
+        console.log(`Order type is ${regexKey}`);
+        return true;
+      }
+    }
   }
 
-  return true;
+  console.log('Message is not an order');
+  return false;
+}
+
+function saveOrder(order, ts, user) {
+  orders.push({ts: ts, text: order, userId: user});
+
+  // insert order into database
+  database.run(
+    'INSERT INTO orders (timestamp, text, user_id) VALUES ($ts, $text, $user)',
+    {
+      $ts: ts,
+      $text: order,
+      $user: user,
+    }
+  ).then(() => {
+    console.log(`Order ${order} successfully saved in database`);
+    confirmOrder(ts);
+  }).catch((error) => {
+    console.log('Could not insert order into database', error);
+  });
 }
 
 /**
@@ -68,12 +58,16 @@ export function processOrder(order, ts) {
  * @param {string} ts - timestamp of the order message
  * @returns {bool} - true if order with supplied ts is found, false otherwise
  */
-export function updateOrder(newOrder, ts) {
-  const orders = [...jpn, ...veglife, ...spaghetti, ...nakup];
-
+function updateOrder(newOrder, ts) {
   for (let order of orders) {
     if (order.ts === ts) {
       order.text = newOrder;
+      database.run('UPDATE orders SET text=$text WHERE timestamp=$ts', {
+        $text: newOrder,
+        $ts: ts,
+      }).then(() => {
+        console.log(`Updated order ${ts} to ${newOrder}`);
+      });
       return true;
     }
   }
@@ -87,15 +81,15 @@ export function updateOrder(newOrder, ts) {
  * @param {string} ts - timestamp of the order message
  * @returns {bool} - true if order with supplied ts is deleted, false otherwise
  */
-export function removeOrder(ts) {
-  const restaurants = [jpn, veglife, spaghetti, nakup];
-
-  for (let restaurant of restaurants) {
-    for (let order in restaurant) {
-      if (restaurant[order].ts === ts) {
-        restaurant.splice(order, 1);
-        return true;
-      }
+function removeOrder(ts) {
+  for (let order of orders) {
+    if (order.ts === ts) {
+      orders.splice(orders.indexOf(order), 1);
+      database.run('DELETE FROM orders WHERE timestamp=$ts', {$ts: ts})
+        .then(() => {
+          console.log(`Deleted order ${ts}`);
+        });
+      return true;
     }
   }
 
@@ -106,59 +100,35 @@ export function removeOrder(ts) {
  * Adds reaction to the message to confirm the order
  *
  * @param {string} ts - timestamp of the order message
- *
+ * @param {string} channel - channel on which to add reaction to the message
  */
 
-export function confirmOrder(ts) {
+function confirmOrder(ts) {
   // key of the object is the reaction to the order on slack
   // reactions are custom/aliases of slack reactions
-  const restaurants = {
-    jedlopodnos: jpn,
-    veglife: veglife,
-    spaghetti: spaghetti,
-    nakup: nakup,
-  };
 
-  for (let key in restaurants) {
-    if (restaurants.hasOwnProperty(key)) {
-      for (let order of restaurants[key]) {
-        if (order.ts === ts) {
-          web.reactions.add(key, {channel: channelId, timestamp: ts});
+  database.get('SELECT user_id FROM orders WHERE timestamp=$ts', {$ts: ts})
+    .then((ans) => {
+      if (!ans) {
+        console.log('Order confirmation error: Requested order does not exist');
+      } else {
+        const channel = find(users, {user_id: ans.user_id}).channel_id;
+
+        if (!channel) {
+          console.log('Order confirmation error: Requested user does not exist');
+        } else {
+          slack.web.reactions.add(config.orderReaction, {channel: channel, timestamp: ts});
         }
       }
-    }
-  }
+    });
 }
 
 /**
- * Checks whether the order with given timestamp exists
- *
- * @param {string} ts - timestamp of the order
- * @returns {bool} - true if order exists, false otherwise
- */
-
-export function orderExists(ts) {
-  const orders = [...jpn, ...veglife, ...spaghetti, ...nakup];
-
-  for (let order of orders) {
-    if (order.ts === ts) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/**
- * Deletes and archives all the orders
+ * Deletes all the loaded orders
  */
 
 export function dropOrders() {
-  for (let restaurant in orders) {
-    if (orders.hasOwnProperty(restaurant)) {
-      orders[restaurant].length = 0;
-    }
-  }
+  orders.length = 0;
 }
 
 /**
@@ -176,39 +146,34 @@ export function messageReceived(msg) {
 
     // first letter of the channel denotes its type
     // D = direct message, C = basic public channel
-    if (msg.channel.charAt(0) === 'D' && processOrder(msg.text, msg.ts)) {
-      confirmOrder(msg.ts);
-
-      new Order({
-        timestamp: msg.ts,
-        text: msg.text,
-        userId: msg.user,
-      }).save()
-      .then((order) => {
-        console.log(`Order ${order.text} successfully saved in database`);
-      }).catch((error) => {
-        console.log('Could not insert order into database', error);
-      });
+    if (msg.channel.charAt(0) === 'D') {
+      if (!userExists(msg.user)) {
+        saveUser(msg.user, msg.channel);
+      }
+      if (isOrder(msg.text)) {
+        saveOrder(msg.text, msg.ts, msg.user);
+      }
     }
   } else if (msg.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
-    console.log('Received an edited message');
+    console.log('Received an edited message', prettyPrint(msg));
 
-    // edited last call message came in
-    if (!isNull(lastCall.ts) && msg.previous_message.ts === lastCall.ts) {
-      console.log('Received last call message edited by obedbot.');
-    } else {
-      console.log('Received edited message.');
-      const order = msg.message.text;
+    const order = msg.message.text;
+    const timestamp = msg.message.ts;
+    const channel = msg.channel;
+    const user = msg.message.user;
 
-      if (msg.channel.charAt(0) === 'D') {
-        if (updateOrder(order, msg.message.ts)) {
-          console.log('Updated some order.');
-        } else {
-          console.log('Order with such id does not exist.');
+    if (channel.charAt(0) === 'D') {
+      if (!userExists(user)) {
+        saveUser(user, channel);
+      }
 
-          if (processOrder(order.toLowerCase(), msg.message.ts)) {
-            confirmOrder(msg.message.ts);
-          }
+      if (updateOrder(order, timestamp)) {
+        console.log('Updated some order.');
+      } else {
+        console.log('Order with such id does not exist.');
+
+        if (isOrder(order.toLowerCase())) {
+          saveOrder(order, timestamp, channel);
         }
       }
     }
@@ -218,12 +183,37 @@ export function messageReceived(msg) {
   }
 }
 
+function processMessages(history) {
+  for (let message of history.messages) {
+    console.log(prettyPrint(message));
+
+    const order = message.text;
+    const timestamp = message.ts;
+    const user = message.user;
+
+    // check if the order is already registered
+    // if not, save and confirm it
+    database.get('SELECT * FROM orders WHERE timestamp=$ts', {$ts: timestamp})
+      .then((result) => {
+        if (!result && isOrder(order)) {
+          console.log('Order with such id does not exist in the database, inserting');
+          saveOrder(order, timestamp, user);
+        } else {
+          orders.push({ts: timestamp, text: order, userId: user});
+          if (!message.reactions) {
+            confirmOrder(timestamp);
+          }
+        }
+      }).catch((err) => console.log('Error', err));
+    console.log('Loaded today\'s orders for user', user);
+  }
+}
+
 /**
  * Loads the orders since the last noon
  */
-
 export function loadTodayOrders() {
-  console.log('Loading today\'s orders from', channelId);
+  console.log('Loading today\'s orders');
 
   let lastNoon = moment();
   let now = moment();
@@ -239,94 +229,26 @@ export function loadTodayOrders() {
   lastNoon.minutes(0);
   lastNoon.seconds(0);
 
-  let messages = web.channels.history(
-    channelId,
-    {
-      latest: now.valueOf() / 1000,
-      oldest: lastNoon.valueOf() / 1000,
-    }
-  ).then((data) => {
-    for (let message of data.messages) {
-      console.log(prettyPrint(message));
+  const timeRange = {
+    latest: now.valueOf() / 1000,
+    oldest: lastNoon.valueOf() / 1000,
+  };
 
-      let order = message.text;
-      Order.find({timestamp: message.ts}).exec().then((results) => {
-        console.log('I am in then', results);
-        if (!results.length) {
-          console.log('order does not exist in db');
-          new Order({timestamp: message.ts, text: order, userId: message.user}).save();
-        }
-      }).catch((err) => {
-        console.log('I got caught', err);
-      });
-      if (false) {
-        if (order.match(atObedbot)) {
-          order = stripMention(order);
-
-          if (processOrder(order.toLowerCase(), message.ts)) {
-            web.reactions.get(
-              {
-                channel: channelId,
-                timestamp: message.ts,
-                full: true,
-              }
-            ).then((res) => {
-              console.log('Checking order confirmation:', prettyPrint(res));
-
-              if (isNil(res.message.reactions)) {
-                confirmOrder(res.message.ts);
-              } else {
-                console.log('Reactions:', prettyPrint(res.message.reactions));
-
-                // if order hasn't been confirmed
-                if (res.message.reactions.filter((r) => reactions.indexOf(r.name) > -1).length === 0) {
-                  confirmOrder(res.message.ts);
-                }
-              }
-            });
-          }
-        }
-      }
-    }
-    console.log('Loaded today\'s orders');
+  users.forEach(({channel_id}) => {
+    slack.web.im.history(channel_id, timeRange).then(processMessages);
   });
-  console.log('messages', messages);
 }
 
 /**
  * Makes the last call for orders
  */
 export function makeLastCall(restaurant) {
-  if (isNull(lastCall.ts)) {
-    // no last call ongoing, start one
-    lastCall.timeLeft = lastCallLength;
-    rtm.sendMessage(`@channel Last call ${restaurant}: ${lastCall.timeLeft}`, channelId,
-      (err, msg) => {
-        if (err) {
-          console.error(err);
-        }
-        console.log('Sent last call message', err, msg);
-
-        lastCall.ts = msg.ts;
-        lastCall.timeLeft = lastCallLength;
-
-        setTimeout(() => {makeLastCall(restaurant);}, lastCallStep * 1000);
-      }
-    );
-  } else if (lastCall.timeLeft > 0 && lastCall.timeLeft <= lastCallLength) {
-    // last call ongoing, update it
-    lastCall.timeLeft -= lastCallStep;
-
-    web.chat.update(lastCall.ts, channelId, `@channel Last call ${restaurant}: ${lastCall.timeLeft}`);
-
-    setTimeout(() => {makeLastCall(restaurant);}, lastCallStep * 1000);
-  } else if (lastCall.timeLeft <= 0) {
-    // end of last call
-    web.chat.update(lastCall.ts, channelId, '@channel Koniec objednavok ' + restaurant);
-
-    lastCall.timeLeft = null;
-    lastCall.ts = null;
-  } else {
-    console.log('This should not happen');
+  for (let order of orders) {
+    const orderRest = identifyRestaurant(order.text);
+    if (orderRest === restaurant) {
+      // TODO finish last calls
+      //const channel = find(users, {user_id: order.userId}).channel_id;
+      //slack.rtm.sendMessage(`Last call ${restaurant}`, channel);
+    }
   }
 }
