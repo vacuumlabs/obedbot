@@ -1,7 +1,7 @@
 import {RtmClient, WebClient} from '@slack/client';
 import database from 'sqlite';
 
-import config from '../config';
+import config from '../config'; // eslint-disable-line import/no-unresolved
 
 export const slack = {
   rtm: new RtmClient(config.slack.token, {logLevel: 'error'}),

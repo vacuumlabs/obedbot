@@ -7,7 +7,7 @@ import {slack, loadUsers} from './resources';
 import {startExpress} from './routes';
 import {messageReceived, loadTodayOrders, makeLastCall, dropOrders} from './orders';
 import {restaurants} from './utils';
-import config from '../config';
+import config from '../config'; // eslint-disable-line import/no-unresolved
 
 /**
  * Starts the bot server

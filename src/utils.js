@@ -2,7 +2,7 @@ import database from 'sqlite';
 import {find} from 'lodash';
 
 import {slack, users} from './resources';
-import config from '../config';
+import config from '../config'; // eslint-disable-line import/no-unresolved
 
 /**
  * Returns string with pretty printed json object
