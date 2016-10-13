@@ -6,39 +6,33 @@ html
   body
     div(id='main')
       h1= tableName
-      table
-        tr
-          each orders, restaurant in allOrders
-            th= restaurant
-        - for (var i = 0; i < maxOrders; ++i) {
-            tr
-              td= allOrders['Jedlo pod nos'][i].text
-              td= allOrders['Veglife'][i].text
-              td= allOrders['Spaghetti'][i].text
-              td= allOrders['Nakup'][i].text
-        - }
-
-      p
-        b Jedlo Pod Nos
+      h2
+        b Presto
       table
         tr
           td
-          - for (var i = 0; i < 8; ++i) {
+          - for (var i = 0; i < presto.meals.length; ++i) {
             td= i + 1
           - }
         tr
-          td Jedlo pod nos
-          - for (var i = 0; i < 8; ++i) {
-            if shortOrders.jpn.orders[i] !== 0
+          td Presto
+          - for (var i = 0; i < presto.meals.length; ++i) {
               td
-                b= shortOrders.jpn.orders[i]
-            else
-              td
+                b= presto.meals[i] || ''
           - }
-      p Treba kupit #{shortOrders.jpn.soup} polievok a #{shortOrders.jpn.chocolate} keksov
+      p
+      b Polievky
+        table
+          - for (var key in presto.soups) {
+              tr
+                td= key
+                td= presto.soups[key]
+          - }
+
 
       p
-        b Veglife
+        h2
+          b Veglife
       table
         tr
           th
@@ -49,19 +43,37 @@ html
         tr
           td Veglife
           - for (var i = 0; i < 4; ++i) {
-            if shortOrders.veglife[i] !== 0
+            if veglife[i] !== 0
               td
-                b= shortOrders.veglife[i]
+                b= veglife[i]
             else
               td
           - }
-          td= shortOrders.veglife.reduce(function(a, b) { return a + b; }, 0)
+          td= veglife.reduce(function(a, b) { return a + b; }, 0)
 
       p
-        b Spaghetti
+        h2
+          b Spaghetti
       table
-        - for (var key in shortOrders.spaghetti) {
+        - for (var key in spaghetti) {
             tr
               td= key
-              td= shortOrders.spaghetti[key]
+              td= spaghetti[key]
+        - }
+
+      p
+        h2
+          b Nakup
+      table
+        - for (var order of shop) {
+          tr
+            td= order
+        - }
+
+      p
+        h2
+          b Vsetky spravy
+      div
+        - for (var order of orders) {
+          p= order.text
         - }

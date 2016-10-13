@@ -1,79 +1,66 @@
 import express from 'express';
+import {get} from 'lodash';
+
 import config from '../config'; // eslint-disable-line import/no-unresolved
 import {orders} from './resources';
-import {padArray} from './utils';
+import {identifyRestaurant, restaurants, getOrderFromMessage} from './utils';
 
 function renderOrders(req, res) {
-  let maxOrders = 0;
-
-  for (let restaurant in orders) {
-    if (orders.hasOwnProperty(restaurant)) {
-      maxOrders = Math.max(orders[restaurant].length, maxOrders);
-    }
-  }
-
-  const compoundOrders = {
-    jpn: {
-      orders: [0, 0, 0, 0, 0, 0, 0, 0],
-      soup: 0,
-      chocolate: 0,
-    },
-    veglife: [0, 0, 0, 0],
-    spaghetti: {},
+  let presto = {
+    soups: {},
+    meals: [0, 0, 0, 0, 0],
   };
+  let pizza = {};
+  let spaghetti = {};
+  let veglife = [0, 0, 0, 0];
+  let shop = [];
 
-  for (let order of orders.jedloPodNos) {
-    const mainMealNum = order.text.charCodeAt(0) - 48;
-    const secondMeal = order.text.charAt(2);
+  for (let o of orders) {
+    const restaurant = identifyRestaurant(o.text);
+    const order = getOrderFromMessage(o.text, restaurant);
 
-    compoundOrders.jpn.orders[mainMealNum - 1]++;
+    if (restaurant === restaurants.presto) {
+      const mainMealNum = parseInt(order.charAt(6), 10) - 1;
+      const soup = order.substring(8);
 
-    if (secondMeal === 'p') {
-      compoundOrders.jpn.soup++;
-    } else if (secondMeal === 'k') {
-      compoundOrders.jpn.chocolate++;
+      presto.meals[mainMealNum]++;
+      if (soup) {
+        presto.soups[soup] = get(presto.soups, soup, 0) + 1;
+      }
+    } else if (restaurant === restaurants.pizza) {
+      const pizzaNum = order.substring(5);
+
+      pizza = get(pizza, pizzaNum, 0) + 1;
+    } else if (restaurant === restaurants.veglife) {
+      const mainMealNum = parseInt(order.charAt(3), 10) - 1;
+
+      veglife[mainMealNum]++;
+    } else if (restaurant === restaurants.spaghetti) {
+      spaghetti[order] = get(spaghetti, order, 0) + 1;
+    } else if (restaurant === restaurants.shop) {
+      shop.push(order.substring(6));
     }
   }
 
-  for (let order of orders.veglife) {
-    const mainMealNum = order.text.charCodeAt(3) - 48;
-
-    compoundOrders.veglife[mainMealNum - 1]++;
-  }
-
-  for (let order of orders.spaghetti) {
-    if (compoundOrders.spaghetti[order.text] === undefined) {
-      compoundOrders.spaghetti[order.text] = 1;
-    } else {
-      compoundOrders.spaghetti[order.text]++;
-    }
-  }
-/*
-  console.log(padArray(jpn.slice(), maxOrders),
-  padArray(veglife.slice(), maxOrders),
-  padArray(spaghetti.slice(), maxOrders),
-  padArray(nakup.slice(), maxOrders));
-*/
   res.render('index', {
     title: 'Obedbot page',
-    tableName: 'Dne\u0161n\u00E9 objedn\u00E1vky',
-    maxOrders: maxOrders,
-    allOrders: {
-      'Jedlo pod nos': padArray(orders.jedloPodNos.slice(), maxOrders),
-      'Veglife': padArray(orders.veglife.slice(), maxOrders),
-      'Spaghetti': padArray(orders.spaghetti.slice(), maxOrders),
-      'Nakup': padArray(orders.nakup.slice(), maxOrders),
-    },
-    shortOrders: compoundOrders,
+    tableName: 'Dnešné objednávky',
+    presto: presto,
+    pizza: pizza,
+    veglife: veglife,
+    spaghetti: spaghetti,
+    shop: shop,
+    orders: orders.sort((a, b) => a.text.localeCompare(b.text)),
   });
 }
+
 
 export function startExpress() {
   const app = express();
   const port = config.port;
 
   app.set('view engine', 'pug');
-  app.use(express.static('public'));
+  app.use('/public', express.static('public'));
 
   app.get('/', renderOrders);
 

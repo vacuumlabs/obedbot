@@ -7,7 +7,6 @@
   "rules": {
     "block-spacing": [2, "never"],
     "brace-style": [2, "1tbs", {"allowSingleLine": true}],
-    "camelcase": [2, {"properties": "never"}],
     "comma-dangle": [2, "always-multiline"],
     "comma-spacing": [2, {"before": false, "after": true}],
     "comma-style": [2, "last"],
