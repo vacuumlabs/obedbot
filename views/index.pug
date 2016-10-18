@@ -21,13 +21,29 @@ html
                 b= presto.meals[i] || ''
           - }
       p
-      b Polievky
         table
+          tr
+            th Číslo polievky
+            th Počet
           - for (var key in presto.soups) {
               tr
                 td= key
                 td= presto.soups[key]
           - }
+
+
+      p
+        h2
+          b Pizza
+      table
+        tr
+          th Číslo pizze
+          th Počet
+        - for (var key in pizza) {
+            tr
+              td= key
+              td= pizza[key]
+        - }
 
 
       p
@@ -40,16 +56,18 @@ html
             th= i + 1
           - }
           th Polievky
+          th Šaláty
         tr
           td Veglife
           - for (var i = 0; i < 4; ++i) {
-            if veglife[i] !== 0
+            if veglife.meals[i] !== 0
               td
-                b= veglife[i]
+                b= veglife.meals[i]
             else
               td
           - }
-          td= veglife.reduce(function(a, b) { return a + b; }, 0)
+          td= veglife.soups
+          td= veglife.salads
 
       p
         h2
@@ -72,8 +90,10 @@ html
 
       p
         h2
-          b Vsetky spravy
-      div
-        - for (var order of orders) {
-          p= order.text
-        - }
+          b Prišlo jedlo!
+        a(href="/presto") Presto
+        br
+        a(href="/veglife") Veglife
+        br
+        a(href="/spaghetti") Spaghetti
+        br

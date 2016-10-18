@@ -159,6 +159,7 @@
   "plugins": [
     "import",
     "babel",
+    "async-await"
   ],
   "env": {
     "node": true

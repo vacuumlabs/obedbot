@@ -1,7 +1,8 @@
 import database from 'sqlite';
 import {find} from 'lodash';
+import moment from 'moment';
 
-import {slack, users} from './resources';
+import {slack} from './resources';
 import config from '../config'; // eslint-disable-line import/no-unresolved
 
 /**
@@ -83,34 +84,73 @@ function getOrderFromMessage(msg, restaurant) {
   return msg.match(regex)[0];
 }
 
-function saveUser(userId, channelId) {
-  slack.rtm.sendMessage(
-    'Ahoj, teba ešte nepoznám, daj mi sekundu, uložím si ťa do môjho adresára :)',
-    channelId
-  );
-  slack.web.users.info(userId).then((userInfo) => {
-    const realname = userInfo.user.profile.real_name;
-    database.run(
-      'INSERT INTO users(user_id, channel_id, username) VALUES($userId, $channelId, $username)',
-      {
-        $userId: userId,
-        $channelId: channelId,
-        $username: realname,
-      }
-    ).then(() => {
-      console.log(`User ${realname} has been added to database`);
-      users.push({user_id: userId, channel_id: channelId, username: realname});
-      slack.rtm.sendMessage(
-        `Dobre, už som si ťa zapísal :) Ak som ešte tvoju objednávku
-        nezaregistroval, prosím ťa zmaž svoju pôvodnú a napíš mi novú :)'`,
-        channelId
-      );
-    }).catch((err) => console.log(`User ${realname} is already in the database. Error: ${err}`));
-  });
+function saveUser(userId) {
+  console.log('Saving user');
+  slack.web.im.open(userId).then(({channel: {id: channelId}}) => {
+    slack.rtm.sendMessage(
+      // eslint-disable-next-line max-len
+      'Ahoj, volám sa obedbot, našiel som ťa v channely #obedy a nemal som ťa ešte v mojom zápisníčku, tak si ťa poznamenávam, budem ti odteraz posielať last cally pokiaľ v daní deň nemáš nič objednané :)',
+      channelId
+    );
+    slack.web.users.info(userId).then((userInfo) => {
+      const realname = userInfo.user.profile.real_name;
+      database.run(
+        'INSERT INTO users(user_id, channel_id, username) VALUES($userId, $channelId, $username)',
+        {
+          $userId: userId,
+          $channelId: channelId,
+          $username: realname,
+        }
+      ).then(() => {
+        console.log(`User ${realname} has been added to database`);
+        slack.rtm.sendMessage(
+          // eslint-disable-next-line max-len
+          'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať v channely #obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
+          channelId
+        );
+      }).catch((err) => console.log(`User ${realname} is already in the database. ${err}`));
+    });
+  }).catch(() => console.log('Trying to save bot or disabled user'));
 }
 
-function userExists(userId) {
-  return !!find(users, (user) => user.user_id === userId);
+async function userExists(userId) {
+  return database.get('SELECT * FROM users WHERE user_id=$userId', {$userId: userId})
+          .then((result) => !!result);
+}
+
+export function loadUsers() {
+  slack.web.channels.info(config.slack.lunchChannelId)
+    .then(async ({channel: {members}}) => {
+      for (let member of members) {
+        if (!(await userExists(member))) {
+          saveUser(member);
+        }
+      }
+    });
+}
+
+
+function getTodaysMessages() {
+  let lastNoon = moment();
+  let now = moment();
+
+  // set the date to last Friday if it is Saturday (6), Sunday (0) or Monday (1)
+  if (now.day() === 0 || now.day() === 1 || now.day() === 6) {
+    lastNoon.day(-2);
+  } else if (now.hours() < 12) {
+    lastNoon.subtract(1, 'day');
+  }
+
+  lastNoon.hours(12);
+  lastNoon.minutes(0);
+  lastNoon.seconds(0);
+
+  const timeRange = {
+    latest: now.valueOf() / 1000,
+    oldest: lastNoon.valueOf() / 1000,
+  };
+
+  return slack.web.channels.history(config.slack.lunchChannelId, timeRange);
 }
 
 export {
@@ -124,4 +164,5 @@ export {
   getOrderFromMessage,
   saveUser,
   userExists,
+  getTodaysMessages,
 };
