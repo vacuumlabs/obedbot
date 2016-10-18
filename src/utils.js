@@ -29,6 +29,21 @@ function stripMention(order) {
   return order.substring(orderStart);
 }
 
+function isObedbotMentioned(order) {
+  return new RegExp(`<@${config.slack.botId}>:?`).test(order);
+}
+
+function isChannelPublic(channel) {
+  return channel === config.slack.lunchChannelId;
+}
+
+function alreadyReacted(reactions) {
+  return !!find(
+    reactions,
+    ({name, users}) => name === config.orderReaction && users.includes(config.slack.botId)
+  );
+}
+
 /**
  * Returns the name of the restaurant to which the order belongs to
  *
@@ -69,6 +84,10 @@ function getOrderFromMessage(msg, restaurant) {
 }
 
 function saveUser(userId, channelId) {
+  slack.rtm.sendMessage(
+    'Ahoj, teba ešte nepoznám, daj mi sekundu, uložím si ťa do môjho adresára :)',
+    channelId
+  );
   slack.web.users.info(userId).then((userInfo) => {
     const realname = userInfo.user.profile.real_name;
     database.run(
@@ -81,6 +100,11 @@ function saveUser(userId, channelId) {
     ).then(() => {
       console.log(`User ${realname} has been added to database`);
       users.push({user_id: userId, channel_id: channelId, username: realname});
+      slack.rtm.sendMessage(
+        `Dobre, už som si ťa zapísal :) Ak som ešte tvoju objednávku
+        nezaregistroval, prosím ťa zmaž svoju pôvodnú a napíš mi novú :)'`,
+        channelId
+      );
     }).catch((err) => console.log(`User ${realname} is already in the database. Error: ${err}`));
   });
 }
@@ -93,6 +117,9 @@ export {
   restaurants,
   prettyPrint,
   stripMention,
+  isObedbotMentioned,
+  isChannelPublic,
+  alreadyReacted,
   identifyRestaurant,
   getOrderFromMessage,
   saveUser,

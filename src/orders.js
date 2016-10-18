@@ -4,7 +4,16 @@ import moment from 'moment';
 import database from 'sqlite';
 
 import {slack, orders, users} from './resources';
-import {prettyPrint, userExists, saveUser, identifyRestaurant} from './utils';
+import {
+  prettyPrint,
+  userExists,
+  saveUser,
+  alreadyReacted,
+  identifyRestaurant,
+  stripMention,
+  isObedbotMentioned,
+  isChannelPublic,
+} from './utils';
 import config from '../config'; // eslint-disable-line import/no-unresolved
 
 /**
@@ -32,19 +41,17 @@ function isOrder(order) {
   return false;
 }
 
-function saveOrder(order, ts, user) {
-  orders.push({ts: ts, text: order, userId: user});
+function saveOrder(messageText, ts, user) {
+  messageText = stripMention(messageText);
+
+  orders.push({ts: ts, text: messageText, userId: user});
 
   // insert order into database
   database.run(
     'INSERT INTO orders (timestamp, text, user_id) VALUES ($ts, $text, $user)',
-    {
-      $ts: ts,
-      $text: order,
-      $user: user,
-    }
+    {$ts: ts, $text: messageText, $user: user}
   ).then(() => {
-    console.log(`Order ${order} successfully saved in database`);
+    console.log(`Order ${messageText} successfully saved in database`);
     confirmOrder(ts);
   }).catch((error) => {
     console.log('Could not insert order into database', error);
@@ -59,6 +66,8 @@ function saveOrder(order, ts, user) {
  * @returns {bool} - true if order with supplied ts is found, false otherwise
  */
 function updateOrder(newOrder, ts) {
+  newOrder = stripMention(newOrder);
+
   for (let order of orders) {
     if (order.ts === ts) {
       order.text = newOrder;
@@ -107,18 +116,16 @@ function confirmOrder(ts) {
   // key of the object is the reaction to the order on slack
   // reactions are custom/aliases of slack reactions
 
-  database.get('SELECT user_id FROM orders WHERE timestamp=$ts', {$ts: ts})
+  database.get('SELECT user_id, public_channel FROM orders WHERE timestamp=$ts', {$ts: ts})
     .then((ans) => {
       if (!ans) {
         console.log('Order confirmation error: Requested order does not exist');
       } else {
-        const channel = find(users, {user_id: ans.user_id}).channel_id;
-
-        if (!channel) {
-          console.log('Order confirmation error: Requested user does not exist');
-        } else {
-          slack.web.reactions.add(config.orderReaction, {channel: channel, timestamp: ts});
-        }
+        const channel = (ans.public_channel === 1)
+                        ? config.slack.lunchChannelId
+                        : find(users, {user_id: ans.user_id}).channel_id;
+        console.log('confirmation order channel is', channel);
+        slack.web.reactions.add(config.orderReaction, {channel: channel, timestamp: ts});
       }
     });
 }
@@ -144,36 +151,36 @@ export function messageReceived(msg) {
   if (isNil(msg.subtype)) {
     console.log('A new message:', prettyPrint(msg));
 
-    // first letter of the channel denotes its type
-    // D = direct message, C = basic public channel
-    if (msg.channel.charAt(0) === 'D') {
-      if (!userExists(msg.user)) {
-        saveUser(msg.user, msg.channel);
-      }
-      if (isOrder(msg.text)) {
-        saveOrder(msg.text, msg.ts, msg.user);
-      }
+    const {text: messageText, ts: timestamp, channel, user} = msg;
+
+    if (isChannelPublic(channel) && isObedbotMentioned(messageText) && isOrder(messageText)) {
+      saveOrder(messageText, timestamp, user);
     }
   } else if (msg.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
     console.log('Received an edited message', prettyPrint(msg));
 
-    const order = msg.message.text;
-    const timestamp = msg.message.ts;
-    const channel = msg.channel;
-    const user = msg.message.user;
+    const {
+      previous_message: {
+        text: previousMessageText,
+        ts: timestamp,
+      },
+      message: {
+        text: messageText,
+        channel,
+        reactions,
+      },
+    } = msg;
 
-    if (channel.charAt(0) === 'D') {
-      if (!userExists(user)) {
-        saveUser(user, channel);
-      }
-
-      if (updateOrder(order, timestamp)) {
-        console.log('Updated some order.');
-      } else {
-        console.log('Order with such id does not exist.');
-
-        if (isOrder(order.toLowerCase())) {
-          saveOrder(order, timestamp, channel);
+    if (isChannelPublic(channel)) {
+      if (isObedbotMentioned(messageText) && isOrder(messageText)) {
+        updateOrder(messageText, timestamp);
+      } else if (isObedbotMentioned(previousMessageText) && isOrder(previousMessageText)) {
+        removeOrder(timestamp);
+        if (alreadyReacted(reactions)) {
+          slack.web.reactions.remove(
+            config.orderReaction,
+            {channel: config.lunchChannelId, timestamp: timestamp}
+          );
         }
       }
     }
@@ -187,25 +194,28 @@ function processMessages(history) {
   for (let message of history.messages) {
     console.log(prettyPrint(message));
 
-    const order = message.text;
-    const timestamp = message.ts;
-    const user = message.user;
+    const {text: messageText, ts: timestamp, user} = message;
 
     // check if the order is already registered
     // if not, save and confirm it
-    database.get('SELECT * FROM orders WHERE timestamp=$ts', {$ts: timestamp})
-      .then((result) => {
-        if (!result && isOrder(order)) {
-          console.log('Order with such id does not exist in the database, inserting');
-          saveOrder(order, timestamp, user);
-        } else if (isOrder(order)) {
-          orders.push({ts: timestamp, text: order, userId: user});
-          if (!message.reactions) {
-            confirmOrder(timestamp);
+    if (isObedbotMentioned(messageText) && isOrder(messageText)) {
+      database.get('SELECT * FROM orders WHERE timestamp=$ts', {$ts: timestamp})
+        .then((result) => {
+          if (!result) {
+            console.log('Order with such id does not exist in the database, inserting');
+            saveOrder(messageText, timestamp, user);
+          } else {
+            orders.push({
+              ts: timestamp,
+              text: messageText,
+              userId: user,
+            });
+            if (!alreadyReacted(message.reactions)) {
+              confirmOrder(timestamp);
+            }
           }
-        }
-      }).catch((err) => console.log('Error', err));
-    console.log('Loaded today\'s orders for user', user);
+        }).catch((err) => console.log('Error', err));
+    }
   }
 }
 
@@ -234,9 +244,7 @@ export function loadTodayOrders() {
     oldest: lastNoon.valueOf() / 1000,
   };
 
-  users.forEach(({channel_id}) => {
-    slack.web.im.history(channel_id, timeRange).then(processMessages);
-  });
+  slack.web.channels.history(config.slack.lunchChannelId, timeRange).then(processMessages);
 }
 
 /**

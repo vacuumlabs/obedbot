@@ -6,8 +6,7 @@
   "scripts": {
     "test": "eslint src/**",
     "build": "babel src/ -d build/ -s",
-    "eslint": "eslint src/**",
-    "mongodb": "mongod --smallfiles --dbpath data"
+    "eslint": "eslint src/**"
   },
   "author": "Jakub Simo",
   "license": "ISC",

@@ -16,11 +16,8 @@ export function runServer() {
   startExpress();
 
   // setup the database
-  Promise.resolve().then(
-    () => database.open(config.dbPath, {Promise})
-  ).then(() => {
-    loadUsers();
-  });
+  Promise.resolve().then(() => database.open(config.dbPath, {Promise}))
+    .then(loadUsers);
 
   const rtm = slack.rtm;
 
