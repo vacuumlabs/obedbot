@@ -1,5 +1,4 @@
 import {RtmClient, WebClient} from '@slack/client';
-import database from 'sqlite';
 
 import config from '../config'; // eslint-disable-line import/no-unresolved
 
@@ -9,11 +8,3 @@ export const slack = {
 };
 
 export let orders = [];
-export let users = [];
-
-export function loadUsers() {
-  database.all('SELECT * FROM users')
-    .then((allUsers) => {
-      allUsers.forEach((userData) => users.push(userData));
-    });
-}
