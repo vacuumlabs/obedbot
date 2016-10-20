@@ -5,7 +5,7 @@ import database from 'sqlite';
 
 import {slack} from './resources';
 import {startExpress} from './routes';
-import {messageReceived, loadTodayOrders, makeLastCall} from './orders';
+import {messageReceived, loadTodayOrders, makeLastCall, endOfOrders} from './orders';
 import {restaurants, loadUsers} from './utils';
 import config from '../config'; // eslint-disable-line import/no-unresolved
 
@@ -33,17 +33,23 @@ export function runServer() {
   });
 
   // set up last calls for each restaurant
-  schedule.scheduleJob('35 9 * * 1-5', () => {
-    makeLastCall(restaurants.presto);
-  });
-  schedule.scheduleJob('35 9 * * 1-5', () => {
-    makeLastCall(restaurants.veglife);
-  });
-  schedule.scheduleJob('35 10 * * 1-5', () => {
-    makeLastCall(restaurants.spaghetti);
+  schedule.scheduleJob('30 9 * * 1-5', () => {
+    makeLastCall();
   });
 
   schedule.scheduleJob('30 8 * * *', async () => {
     loadUsers();
+  });
+
+  schedule.scheduleJob('45 9 * * *', async () => {
+    endOfOrders(restaurants.veglife);
+  });
+
+  schedule.scheduleJob('46 9 * * *', async () => {
+    endOfOrders(restaurants.presto);
+  });
+
+  schedule.scheduleJob('45 10 * * *', async () => {
+    endOfOrders(restaurants.spaghetti);
   });
 }

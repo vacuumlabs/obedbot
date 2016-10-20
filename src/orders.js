@@ -151,18 +151,26 @@ export function loadTodayOrders() {
 /**
  * Makes the last call for orders
  */
-export function makeLastCall(callRestaurant) {
-  console.log('makeing last call', callRestaurant);
+export function makeLastCall() {
+  console.log('making last call');
   getTodaysMessages().then(({messages}) => {
     database.all('SELECT * FROM users').then((users) => {
       for (let user of users) {
         if (!find(messages, ({text, user: userId}) => userId === user.user_id && isOrder(text))) {
+          // if the user is Martin Macko, do not send notification
+          if (user.user_id === 'U0RRABABE') {
+            continue;
+          }
           slack.rtm.sendMessage(
-            `Objednávky ${callRestaurant} posledných 10 minút :slightly_smiling_face:`,
+            'Nezabudni si dnes objednať obed :slightly_smiling_face:',
             user.channel_id
           );
         }
       }
     });
   });
+}
+
+export function endOfOrders(restaurant) {
+  slack.rtm.sendMessage(`Koniec objednávok ${restaurant}`, config.slack.lunchChannelId);
 }

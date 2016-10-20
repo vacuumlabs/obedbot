@@ -137,11 +137,11 @@ function getTodaysMessages() {
   // set the date to last Friday if it is Saturday (6), Sunday (0) or Monday (1)
   if (now.day() === 0 || now.day() === 1 || now.day() === 6) {
     lastNoon.day(-2);
-  } else if (now.hours() < 12) {
+  } else if (now.hours() < 13) {
     lastNoon.subtract(1, 'day');
   }
 
-  lastNoon.hours(12);
+  lastNoon.hours(13);
   lastNoon.minutes(0);
   lastNoon.seconds(0);
 
