@@ -33,23 +33,23 @@ export function runServer() {
   });
 
   // set up last calls for each restaurant
-  schedule.scheduleJob('30 9 * * 1-5', () => {
+  schedule.scheduleJob('30 7 * * 1-5', () => {
     makeLastCall();
   });
 
-  schedule.scheduleJob('30 8 * * *', async () => {
+  schedule.scheduleJob('30 6 * * 1-5', async () => {
     loadUsers();
   });
 
-  schedule.scheduleJob('45 9 * * *', async () => {
+  schedule.scheduleJob('45 7 * * 1-5', async () => {
     endOfOrders(restaurants.veglife);
   });
 
-  schedule.scheduleJob('46 9 * * *', async () => {
+  schedule.scheduleJob('46 7 * * 1-5', async () => {
     endOfOrders(restaurants.presto);
   });
 
-  schedule.scheduleJob('45 10 * * *', async () => {
+  schedule.scheduleJob('45 8 * * 1-5', async () => {
     endOfOrders(restaurants.spaghetti);
   });
 }
