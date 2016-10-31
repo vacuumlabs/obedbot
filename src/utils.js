@@ -135,7 +135,7 @@ function getTodaysMessages() {
   let now = moment();
 
   // set the date to last Friday if it is Saturday (6), Sunday (0) or Monday (1)
-  if (now.day() === 0 || now.day() === 1 || now.day() === 6) {
+  if ((now.day() === 0 && now.hours() < 13) || now.day() === 1 || now.day() === 6) {
     lastNoon.day(-2);
   } else if (now.hours() < 13) {
     lastNoon.subtract(1, 'day');
