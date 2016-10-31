@@ -1,13 +1,40 @@
-#main {
-  text-align: center;
+body {
+  background-image: url('http://www.foodwise.com.au/wp-content/uploads/2012/10/ChoppingBoard2.gif');
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 table {
   border-collapse: collapse;
+  border-radius: 10px;
   margin: 0 auto;
 }
 
 table, th, td {
-  border: 1px solid black;
-  padding: 5px;
+  background-color: white;
+  text-align: center;
+  border-radius: 10px;
+  border-top: none;
+}
+
+div div div {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border-radius: 10px;
+}
+
+h3, h1 b {
+  color: #003366;
+}
+
+#main {
+  text-align: center;
+  max-width: 768px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#order-buttons {
+  background-color: white;
+  margin-bottom: 2vh;
 }

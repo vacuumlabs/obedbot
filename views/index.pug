@@ -2,98 +2,110 @@ html
   head
     title= title
     meta(charset='utf-8')
+    link(
+      rel='stylesheet',
+      href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css',
+      integrity='sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u',
+      crossorigin='anonymous'
+    )
     link(rel='stylesheet', href='public/css/style.css')
+
   body
     div(id='main')
-      h1= tableName
-      h2
-        b Presto
-      table
-        tr
-          td
-          - for (var i = 0; i < presto.meals.length; ++i) {
-            td= i + 1
-          - }
-        tr
-          td Presto
-          - for (var i = 0; i < presto.meals.length; ++i) {
-              td
-                b= presto.meals[i] || ''
-          - }
-      p
-        table
+      div(class='col-lg-7 col-md-7')
+        h1(id='title-main')
+          b= tableName
+        h3(id='title-presto')
+          b Presto
+        table(id='table-presto', class='table')
           tr
-            th Číslo polievky
+            td
+            - for (var i = 0; i < presto.meals.length; ++i) {
+              td= i + 1
+            - }
+          tr
+            td Presto
+            - for (var i = 0; i < presto.meals.length; ++i) {
+                td
+                  b= presto.meals[i] || ''
+            - }
+        p
+          table(id='table-presto-soups', class='table')
+            tr
+              th Číslo polievky
+              th Počet
+            - for (var key in presto.soups) {
+                tr
+                  td= key
+                  td= presto.soups[key]
+            - }
+
+        h3(id='title-pizza')
+          b Pizza
+        table(id='table-pizza', class='table')
+          tr
+            th Číslo pizze
             th Počet
-          - for (var key in presto.soups) {
+          - for (var key in pizza) {
               tr
                 td= key
-                td= presto.soups[key]
+                td= pizza[key]
           - }
 
-
-      p
-        h2
-          b Pizza
-      table
-        tr
-          th Číslo pizze
-          th Počet
-        - for (var key in pizza) {
-            tr
-              td= key
-              td= pizza[key]
-        - }
-
-
-      p
-        h2
+        h3(id='title-veglife')
           b Veglife
-      table
-        tr
-          th
-          - for (var i = 0; i < 4; ++i) {
-            th= i + 1
-          - }
-          th Polievky
-          th Šaláty
-        tr
-          td Veglife
-          - for (var i = 0; i < 4; ++i) {
-            if veglife.meals[i] !== 0
-              td
-                b= veglife.meals[i]
-            else
-              td
-          - }
-          td= veglife.soups
-          td= veglife.salads
-
-      p
-        h2
-          b Spaghetti
-      table
-        - for (var key in spaghetti) {
-            tr
-              td= key
-              td= spaghetti[key]
-        - }
-
-      p
-        h2
-          b Nakup
-      table
-        - for (var order of shop) {
+        table(id='table-veglife', class='table')
           tr
-            td= order
-        - }
+            th
+            - for (var i = 0; i < 4; ++i) {
+              th= i + 1
+            - }
+            th Polievky
+            th Šaláty
+          tr
+            td Veglife
+            - for (var i = 0; i < 4; ++i) {
+              if veglife.meals[i] !== 0
+                td
+                  b= veglife.meals[i]
+              else
+                td
+            - }
+            td= veglife.soups
+            td= veglife.salads
 
-      p
-        h2
+        h3(id='title-spaghetti')
+          b Spaghetti
+        table(id='table-spaghetti', class='table')
+          tr
+            th Typ
+            th Počet
+          - for (var key in spaghetti) {
+              tr
+                td= key
+                td= spaghetti[key]
+          - }
+
+        h3
+          b Nakup
+        table(id='table-nakup', class='table table-bordered')
+          tr
+            th Objednávka
+          - for (var order of shop) {
+            tr
+              td= order
+          - }
+
+      div(class='col-lg-5 col-md-5')
+        h1
           b Prišlo jedlo!
-        a(href="/presto") Presto
-        br
-        a(href="/veglife") Veglife
-        br
-        a(href="/spaghetti") Spaghetti
-        br
+        div(id='order-buttons' class='row')
+          div
+            a(href="/presto")
+              button(class='btn btn-warning') Presto
+          div
+            a(href="/veglife")
+              button(class='btn btn-success') Veglife
+          div
+            a(href="/spaghetti")
+              button(class='btn btn-info') Spaghetti
