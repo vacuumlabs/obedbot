@@ -98,7 +98,7 @@ function notifyThatFoodArrived(callRestaurant) {
         if (restaurant === callRestaurant) {
           const userChannelId = find(users, ({user_id}) => user_id === message.user).channel_id;
           if (userChannelId) {
-            slack.rtm.sendMessage(`Prišiel ti obed z ${callRestaurant}`, userChannelId);
+            slack.web.chat.postMessage(userChannelId, `Prišiel ti obed z ${callRestaurant}`);
           }
         }
       }
