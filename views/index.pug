@@ -97,15 +97,29 @@ html
           - }
 
       div(class='col-lg-5 col-md-5')
-        h1
-          b Prišlo jedlo!
-        div(id='order-buttons' class='row')
-          div
-            a(href="/presto")
-              button(class='btn btn-warning') Presto
-          div
-            a(href="/veglife")
-              button(class='btn btn-success') Veglife
-          div
-            a(href="/spaghetti")
-              button(class='btn btn-info') Spaghetti
+        div(class='row')
+          h1
+            b Prišlo jedlo!
+          div(id='order-buttons' class='row')
+            div
+              a(href="/presto")
+                button(class='btn btn-warning') Presto
+            div
+              a(href="/veglife")
+                button(class='btn btn-success') Veglife
+            div
+              a(href="/spaghetti")
+                button(class='btn btn-info') Spaghetti
+        div(class='row')
+          h1
+            b Nepríde jedlo :-(
+          div(id='order-buttons' class='row')
+            div
+              a(href="/nopresto")
+                button(class='btn btn-warning') Presto
+            div
+              a(href="/noveglife")
+                button(class='btn btn-success') Veglife
+            div
+              a(href="/nospaghetti")
+                button(class='btn btn-info') Spaghetti

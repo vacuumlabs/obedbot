@@ -95,10 +95,40 @@ function notifyThatFoodArrived(callRestaurant) {
         const text = stripMention(message.text).toLowerCase().trim();
         const restaurant = identifyRestaurant(text);
 
-        if (restaurant === callRestaurant) {
+        if (restaurant === callRestaurant
+          || (callRestaurant === restaurants.presto && restaurant === restaurants.pizza)) {
           const userChannelId = find(users, ({user_id}) => user_id === message.user).channel_id;
           if (userChannelId) {
-            slack.web.chat.postMessage(userChannelId, `Prišiel ti obed z ${callRestaurant}`);
+            slack.web.chat.postMessage(
+              userChannelId,
+              `Prišiel ti obed z ${callRestaurant} :slightly_smiling_face:`
+            );
+          }
+        }
+      }
+    });
+  });
+}
+
+function notifyThatFoodWontArrive(callRestaurant) {
+  console.log('Notifying that food will not arrive', callRestaurant);
+  getTodaysMessages().then(({messages}) => {
+    database.all('SELECT * FROM users').then((users) => {
+      for (let message of messages) {
+        if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
+          continue;
+        }
+        const text = stripMention(message.text).toLowerCase().trim();
+        const restaurant = identifyRestaurant(text);
+
+        if (restaurant === callRestaurant
+          || (callRestaurant === restaurants.presto && restaurant === restaurants.pizza)) {
+          const userChannelId = find(users, ({user_id}) => user_id === message.user).channel_id;
+          if (userChannelId) {
+            slack.web.chat.postMessage(
+              userChannelId,
+              `Dneska bohužiaľ obed z ${callRestaurant} nepríde :disappointed:`
+            );
           }
         }
       }
@@ -120,13 +150,28 @@ export function startExpress() {
     res.redirect('/');
   });
 
+  app.get('/noveglife', (req, res) => {
+    notifyThatFoodWontArrive(restaurants.veglife);
+    res.redirect('/');
+  });
+
   app.get('/presto', (req, res) => {
     notifyThatFoodArrived(restaurants.presto);
     res.redirect('/');
   });
 
+  app.get('/nopresto', (req, res) => {
+    notifyThatFoodWontArrive(restaurants.presto);
+    res.redirect('/');
+  });
+
   app.get('/spaghetti', (req, res) => {
     notifyThatFoodArrived(restaurants.spaghetti);
+    res.redirect('/');
+  });
+
+  app.get('/nospaghetti', (req, res) => {
+    notifyThatFoodWontArrive(restaurants.spaghetti);
     res.redirect('/');
   });
 
