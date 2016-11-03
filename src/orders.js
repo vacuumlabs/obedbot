@@ -161,9 +161,9 @@ export function makeLastCall() {
           if (user.user_id === 'U0RRABABE') {
             continue;
           }
-          slack.rtm.sendMessage(
+          slack.web.chat.postMessage(
+            user.channel_id,
             'Nezabudni si dnes objednať obed :slightly_smiling_face:',
-            user.channel_id
           );
         }
       }

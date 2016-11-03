@@ -87,10 +87,10 @@ function getOrderFromMessage(msg, restaurant) {
 function saveUser(userId) {
   console.log('Saving user');
   slack.web.im.open(userId).then(({channel: {id: channelId}}) => {
-    slack.rtm.sendMessage(
+    slack.web.chat.postMessage(
+      channelId,
       // eslint-disable-next-line max-len
       'Ahoj, volám sa obedbot, našiel som ťa v channely #obedy a nemal som ťa ešte v mojom zápisníčku, tak si ťa poznamenávam, budem ti odteraz posielať last cally pokiaľ v daní deň nemáš nič objednané :)',
-      channelId
     );
     slack.web.users.info(userId).then((userInfo) => {
       const realname = userInfo.user.profile.real_name;
@@ -103,10 +103,10 @@ function saveUser(userId) {
         }
       ).then(() => {
         console.log(`User ${realname} has been added to database`);
-        slack.rtm.sendMessage(
+        slack.web.chat.postMessage(
+          channelId,
           // eslint-disable-next-line max-len
           'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať v channely #obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
-          channelId
         );
       }).catch((err) => console.log(`User ${realname} is already in the database. ${err}`));
     });
@@ -135,7 +135,7 @@ function getTodaysMessages() {
   let now = moment();
 
   // set the date to last Friday if it is Saturday (6), Sunday (0) or Monday (1)
-  if (now.day() === 0 || (now.day() === 1  && now.hours() < 13) || now.day() === 6) {
+  if (now.day() === 0 || (now.day() === 1 && now.hours() < 13) || now.day() === 6) {
     lastNoon.day(-2);
   } else if (now.hours() < 13) {
     lastNoon.subtract(1, 'day');
