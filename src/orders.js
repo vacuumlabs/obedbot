@@ -23,7 +23,10 @@ import config from '../config'; // eslint-disable-line import/no-unresolved
  */
 export function isOrder(order) {
   const regexes = config.orderRegex;
-  order = stripMention(order).toLowerCase().trim();
+  if (isObedbotMentioned(order)) {
+    order = stripMention(order);
+  }
+  order = order.toLowerCase().trim();
 
   console.log('Checking order:', order);
 
