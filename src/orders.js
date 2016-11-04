@@ -62,6 +62,20 @@ function removeConfirmation(ts) {
 }
 
 /**
+ * User has tried to order in private channel
+ * send him message that this feature is deprecated
+ *
+ * @param {string} userChannel - IM channel of the user
+ */
+function privateIsDeprecated(userChannel) {
+  slack.web.chat.postMessage(
+    userChannel,
+    // eslint-disable-next-line max-len
+    'Objednávanie v súkromných kanáloch bolo vypnuté, pošli prosím svoju objednávku do #obedy :slightly_smiling_face:'
+  );
+}
+
+/**
  * Function called by slack api after receiving message event
  *
  * @param {Object} res - response slack api received
@@ -82,6 +96,11 @@ export async function messageReceived(msg) {
 
     if (isChannelPublic(channel) && isObedbotMentioned(messageText) && isOrder(messageText)) {
       confirmOrder(timestamp);
+    } else if (channel.charAt(0) === 'D') {
+      // if the user sent order into private channel, notify him this feature is deprecated
+      if (isOrder(messageText)) {
+        privateIsDeprecated(channel);
+      }
     }
   } else if (msg.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
     console.log('Received an edited message', prettyPrint(msg));
@@ -113,6 +132,11 @@ export async function messageReceived(msg) {
             if (alreadyReacted(reactions)) {
               removeConfirmation(timestamp);
             }
+          }
+        } else if (channel.charAt(0) === 'D') {
+          // if the user sent order into private channel, notify him this feature is deprecated
+          if (isOrder(messageText)) {
+            privateIsDeprecated(channel);
           }
         }
       }).catch((err) => console.log(`Error during loading of reactions: ${err}`));
