@@ -12,10 +12,10 @@ html
 
   body
     div(id='main')
-      div(class='col-lg-7 col-md-7')
+      div(class='col-lg-7 col-md-7 col-sm-12 col-xs-12')
         h1(id='title-main')
           b= tableName
-        h3(id='title-presto')
+        h3(id='title-presto', class='title')
           b Presto
         table(id='table-presto', class='table')
           tr
@@ -29,18 +29,18 @@ html
                 td
                   b= presto.meals[i] || ''
             - }
-        p
-          table(id='table-presto-soups', class='table')
-            tr
-              th Číslo polievky
-              th Počet
-            - for (var key in presto.soups) {
-                tr
-                  td= key
-                  td= presto.soups[key]
-            - }
 
-        h3(id='title-pizza')
+        table(id='table-presto-soups', class='table')
+          tr
+            th Číslo polievky
+            th Počet
+          - for (var key in presto.soups) {
+              tr
+                td= key
+                td= presto.soups[key]
+          - }
+
+        h3(id='title-pizza', class='title')
           b Pizza
         table(id='table-pizza', class='table')
           tr
@@ -52,7 +52,7 @@ html
                 td= pizza[key]
           - }
 
-        h3(id='title-veglife')
+        h3(id='title-veglife', class='title')
           b Veglife
         table(id='table-veglife', class='table')
           tr
@@ -60,8 +60,6 @@ html
             - for (var i = 0; i < 4; ++i) {
               th= i + 1
             - }
-            th Polievky
-            th Šaláty
           tr
             td Veglife
             - for (var i = 0; i < 4; ++i) {
@@ -71,10 +69,16 @@ html
               else
                 td
             - }
+
+        table(id='table-veglife-soups', class='table')
+          tr
+            th Polievky
+            th Šaláty
+          tr
             td= veglife.soups
             td= veglife.salads
 
-        h3(id='title-spaghetti')
+        h3(id='title-spaghetti', class='title')
           b Spaghetti
         table(id='table-spaghetti', class='table')
           tr
@@ -86,7 +90,7 @@ html
                 td= spaghetti[key]
           - }
 
-        h3
+        h3(id='title-nakup', class='title')
           b Nakup
         table(id='table-nakup', class='table table-bordered')
           tr
@@ -96,30 +100,30 @@ html
               td= order
           - }
 
-      div(class='col-lg-5 col-md-5')
+      div(id='right-column', class='col-lg-5 col-md-5 col-sm-12 col-xs-12')
         div(class='row')
-          h1
+          h1(class='title')
             b Prišlo jedlo!
           div(id='order-buttons' class='row')
             div
               a(href="/presto")
-                button(class='btn btn-warning') Presto
+                button(class='btn btn-warning btn-responsive') Presto
             div
               a(href="/veglife")
-                button(class='btn btn-success') Veglife
+                button(class='btn btn-success btn-responsive') Veglife
             div
               a(href="/spaghetti")
-                button(class='btn btn-info') Spaghetti
+                button(class='btn btn-info btn-responsive') Spaghetti
         div(class='row')
-          h1
+          h1(class='title')
             b Nepríde jedlo :-(
           div(id='order-buttons' class='row')
             div
               a(href="/nopresto")
-                button(class='btn btn-warning') Presto
+                button(class='btn btn-warning btn-responsive') Presto
             div
               a(href="/noveglife")
-                button(class='btn btn-success') Veglife
+                button(class='btn btn-success btn-responsive') Veglife
             div
               a(href="/nospaghetti")
-                button(class='btn btn-info') Spaghetti
+                button(class='btn btn-info btn-responsive') Spaghetti
