@@ -166,18 +166,14 @@ function getTodaysPrestoMenu(menu) {
 }
 
 function getTodaysVeglifeMenu(menu) {
-  menu = menu
+  return menu
     .substring(menu.indexOf('Polievka'), menu.indexOf('jedál') + 5)
     // delete all HTML tags
     .replace(/<[^>]*>/g, '')
     .split('\n')
     .map((row) => row.trim())
     .filter((row) => row.length)
-    .join('\n')
-    // replace all multiple whitespaces with single space
-    .replace(/\s\s+/g, ' ');
-
-  return menu;
+    .join('\n');
 }
 
 export function startExpress() {
@@ -227,6 +223,7 @@ export function startExpress() {
     curl.setOpt('URL', 'http://www.pizza-presto.sk/default.aspx?p=catalogpage&group=1');
 
     curl.on('end', (status, body, headers) => {
+      console.log(getTodaysVeglifeMenu(body));
       res
         .status(200)
         .send(`\`\`\`${getTodaysPrestoMenu(body)}\`\`\``);
