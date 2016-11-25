@@ -223,7 +223,6 @@ export function startExpress() {
     curl.setOpt('URL', 'http://www.pizza-presto.sk/default.aspx?p=catalogpage&group=1');
 
     curl.on('end', (status, body, headers) => {
-      console.log(getTodaysVeglifeMenu(body));
       res
         .status(200)
         .send(`\`\`\`${getTodaysPrestoMenu(body)}\`\`\``);
