@@ -232,7 +232,10 @@ export function startExpress() {
         .send(`\`\`\`${getTodaysPrestoMenu(body)}\`\`\``);
       curl.close();
     });
-    curl.on('error', curl.close.bind(curl));
+    curl.on('error', () => {
+      res.status(500).send();
+      curl.close();
+    });
     curl.perform();
   });
 
@@ -246,7 +249,10 @@ export function startExpress() {
         .send(`\`\`\`${getTodaysVeglifeMenu(body)}\`\`\``);
       curl.close();
     });
-    curl.on('error', curl.close.bind(curl));
+    curl.on('error', () => {
+      res.status(500).send();
+      curl.close();
+    });
     curl.perform();
   });
 
