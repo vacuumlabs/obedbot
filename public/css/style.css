@@ -10,10 +10,18 @@ table {
   margin: 0 auto;
 }
 
-table, th, td {
+table, td {
   background-color: white;
   text-align: center;
   border-radius: 10px;
+  border-top: none;
+}
+
+th {
+  background-color: green;
+  color: white;
+  text-align: center;
+  border-radius: 10px 10px 0 0;
   border-top: none;
 }
 
