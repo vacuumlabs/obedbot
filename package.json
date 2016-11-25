@@ -14,7 +14,9 @@
     "@slack/client": "^3.6.0",
     "bluebird": "^3.4.6",
     "express": "^4.14.0",
+    "html-entities": "^1.2.0",
     "moment": "^2.14.1",
+    "node-libcurl": "^1.0.0",
     "node-schedule": "^1.2.0",
     "pug": "^2.0.0-beta6",
     "sqlite": "^2.2.0"

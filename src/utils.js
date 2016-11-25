@@ -12,7 +12,7 @@ import config from '../config'; // eslint-disable-line import/no-unresolved
  * @returns {string} - pretty printed json string
  */
 
-function prettyPrint(json) {
+export function prettyPrint(json) {
   return JSON.stringify(json, null, 2);
 }
 
@@ -23,22 +23,22 @@ function prettyPrint(json) {
  * @returns {string} - order message without the @obedbot mention
  */
 
-function stripMention(order) {
+export function stripMention(order) {
   //check if user used full colon after @obedbot
   const orderStart = (order.charAt(12) === ':') ? 14 : 13;
 
   return order.substring(orderStart);
 }
 
-function isObedbotMentioned(order) {
+export function isObedbotMentioned(order) {
   return new RegExp(`<@${config.slack.botId}>:?`).test(order);
 }
 
-function isChannelPublic(channel) {
+export function isChannelPublic(channel) {
   return channel === config.slack.lunchChannelId;
 }
 
-function alreadyReacted(reactions) {
+export function alreadyReacted(reactions) {
   return !!find(
     reactions,
     ({name, users}) => name === config.orderReaction && users.includes(config.slack.botId)
@@ -52,7 +52,7 @@ function alreadyReacted(reactions) {
  * @returns {string} - name of the restaurant
  */
 
-const restaurants = {
+export const restaurants = {
   presto: 'presto',
   pizza: 'pizza',
   veglife: 'veglife',
@@ -60,7 +60,7 @@ const restaurants = {
   shop: 'shop',
 };
 
-function identifyRestaurant(order) {
+export function identifyRestaurant(order) {
   const regexes = config.orderRegex;
   const values = [
     {regex: regexes.presto, name: restaurants.presto},
@@ -79,12 +79,12 @@ function identifyRestaurant(order) {
   return ans;
 }
 
-function getOrderFromMessage(msg, restaurant) {
+export function getOrderFromMessage(msg, restaurant) {
   const regex = config.orderRegex[restaurant];
   return msg.match(regex)[0];
 }
 
-function saveUser(userId) {
+export function saveUser(userId) {
   console.log('Saving user');
   slack.web.im.open(userId).then(({channel: {id: channelId}}) => {
     slack.web.chat.postMessage(
@@ -113,7 +113,7 @@ function saveUser(userId) {
   }).catch(() => console.log('Trying to save bot or disabled user'));
 }
 
-async function userExists(userId) {
+export async function userExists(userId) {
   return database.get('SELECT * FROM users WHERE user_id=$userId', {$userId: userId})
           .then((result) => !!result);
 }
@@ -130,7 +130,7 @@ export function loadUsers() {
 }
 
 
-function getTodaysMessages() {
+export function getTodaysMessages() {
   let lastNoon = moment();
   let now = moment();
 
@@ -152,17 +152,3 @@ function getTodaysMessages() {
 
   return slack.web.channels.history(config.slack.lunchChannelId, timeRange);
 }
-
-export {
-  restaurants,
-  prettyPrint,
-  stripMention,
-  isObedbotMentioned,
-  isChannelPublic,
-  alreadyReacted,
-  identifyRestaurant,
-  getOrderFromMessage,
-  saveUser,
-  userExists,
-  getTodaysMessages,
-};

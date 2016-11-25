@@ -1,6 +1,9 @@
 import express from 'express';
 import {get, find} from 'lodash';
 import database from 'sqlite';
+import {Curl} from 'node-libcurl';
+import {AllHtmlEntities} from 'html-entities';
+import moment from 'moment';
 
 import config from '../config'; // eslint-disable-line import/no-unresolved
 import {
@@ -136,6 +139,47 @@ function notifyThatFoodWontArrive(callRestaurant) {
   });
 }
 
+function getTodaysPrestoMenu(menu) {
+  const entities = new AllHtmlEntities();
+  // CENA is there as a delimiter because the menu continues on with different things
+  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'CENA'];
+  let today = moment().day();
+
+  if (today === 0 || today === 6) {
+    today = 1;
+  }
+
+  // delete all HTML tags
+  menu = menu.replace(/<[^>]*>/g, '');
+  menu = entities.decode(menu);
+  menu = menu
+    // presto has the whole menu on single page, cut out only today
+    .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
+    .split('\n')
+    .map((row) => row.trim())
+    .filter((row) => row.length)
+    .join('\n')
+    // replace all multiple whitespaces with single space
+    .replace(/\s\s+/g, ' ');
+
+  return menu;
+}
+
+function getTodaysVeglifeMenu(menu) {
+  menu = menu
+    .substring(menu.indexOf('Polievka'), menu.indexOf('jedál') + 5)
+    // delete all HTML tags
+    .replace(/<[^>]*>/g, '')
+    .split('\n')
+    .map((row) => row.trim())
+    .filter((row) => row.length)
+    .join('\n')
+    // replace all multiple whitespaces with single space
+    .replace(/\s\s+/g, ' ');
+
+  return menu;
+}
+
 export function startExpress() {
   const app = express();
   const port = config.port;
@@ -145,6 +189,7 @@ export function startExpress() {
 
   app.get('/', renderOrders);
 
+  // notification messages that food has arrived
   app.get('/veglife', (req, res) => {
     notifyThatFoodArrived(restaurants.veglife);
     res.redirect('/');
@@ -160,6 +205,7 @@ export function startExpress() {
     res.redirect('/');
   });
 
+  // notification messages that food will not arrive
   app.get('/nopresto', (req, res) => {
     notifyThatFoodWontArrive(restaurants.presto);
     res.redirect('/');
@@ -173,6 +219,35 @@ export function startExpress() {
   app.get('/nospaghetti', (req, res) => {
     notifyThatFoodWontArrive(restaurants.spaghetti);
     res.redirect('/');
+  });
+
+  // menu responses for slash commands
+  app.get('/menupresto', (req, res) => {
+    const curl = new Curl();
+    curl.setOpt('URL', 'http://www.pizza-presto.sk/default.aspx?p=catalogpage&group=1');
+
+    curl.on('end', (status, body, headers) => {
+      res
+        .status(200)
+        .send(`\`\`\`${getTodaysPrestoMenu(body)}\`\`\``);
+      curl.close();
+    });
+    curl.on('error', curl.close.bind(curl));
+    curl.perform();
+  });
+
+  app.get('/menuveglife', (req, res) => {
+    const curl = new Curl();
+    curl.setOpt('URL', 'http://www.veglife.sk/sk/');
+
+    curl.on('end', (status, body, headers) => {
+      res
+        .status(200)
+        .send(`\`\`\`${getTodaysVeglifeMenu(body)}\`\`\``);
+      curl.close();
+    });
+    curl.on('error', curl.close.bind(curl));
+    curl.perform();
   });
 
   app.listen(port, () => {

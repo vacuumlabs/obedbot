@@ -57,6 +57,13 @@ function confirmOrder(ts) {
   );
 }
 
+function unknownOrder(ts) {
+  slack.web.reactions.add(
+    config.orderUnknownReaction,
+    {channel: config.slack.lunchChannelId, timestamp: ts}
+  );
+}
+
 function removeConfirmation(ts) {
   slack.web.reactions.remove(
     config.orderReaction,
@@ -97,8 +104,12 @@ export async function messageReceived(msg) {
       saveUser(user);
     }
 
-    if (isChannelPublic(channel) && isObedbotMentioned(messageText) && isOrder(messageText)) {
-      confirmOrder(timestamp);
+    if (isChannelPublic(channel) && isObedbotMentioned(messageText)) {
+      if (isOrder(messageText)) {
+        confirmOrder(timestamp);
+      } else {
+        unknownOrder(timestamp);
+      }
     } else if (channel.charAt(0) === 'D') {
       // if the user sent order into private channel, notify him this feature is deprecated
       if (isOrder(messageText)) {

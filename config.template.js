@@ -13,6 +13,7 @@ var config = {
     shop: /^nakup.*/,
   },
   orderReaction: 'taco',
+  orderUnknownReaction: 'question',
   dbPath: './obedbot.db'
 };
 
