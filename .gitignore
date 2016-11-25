@@ -43,5 +43,5 @@ config.js
 # Build folder
 build
 
-# Mongodb folder
-data
+# SQLite production database file
+obedbot.db
