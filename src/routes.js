@@ -17,7 +17,7 @@ import {isOrder} from './orders';
 function renderOrders(req, res) {
   let presto = {
     soups: {},
-    meals: [0, 0, 0, 0, 0],
+    meals: [0, 0, 0, 0, 0, 0],
   };
   let pizza = {};
   let spaghetti = {};
@@ -101,7 +101,7 @@ function notifyThatFoodArrived(callRestaurant) {
           if (userChannelId) {
             slack.web.chat.postMessage(
               userChannelId,
-              `Prišiel ti obed z ${callRestaurant} :slightly_smiling_face:`
+              `Prišiel ti obed ${text} z ${callRestaurant} :slightly_smiling_face:`
             );
           }
         }

@@ -1,16 +1,19 @@
 var config = {
-  // server configuration
-  port: 3000,
+  port: 4000,
   slack: {
-    token: 'string with slackbot token',
-    channelId: 'id of the channel bot should read messages from',
-    botId: 'id of the bot itself',
+    token: ''
+    lunchChannelId: '',
+    botId: '',
   },
-  lastCall: {
-    length: 10,
-    step: 1,
+  orderRegex: {
+    presto: /presto[1-6]p[1-2]/,
+    pizza: /pizza[0-9]{1,2}(v((33)|(40)|(50)))?/,
+    veglife: /veg[1-4]\+?[ps]?/,
+    spaghetti: /[a-z]{1,2}((300)|(400)|(450)|(600)|(800))((sc)|(cs)|(pc)|[psc])?\+?[pt]?/,
+    shop: /^nakup.*/,
   },
-  dbUrl: 'url to your mongodb database',
+  orderReaction: 'taco',
+  dbPath: './obedbot.db'
 };
 
 module.exports = config;
