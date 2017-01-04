@@ -303,7 +303,7 @@ export function getTodaysPrestoMenu(menu) {
 }
 
 export function getTodaysVeglifeMenu(menu) {
-  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'CENA'];
+  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK'];
   let today = moment().day();
 
   if (today === 0 || today === 6) {
