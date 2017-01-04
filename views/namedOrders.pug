@@ -1,0 +1,34 @@
+doctype html
+html
+  include includes/head.pug
+
+  body
+    div(id='main')
+      div(class='row')
+        h1(id='title-main')
+          b= tableName
+
+      div(class='row')
+        include includes/links.pug
+
+      div(class='row')
+        div(class='col-lg-1 col-md-1 col-sm-12 col-xs-12')
+        - for (var restaurant in orders) {
+        -   if (orders.hasOwnProperty(restaurant)) {
+              div(class='col-lg-2 col-md-2 col-sm-12 col-xs-12')
+                h2(class='named-title')
+                  b= restaurant.charAt(0).toUpperCase() + restaurant.slice(1)
+                table(class='table')
+                  thead
+                    tr
+                      th= 'Meno'
+                      th= 'Objednávka'
+                  tbody
+                    - for (var i = 0;i < orders[restaurant].length;i++) {
+                        tr
+                          td= orders[restaurant][i].user
+                          td= orders[restaurant][i].order
+                    - }
+        -   }
+        - }
+        div(class='col-lg-1 col-md-1 col-sm-12 col-xs-12')

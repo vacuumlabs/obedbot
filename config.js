@@ -1,9 +1,13 @@
+// load .env variables into process.env
+require('dotenv').config();
+
 var config = {
-  port: 4000,
+  dev: process.env.OBEDBOT_DEV || false,
+  port: process.env.OBEDBOT_PORT || 4000,
   slack: {
-    token: ''
-    lunchChannelId: '',
-    botId: '',
+    token: process.env.OBEDBOT_BOT_TOKEN || '',
+    lunchChannelId: process.env.OBEDBOT_CHANNEL_ID || '',
+    botId: process.env.OBEDBOT_BOT_ID || '',
   },
   orderRegex: {
     presto: /presto[1-6]p[1-2]/,

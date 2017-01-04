@@ -1,0 +1,25 @@
+h3(id='title-veglife', class='title')
+  b Veglife
+table(id='table-veglife', class='table')
+  tr
+    th
+    - for (var i = 0; i < 4; ++i) {
+      th= i + 1
+    - }
+  tr
+    td Veglife
+    - for (var i = 0; i < 4; ++i) {
+      if veglife.meals[i] !== 0
+        td
+          b= veglife.meals[i]
+      else
+        td
+    - }
+
+table(id='table-veglife-soups', class='table')
+  tr
+    th Polievky
+    th Šaláty
+  tr
+    td= veglife.soups
+    td= veglife.salads

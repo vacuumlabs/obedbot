@@ -1,0 +1,24 @@
+h3(id='title-presto', class='title')
+  b Presto
+table(id='table-presto', class='table')
+  tr
+    th
+    - for (var i = 0; i < presto.meals.length; ++i) {
+      th= i + 1
+    - }
+  tr
+    td Presto
+    - for (var i = 0; i < presto.meals.length; ++i) {
+        td
+          b= presto.meals[i] || ''
+    - }
+
+table(id='table-presto-soups', class='table')
+  tr
+    th Číslo polievky
+    th Počet
+  - for (var key in presto.soups) {
+      tr
+        td= key
+        td= presto.soups[key]
+  - }

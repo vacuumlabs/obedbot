@@ -37,11 +37,10 @@ jspm_packages
 # Optional REPL history
 .node_repl_history
 
-# User settings
-config.js
-
 # Build folder
 build
 
 # SQLite production database file
 obedbot.db
+
+.env
