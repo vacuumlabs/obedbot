@@ -5,9 +5,9 @@ import database from 'sqlite';
 
 import {slack} from './resources';
 import {startExpress} from './routes';
-import {messageReceived, loadTodayOrders, makeLastCall, endOfOrders} from './orders';
-import {restaurants, loadUsers} from './utils';
-import config from '../config'; // eslint-disable-line import/no-unresolved
+import {loadTodayOrders, restaurants} from './utils';
+import {loadUsers, messageReceived, endOfOrders, makeLastCall} from './slack';
+import config from '../config';
 
 /**
  * Starts the bot server
@@ -20,9 +20,8 @@ export function runServer() {
     .then(loadUsers);
 
   const rtm = slack.rtm;
-
+  console.log('Starting Slack RTM client');
   rtm.start();
-  console.log('slack server started');
 
   rtm.on(RTM_EVENTS.MESSAGE, messageReceived);
 

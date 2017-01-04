@@ -1,7 +1,5 @@
 body {
-  background-image: url('http://www.foodwise.com.au/wp-content/uploads/2012/10/ChoppingBoard2.gif');
-  background-repeat: no-repeat;
-  background-size: cover;
+  background-image: url('../background.png');
 }
 
 table {
@@ -37,7 +35,7 @@ h3, h1 b {
 
 #main {
   text-align: center;
-  max-width: 768px;
+  width: 90%;
   margin-left: auto;
   margin-right: auto;
 }
@@ -51,14 +49,17 @@ h3, h1 b {
   margin-bottom: 2vh;
 }
 
-#right-column > .row {
-  margin-top: 30px;
-  margin-left: 0;
-}
-
 .btn-responsive {
   width: 90%;
   height: 50px;
+}
+
+h1 .title {
+  font-size: default;
+}
+
+.named-title {
+  font-size: 2em;
 }
 
 @media (max-width: 768px) {
@@ -74,12 +75,12 @@ h3, h1 b {
     font-size: 60px;
   }
 
-  .title {
-    font-size: 60px;
-  }
-
   th, td {
     font-size: 40px;
+  }
+
+  .named-title {
+    font-size: 4em;
   }
 }
 
@@ -96,11 +97,11 @@ h3, h1 b {
     font-size: 60px;
   }
 
-  .title {
-    font-size: 60px;
-  }
-
   th, td {
     font-size: 40px;
+  }
+
+  .named-title {
+    font-size: 4em;
   }
 }

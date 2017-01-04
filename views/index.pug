@@ -1,147 +1,35 @@
+doctype html
 html
-  head
-    title= title
-    meta(charset='utf-8')
-    link(
-      rel='stylesheet',
-      href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css',
-      integrity='sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u',
-      crossorigin='anonymous'
-    )
-    link(rel='stylesheet', href='public/css/style.css')
+  include includes/head.pug
 
   body
     div(id='main')
-      div(class='col-lg-7 col-md-7 col-sm-12 col-xs-12')
+      div(class='row')
         h1(id='title-main')
           b= tableName
-        h3(id='title-presto', class='title')
-          b Presto
-        table(id='table-presto', class='table')
-          tr
-            th
-            - for (var i = 0; i < presto.meals.length; ++i) {
-              th= i + 1
-            - }
-          tr
-            td Presto
-            - for (var i = 0; i < presto.meals.length; ++i) {
-                td
-                  b= presto.meals[i] || ''
-            - }
+      div(class='row')
+        div(class='col-lg-12 col-md-12 col-sm-12 col-xs-12')
+        include includes/links.pug
 
-        table(id='table-presto-soups', class='table')
-          tr
-            th Číslo polievky
-            th Počet
-          - for (var key in presto.soups) {
-              tr
-                td= key
-                td= presto.soups[key]
-          - }
+      div(class='row')
+        div(class='col-lg-3 col-md-3 col-sm-12 col-xs-12')
+          include restaurants/presto.pug
 
-        h3(id='title-pizza', class='title')
-          b Pizza
-        table(id='table-pizza', class='table')
-          tr
-            th Číslo pizze
-            th Počet
-          - for (var key in pizza) {
-              tr
-                td= key
-                td= pizza[key]
-          - }
+        div(class='col-lg-2 col-md-2 col-sm-12 col-xs-12')
+          include restaurants/pizza.pug
 
-        h3(id='title-veglife', class='title')
-          b Veglife
-        table(id='table-veglife', class='table')
-          tr
-            th
-            - for (var i = 0; i < 4; ++i) {
-              th= i + 1
-            - }
-          tr
-            td Veglife
-            - for (var i = 0; i < 4; ++i) {
-              if veglife.meals[i] !== 0
-                td
-                  b= veglife.meals[i]
-              else
-                td
-            - }
+        div(class='col-lg-2 col-md-2 col-sm-12 col-xs-12')
+          include restaurants/veglife.pug
 
-        table(id='table-veglife-soups', class='table')
-          tr
-            th Polievky
-            th Šaláty
-          tr
-            td= veglife.soups
-            td= veglife.salads
+        div(class='col-lg-2 col-md-2 col-sm-12 col-xs-12')
+          include restaurants/spaghetti.pug
 
-        h3(id='title-spaghetti', class='title')
-          b Spaghetti
-        table(id='table-spaghetti', class='table')
-          tr
-            th Typ
-            th Počet
-          - for (var key in spaghetti) {
-              tr
-                td= key
-                td= spaghetti[key]
-          - }
-
-        h3(id='title-nakup', class='title')
-          b Nakup
-        table(id='table-nakup', class='table table-bordered')
-          tr
-            th Objednávka
-          - for (var order of shop) {
-            tr
-              td= order
-          - }
-
-      div(id='right-column', class='col-lg-5 col-md-5 col-sm-12 col-xs-12')
-        div(class='row')
-          h1(class='title')
-            b Prišlo jedlo!
-          div(id='order-buttons' class='row')
-            div
-              a(href="/presto")
-                button(
-                  class='btn btn-warning btn-responsive',
-                  onclick='return confirm(\'Are you sure?\')'
-                ) Presto
-            div
-              a(href="/veglife")
-                button(
-                  class='btn btn-success btn-responsive',
-                  onclick='return confirm(\'Are you sure?\')'
-                ) Veglife
-            div
-              a(href="/spaghetti")
-                button(
-                  class='btn btn-info btn-responsive',
-                  onclick='return confirm(\'Are you sure?\')'
-                ) Spaghetti
-        div(class='row')
-          h1(class='title')
-            b Nepríde jedlo :-(
-          div(id='order-buttons' class='row')
-            div
-              a(href="/nopresto")
-                button(
-                  class='btn btn-warning btn-responsive',
-                  onclick='return confirm(\'Are you sure?\')'
-                ) Presto
-            div
-              a(href="/noveglife")
-                button(
-                  class='btn btn-success btn-responsive',
-                  onclick='return confirm(\'Are you sure?\')'
-                ) Veglife
-            div
-              a(href="/nospaghetti")
-                button(
-                  class='btn btn-info btn-responsive',
-                  onclick='return confirm(\'Are you sure?\')'
-                ) Spaghetti
+        div(class='col-lg-3 col-md-3 col-sm-12 col-xs-12')
+          include restaurants/shop.pug
+      div(class='row')
+        div(class='col-lg-3 col-md-3 hidden-sm hidden-xs')
+        div(class='col-lg-3 col-md-3 col-sm-12 col-xs-12')
+          include includes/foodArrived.pug
+        div(class='col-lg-3 col-md-3 col-sm-12 col-xs-12')
+          include includes/foodWontArrive.pug
+        div(class='col-lg-3 col-md-3 hidden-sm hidden-xs')

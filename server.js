@@ -1,3 +1,3 @@
-const runServer = require('./build/server').runServer;
+var runServer = require('./build/server').runServer;
 
 runServer();

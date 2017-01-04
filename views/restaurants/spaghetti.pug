@@ -1,0 +1,11 @@
+h3(id='title-spaghetti', class='title')
+  b Spaghetti
+table(id='table-spaghetti', class='table')
+  tr
+    th Typ
+    th Počet
+  - for (var key in spaghetti) {
+      tr
+        td= key
+        td= spaghetti[key]
+  - }

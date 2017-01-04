@@ -1,0 +1,11 @@
+h3(id='title-pizza', class='title')
+  b Pizza
+table(id='table-pizza', class='table')
+  tr
+    th Číslo pizze
+    th Počet
+  - for (var key in pizza) {
+      tr
+        td= key
+        td= pizza[key]
+  - }
