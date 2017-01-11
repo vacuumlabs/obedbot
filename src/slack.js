@@ -180,7 +180,7 @@ export async function messageReceived(msg) {
       }
     } else if (channel.charAt(0) === 'D') {
       // if the user sent order into private channel, notify him this feature is deprecated
-      if (isOrder(messageText)) {
+      if (user !== config.slack.botId && isOrder(messageText)) {
         privateIsDeprecated(channel);
       }
     }
