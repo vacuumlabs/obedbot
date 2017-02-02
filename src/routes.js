@@ -91,7 +91,7 @@ export function startExpress() {
 
   app.get('/menuveglife', (req, res) => {
     const curl = new Curl();
-    curl.setOpt('URL', 'http://www.veglife.sk/sk/');
+    curl.setOpt('URL', 'http://www.veglife.sk/sk/menu-2/');
 
     curl.on('end', (status, body, headers) => {
       res

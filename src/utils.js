@@ -280,10 +280,14 @@ export function getTodaysPrestoMenu(menu) {
   const entities = new AllHtmlEntities();
   // CENA is there as a delimiter because the menu continues on with different things
   const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'CENA'];
-  let today = moment().day();
+  const now = moment();
+  let today = now.day();
 
-  if (today === 0 || today === 6) {
+  // if it is Saturday, Sunday or Friday afternoon, set day to Monday
+  if (today === 0 || today === 6 || (today === 5 && now.hours() > 13)) {
     today = 1;
+  } else if (now.hours() < 13) {
+    today++;
   }
 
   // delete all HTML tags
@@ -303,15 +307,19 @@ export function getTodaysPrestoMenu(menu) {
 }
 
 export function getTodaysVeglifeMenu(menu) {
-  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK'];
-  let today = moment().day();
+  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOTA'];
+  const now = moment();
+  let today = now.day();
 
-  if (today === 0 || today === 6) {
+  // if it is Saturday or Sunday, set day to Monday
+  if (today === 0 || today === 6 || (today === 5 && now.hours() > 13)) {
     today = 1;
+  } else if (now.hours() < 13) {
+    today++;
   }
 
   return menu
-    .substring(menu.indexOf(slovakDays[today]), menu.indexOf('jedál') + 5)
+    .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
     // delete all HTML tags
     .replace(/<[^>]*>/g, '')
     .split('\n')
