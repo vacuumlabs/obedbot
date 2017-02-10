@@ -52,62 +52,36 @@ export function getTodaysMessages() {
   return slack.web.channels.history(config.slack.lunchChannelId, timeRange);
 }
 
-export function notifyThatFoodArrived(callRestaurant) {
-  console.log('Notifying that food arrived', callRestaurant);
-  getTodaysMessages()
-    .then(({messages}) => {
-      database.all('SELECT * FROM users')
-        .then((users) => {
-          for (let message of messages) {
-            if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
-              continue;
-            }
-            const text = stripMention(message.text).toLowerCase().trim();
-            const restaurant = identifyRestaurant(text);
+export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
+  console.log('Notifying about food arrival', callRestaurant);
+  const messages = await getTodaysMessages();
+  const users = await database.all('SELECT * FROM users');
 
-            if (restaurant === callRestaurant ||
-              (callRestaurant === restaurants.presto && restaurant === restaurants.pizza)) {
-              const userChannelId = find(users, ({user_id}) => user_id === message.user).channel_id;
-              if (userChannelId) {
-                slack.web.chat.postMessage(
-                  userChannelId,
-                  `Prišiel ti obed ${text} z ${callRestaurant} :slightly_smiling_face:`,
-                  {as_user: true}
-                );
-              }
-            }
-          }
-        });
-    });
-}
+  slack.web.chat.postMessage(
+    config.slack.lunchChannelId,
+    `Prišli obedy z ${callRestaurant} :slightly_smiling_face:`,
+    {as_user: true}
+  );
 
-export function notifyThatFoodWontArrive(callRestaurant) {
-  console.log('Notifying that food will not arrive', callRestaurant);
-  getTodaysMessages()
-    .then(({messages}) => {
-      database.all('SELECT * FROM users')
-        .then((users) => {
-          for (let message of messages) {
-            if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
-              continue;
-            }
-            const text = stripMention(message.text).toLowerCase().trim();
-            const restaurant = identifyRestaurant(text);
+  for (let message of messages) {
+    if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
+      continue;
+    }
+    const text = stripMention(message.text).toLowerCase().trim();
+    const restaurant = identifyRestaurant(text);
 
-            if (restaurant === callRestaurant
-              || (callRestaurant === restaurants.presto && restaurant === restaurants.pizza)) {
-              const userChannelId = find(users, ({user_id}) => user_id === message.user).channel_id;
-              if (userChannelId) {
-                slack.web.chat.postMessage(
-                  userChannelId,
-                  `Dneska bohužiaľ obed z ${callRestaurant} nepríde :disappointed:`,
-                  {as_user: true}
-                );
-              }
-            }
-          }
-        });
-    });
+    if (restaurant === callRestaurant ||
+      (callRestaurant === restaurants.presto && restaurant === restaurants.pizza)) {
+      const userChannelId = find(users, ({user_id}) => user_id === message.user).channel_id;
+      const notification = willThereBeFood
+        ? `Prišiel ti obed ${text} z ${callRestaurant} :slightly_smiling_face:`
+        : `Dneska bohužiaľ obed z ${callRestaurant} nepríde :disappointed:`;
+
+      if (userChannelId) {
+        slack.web.chat.postMessage(userChannelId, notification, {as_user: true});
+      }
+    }
+  }
 }
 
 /**
@@ -128,6 +102,18 @@ function unknownOrder(ts) {
   slack.web.reactions.add(
     config.orderUnknownReaction,
     {channel: config.slack.lunchChannelId, timestamp: ts}
+  );
+  slack.web.chat.postMessage(
+    config.slack.lunchChannelId,
+    `Poslal/a si neznámy príkaz
+     Podporované príkazy sú:
+     \`
+      @obedbot nakup [item]
+      @obedbot presto[code]
+      @obedbot veg[code]
+      @obedbot [code]
+     \`
+     Napíš \`@obedbot help\` pre viac informácií `
   );
 }
 
@@ -168,6 +154,10 @@ export async function messageReceived(msg) {
 
     const {text: messageText, ts: timestamp, channel, user} = msg;
 
+    if (user !== config.slack.botId) {
+      return;
+    }
+
     if (!(await userExists(user))) {
       saveUser(user);
     }
@@ -180,7 +170,7 @@ export async function messageReceived(msg) {
       }
     } else if (channel.charAt(0) === 'D') {
       // if the user sent order into private channel, notify him this feature is deprecated
-      if (user !== config.slack.botId && isOrder(messageText)) {
+      if (isOrder(messageText)) {
         privateIsDeprecated(channel);
       }
     }
@@ -248,28 +238,28 @@ export async function processMessages(history) {
 /**
  * Makes the last call for orders
  */
-export function makeLastCall() {
+export async function makeLastCall() {
   if (config.dev) {
     return;
   }
   console.log('making last call');
-  getTodaysMessages().then(({messages}) => {
-    database.all('SELECT * FROM users').then((users) => {
-      for (let user of users) {
-        if (!find(messages, ({text, user: userId}) => userId === user.user_id && isOrder(text))) {
-          // if the user is Martin Macko, do not send notification
-          if (user.user_id === 'U0RRABABE') {
-            continue;
-          }
-          slack.web.chat.postMessage(
-            user.channel_id,
-            'Nezabudni si dnes objednať obed :slightly_smiling_face:',
-            {as_user: true}
-          );
-        }
+
+  const messages = await getTodaysMessages();
+  const users = await database.all('SELECT * FROM users');
+
+  for (let user of users) {
+    if (!find(messages, ({text, user: userId}) => userId === user.user_id && isOrder(text))) {
+      // if the user is Martin Macko, do not send notification
+      if (user.user_id === 'U0RRABABE') {
+        continue;
       }
-    });
-  });
+      slack.web.chat.postMessage(
+        user.channel_id,
+        'Nezabudni si dnes objednať obed :slightly_smiling_face:',
+        {as_user: true}
+      );
+    }
+  }
 }
 
 export function endOfOrders(restaurant) {
