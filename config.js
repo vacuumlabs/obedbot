@@ -14,7 +14,7 @@ var config = {
     pizza: /pizza[0-9]{1,2}(v((33)|(40)|(50)))?/,
     veglife: /veg[1-4]\+?[ps]?/,
     spaghetti: /[a-z]{1,2}((300)|(400)|(450)|(600)|(800))((sc)|(cs)|(pc)|[psc])?\+?[pt]?/,
-    shop: /^nakup.*/,
+    shop: /^(nakup)|(nákup)|(nakúp).*/,
   },
   orderReaction: 'taco',
   orderUnknownReaction: 'question',
