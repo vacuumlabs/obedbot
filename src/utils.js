@@ -286,7 +286,7 @@ export function getTodaysPrestoMenu(menu) {
   // if it is Saturday, Sunday or Friday afternoon, set day to Monday
   if (today === 0 || today === 6 || (today === 5 && now.hours() > 13)) {
     today = 1;
-  } else if (now.hours() < 13) {
+  } else if (now.hours() > 13) {
     today++;
   }
 
@@ -314,7 +314,7 @@ export function getTodaysVeglifeMenu(menu) {
   // if it is Saturday or Sunday, set day to Monday
   if (today === 0 || today === 6 || (today === 5 && now.hours() > 13)) {
     today = 1;
-  } else if (now.hours() < 13) {
+  } else if (now.hours() > 13) {
     today++;
   }
 
