@@ -43,4 +43,8 @@ build
 # SQLite production database file
 obedbot.db
 
+# ENV variables
 .env
+
+# Visual Studio Code workspace folder
+.vscode
