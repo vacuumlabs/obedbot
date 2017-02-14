@@ -1,0 +1,27 @@
+*ŠALÁT + MÄSO*
+stačí nahlásiť do ~11:00, že budete papať a dostanete šalátik + mäsko, aké si vypýtate z Billy. Bežne býva kuracie stehno, klobáska, no nájde sa občas aj sekaná, prso, bôčik, ...
+
+*Príklad:* `@obedbot: nakup stehno+salat`
+
+*PIZZA PRESTO*
+`http://www.pizza-presto.sk/default.aspx?p=catalogpage&group=1`
+Tam si viete objednať do 9:45 v daný deň ľubovoľný obed z denného menu alebo pizzu.
+MENU: Napíšete do Slacku presto+"cislo"+"p"+(1/2), kde 1 alebo 2 na konci je čislo polievky.
+*Príklad:* `@obedbot: presto3p1` - chcem menu 3 s prvou polievkou v poradí na daný deň
+PIZZA: Napíšete do Slacku pizza+"cislo"+"v" (veľkosť) +(33/40/50)
+*Príklad:* `@obedbot: pizza3v33` - chcem pizzu č. 3 veľkosti 33 cm
+
+*ŠPAGETY LEVIATHAN*
+`http://www.leviathan.sk/bratislava/menu.html`
+Viete si objednať do ~10:45 na Slacku. Náš slang dnes vyzerá tak, ze napíšete ABC+D, kde A je prvé písmeno názvu špagiet (môže sa skladať aj z dvoch písmen pre lepšiu prehľadnosť, ak je viac typov špagiet s rovnakým začínajúcim písmenom), B je hmotnosť a C je typ cestoviny (špagety alebo penne). D určuje, či chcete polievku alebo tiramisu ("p" alebo "t").
+*Príklad:* `@obedbot: b600p+p` znamená bolognese 600 gramové penne s polievkou.
+Žiaľ niekedy nerobia donášku, čo dopredu nikdy nevieme.
+
+*VEGLIFE*
+`http://www.veglife.sk/index.php/obedove-menu`
+Do 9:45 je možné si nahlásiť veg+číslo+pripadná polievka alebo šalát
+Príklad: `@obedbot: veg4p` značí, že si dáte štvorku s polievkou z VegLife.
+Dúfame, že si v tom každý najde svoje :slightly_smiling_face:
+
+*MENU*
+Ak sa ti nechce hladať menu na strankach tychto restik, stačí ak do konverzácie na slacku napises `/veglife` alebo `/presto` a zobrazí sa ti menu reštiky na daný deň. Neboj, nikoho tým spamovať nebudeš. Menu je viditelné iba pre teba :slightly_smiling_face:

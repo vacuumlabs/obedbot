@@ -105,15 +105,8 @@ function unknownOrder(ts) {
   );
   slack.web.chat.postMessage(
     config.slack.lunchChannelId,
-    `Poslal/a si neznámy príkaz
-     Podporované príkazy sú:
-     \`
-      @obedbot nakup [item]
-      @obedbot presto[code]
-      @obedbot veg[code]
-      @obedbot [code]
-     \`
-     Napíš \`@obedbot help\` pre viac informácií `
+    config.messages.unknownOrder,
+    {as_user: true}
   );
 }
 
@@ -154,7 +147,7 @@ export async function messageReceived(msg) {
 
     const {text: messageText, ts: timestamp, channel, user} = msg;
 
-    if (user !== config.slack.botId) {
+    if (user === config.slack.botId) {
       return;
     }
 

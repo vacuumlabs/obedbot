@@ -108,6 +108,10 @@ export function startExpress() {
     curl.perform();
   });
 
+  app.get('/help', (req, res) => {
+    res.send(config.messages.help);
+  });
+
   app.listen(port, () => {
     console.log('Server listening on port', port);
   });
