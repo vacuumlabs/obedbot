@@ -2,12 +2,16 @@
 require('dotenv').config();
 
 var config = {
-  dev: process.env.OBEDBOT_DEV || false,
+  dev: (process.env.OBEDBOT_DEV === 'true') || false,
   port: process.env.OBEDBOT_PORT || 4000,
   slack: {
     token: process.env.OBEDBOT_BOT_TOKEN || '',
     lunchChannelId: process.env.OBEDBOT_CHANNEL_ID || '',
     botId: process.env.OBEDBOT_BOT_ID || '',
+  },
+  menuLinks: {
+    presto: process.env.OBEDBOT_PRESTO || '',
+    veglife: process.env.OBEDBOT_VEGLIFE || '',
   },
   orderRegex: {
     presto: /presto[1-6]p[1-2]/,
@@ -18,8 +22,15 @@ var config = {
   },
   orderReaction: 'taco',
   orderUnknownReaction: 'question',
-  dbPath: './obedbot.db'
+  dbPath: './obedbot.db',
+  messages: require('./messages'),
 };
+
+if (!config.slack.token || !config.slack.lunchChannelId
+  || !config.slack.botId || !config.menuLinks.presto || !config.menuLinks.veglife) {
+  console.log('Missing env variables!');
+  process.exit(1);
+}
 
 module.exports = config;
 module.exports.default = config;

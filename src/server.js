@@ -37,19 +37,19 @@ export function runServer() {
     makeLastCall();
   });
 
-  schedule.scheduleJob('30 7 * * 1-5', async () => {
+  schedule.scheduleJob('30 7 * * 1-5', () => {
     loadUsers();
   });
 
-  schedule.scheduleJob('45 8 * * 1-5', async () => {
+  schedule.scheduleJob('45 8 * * 1-5', () => {
     endOfOrders(restaurants.veglife);
   });
 
-  schedule.scheduleJob('46 8 * * 1-5', async () => {
+  schedule.scheduleJob('46 8 * * 1-5', () => {
     endOfOrders(restaurants.presto);
   });
 
-  schedule.scheduleJob('45 9 * * 1-5', async () => {
+  schedule.scheduleJob('45 9 * * 1-5', () => {
     endOfOrders(restaurants.spaghetti);
   });
 }

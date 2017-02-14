@@ -2,7 +2,7 @@ import express from 'express';
 import {Curl} from 'node-libcurl';
 
 import {restaurants, parseOrders, parseOrdersNamed, getTodaysPrestoMenu, getTodaysVeglifeMenu} from './utils';
-import {notifyThatFoodArrived, notifyThatFoodWontArrive} from './slack';
+import {notifyAllThatOrdered} from './slack';
 import config from '../config';
 
 async function renderOrders(req, res) {
@@ -41,40 +41,42 @@ export function startExpress() {
 
   // notification messages that food has arrived
   app.get('/veglife', (req, res) => {
-    notifyThatFoodArrived(restaurants.veglife);
+    notifyAllThatOrdered(restaurants.veglife, true);
     res.redirect('/');
   });
 
   app.get('/noveglife', (req, res) => {
-    notifyThatFoodWontArrive(restaurants.veglife);
+    notifyAllThatOrdered(restaurants.veglife, false);
     res.redirect('/');
   });
 
   app.get('/presto', (req, res) => {
-    notifyThatFoodArrived(restaurants.presto);
+    notifyAllThatOrdered(restaurants.presto, true);
+    notifyAllThatOrdered(restaurants.pizza, true);
     res.redirect('/');
   });
 
   // notification messages that food will not arrive
   app.get('/nopresto', (req, res) => {
-    notifyThatFoodWontArrive(restaurants.presto);
+    notifyAllThatOrdered(restaurants.presto, false);
+    notifyAllThatOrdered(restaurants.pizza, false);
     res.redirect('/');
   });
 
   app.get('/spaghetti', (req, res) => {
-    notifyThatFoodArrived(restaurants.spaghetti);
+    notifyAllThatOrdered(restaurants.spaghetti, true);
     res.redirect('/');
   });
 
   app.get('/nospaghetti', (req, res) => {
-    notifyThatFoodWontArrive(restaurants.spaghetti);
+    notifyAllThatOrdered(restaurants.spaghetti, false);
     res.redirect('/');
   });
 
   // menu responses for slash commands
   app.get('/menupresto', (req, res) => {
     const curl = new Curl();
-    curl.setOpt('URL', 'http://www.pizza-presto.sk/default.aspx?p=catalogpage&group=1');
+    curl.setOpt('URL', config.menuLinks.presto);
 
     curl.on('end', (status, body, headers) => {
       res
@@ -91,7 +93,7 @@ export function startExpress() {
 
   app.get('/menuveglife', (req, res) => {
     const curl = new Curl();
-    curl.setOpt('URL', 'http://www.veglife.sk/sk/');
+    curl.setOpt('URL', config.menuLinks.veglife);
 
     curl.on('end', (status, body, headers) => {
       res
@@ -104,6 +106,10 @@ export function startExpress() {
       curl.close();
     });
     curl.perform();
+  });
+
+  app.get('/help', (req, res) => {
+    res.send(config.messages.help);
   });
 
   app.listen(port, () => {

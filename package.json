@@ -2,8 +2,8 @@
   "name": "obedbot",
   "version": "1.0.0",
   "description": "Lunch bot for Vacuumlabs lunch orders in Slack",
-  "start": "npm run build && node server.js",
   "scripts": {
+    "start": "npm run build && node server.js",
     "test": "eslint src/**",
     "build": "babel src/ -d build/ -s",
     "eslint": "eslint src/**"
