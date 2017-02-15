@@ -3,7 +3,7 @@ import moment from 'moment';
 import {isNil, find} from 'lodash';
 import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
 
-import {slack} from './resources';
+import {slack, logger} from './resources';
 import {
   userExists,
   saveUser,
@@ -29,7 +29,7 @@ export function loadUsers() {
     });
 }
 
-export function getTodaysMessages() {
+export async function getTodaysMessages() {
   let lastNoon = moment();
   let now = moment();
 
@@ -49,11 +49,11 @@ export function getTodaysMessages() {
     oldest: lastNoon.valueOf() / 1000,
   };
 
-  return slack.web.channels.history(config.slack.lunchChannelId, timeRange);
+  return (await slack.web.channels.history(config.slack.lunchChannelId, timeRange)).messages;
 }
 
 export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
-  console.log('Notifying about food arrival', callRestaurant);
+  logger.devLog('Notifying about food arrival', callRestaurant);
   const messages = await getTodaysMessages();
   const users = await database.all('SELECT * FROM users');
 
@@ -140,14 +140,16 @@ function privateIsDeprecated(userChannel) {
  */
 
 export async function messageReceived(msg) {
-  console.log('Message received');
+  logger.devLog('Message received');
 
   if (isNil(msg.subtype)) {
-    console.log('A new message:', prettyPrint(msg));
+    logger.devLog('Message type: new message\n');
+    logger.devLog(prettyPrint(msg));
 
     const {text: messageText, ts: timestamp, channel, user} = msg;
 
     if (user === config.slack.botId) {
+      logger.devLog('Message was from obedbot');
       return;
     }
 
@@ -168,7 +170,8 @@ export async function messageReceived(msg) {
       }
     }
   } else if (msg.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
-    console.log('Received an edited message', prettyPrint(msg));
+    logger.devLog('Message type: edited message\n');
+    logger.devLog(prettyPrint(msg));
 
     const {
       previous_message: {
@@ -181,6 +184,11 @@ export async function messageReceived(msg) {
       },
       channel,
     } = msg;
+
+    if (user === config.slack.botId) {
+      logger.devLog('Message was from obedbot');
+      return;
+    }
 
     if (!(await userExists(user))) {
       saveUser(user);
@@ -204,13 +212,16 @@ export async function messageReceived(msg) {
             privateIsDeprecated(channel);
           }
         }
-      }).catch((err) => console.log(`Error during loading of reactions: ${err}`));
+      }).catch((err) => logger.error('Error during loading of reactions:', err));
+  } else {
+    logger.devLog('Message type: probably deleted message\n');
   }
 }
 
-export async function processMessages(history) {
-  for (let message of history.messages) {
-    console.log(prettyPrint(message));
+export async function processMessages(messages) {
+  for (let message of messages) {
+    logger.devLog('Processing message');
+    logger.devLog(prettyPrint(message));
 
     const {text: messageText, ts: timestamp, user, reactions} = message;
 
@@ -235,7 +246,7 @@ export async function makeLastCall() {
   if (config.dev) {
     return;
   }
-  console.log('making last call');
+  logger.devLog('Making last call');
 
   const messages = await getTodaysMessages();
   const users = await database.all('SELECT * FROM users');

@@ -28,7 +28,7 @@ var config = {
 
 if (!config.slack.token || !config.slack.lunchChannelId
   || !config.slack.botId || !config.menuLinks.presto || !config.menuLinks.veglife) {
-  console.log('Missing env variables!');
+  console.error('Missing env variables!');
   process.exit(1);
 }
 

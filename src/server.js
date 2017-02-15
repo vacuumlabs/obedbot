@@ -3,7 +3,7 @@ import schedule from 'node-schedule';
 import Promise from 'bluebird';
 import database from 'sqlite';
 
-import {slack} from './resources';
+import {slack, logger} from './resources';
 import {startExpress} from './routes';
 import {loadTodayOrders, restaurants} from './utils';
 import {loadUsers, messageReceived, endOfOrders, makeLastCall} from './slack';
@@ -20,14 +20,14 @@ export function runServer() {
     .then(loadUsers);
 
   const rtm = slack.rtm;
-  console.log('Starting Slack RTM client');
+  logger.log('Starting Slack RTM client');
   rtm.start();
 
   rtm.on(RTM_EVENTS.MESSAGE, messageReceived);
 
   rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
     // the timeout is here to go around a bug where connection is opened, but not properly established
-    console.log('Connected');
+    logger.log('Slack RTM client connected');
     setTimeout(loadTodayOrders, 3000);
   });
 

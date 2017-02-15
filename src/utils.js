@@ -5,7 +5,7 @@ import moment from 'moment';
 import {AllHtmlEntities} from 'html-entities';
 
 import {getTodaysMessages, processMessages} from './slack';
-import {slack} from './resources';
+import {slack, logger} from './resources';
 import config from '../config';
 
 /**
@@ -61,18 +61,18 @@ export function isOrder(order) {
   }
   order = order.toLowerCase().trim();
 
-  console.log('Checking order:', order);
+  logger.devLog('Checking order: ' + order);
 
   for (let regexKey in regexes) {
     if (regexes.hasOwnProperty(regexKey)) {
       if (regexes[regexKey].test(order)) {
-        console.log(`Order type is ${regexKey}`);
+        logger.devLog(`Order type is ${regexKey}`);
         return true;
       }
     }
   }
 
-  console.log('Message is not an order');
+  logger.devLog('Message is not an order');
   return false;
 }
 
@@ -80,7 +80,7 @@ export function isOrder(order) {
  * Loads the orders since the last noon
  */
 export function loadTodayOrders() {
-  console.log('Loading today\'s orders');
+  logger.devLog('Loading today\'s orders');
 
   getTodaysMessages().then(processMessages);
 }
@@ -125,7 +125,8 @@ export function getOrderFromMessage(msg, restaurant) {
 }
 
 export function saveUser(userId) {
-  console.log('Saving user');
+  logger.devLog('Saving user ' + userId);
+
   slack.web.im.open(userId)
     .then(({channel: {id: channelId}}) => {
       if (!config.dev) {
@@ -145,7 +146,7 @@ export function saveUser(userId) {
               {$userId: userId, $channelId: channelId, $username: realname}
             )
             .then(() => {
-              console.log(`User ${realname} has been added to database`);
+              logger.devLog(`User ${realname} has been added to database`);
               if (!config.dev) {
                 slack.web.chat.postMessage(
                   channelId,
@@ -153,10 +154,10 @@ export function saveUser(userId) {
                   '#obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
                 );
               }
-            }).catch((err) => console.log(`User ${realname} is already in the database. ${err}`));
+            }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
         });
     }).catch(
-      () => console.log('Trying to save bot or disabled user')
+      () => logger.error('Trying to save bot or disabled user')
     );
 }
 
@@ -182,9 +183,11 @@ export function parseOrders() {
   };
   let shop = [];
 
+  logger.devLog('Parsing orders for webpage display');
+
   return getTodaysMessages()
-    .then((history) => {
-      for (let message of history.messages) {
+    .then((messages) => {
+      for (let message of messages) {
         if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
           continue;
         }
@@ -192,7 +195,9 @@ export function parseOrders() {
 
         const restaurant = identifyRestaurant(text);
         const order = getOrderFromMessage(text, restaurant);
-        console.log(restaurant, order);
+
+        logger.devLog(`Message ${text} is from ${restaurant}, order ${order}`);
+
         if (restaurant === restaurants.presto) {
           const mainMealNum = parseInt(order.charAt(6), 10) - 1;
           const soup = order.substring(8);
@@ -243,7 +248,7 @@ export function parseOrdersNamed() {
 
   return getTodaysMessages()
     .then((history) => {
-      messages = history.messages;
+      messages = history;
       return database.all('SELECT * FROM users');
     }).then((users) => {
       for (let message of messages) {
@@ -271,7 +276,7 @@ export function parseOrdersNamed() {
           orders.shop.push(order);
         }
       }
-      console.log(orders);
+      logger.devLog(`Orders for named display on webpage: ${orders}`);
       return Promise.resolve(orders);
     });
 }

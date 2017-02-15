@@ -3,6 +3,7 @@ import {Curl} from 'node-libcurl';
 
 import {restaurants, parseOrders, parseOrdersNamed, getTodaysPrestoMenu, getTodaysVeglifeMenu} from './utils';
 import {notifyAllThatOrdered} from './slack';
+import {logger} from './resources';
 import config from '../config';
 
 async function renderOrders(req, res) {
@@ -113,6 +114,6 @@ export function startExpress() {
   });
 
   app.listen(port, () => {
-    console.log('Server listening on port', port);
+    logger.log('Server started on http://localhost:' + port);
   });
 }
