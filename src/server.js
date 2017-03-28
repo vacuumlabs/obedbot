@@ -1,5 +1,6 @@
 import {RTM_EVENTS, CLIENT_EVENTS} from '@slack/client';
 import schedule from 'node-schedule';
+import moment from 'moment-timezone';
 import Promise from 'bluebird';
 import database from 'sqlite';
 
@@ -31,25 +32,26 @@ export function runServer() {
     setTimeout(loadTodayOrders, 3000);
   });
 
-  //TODO make times independent
+  const isDST = moment().tz('Europe/Prague').isDST();
+
   // set up last calls for each restaurant
-  schedule.scheduleJob('30 8 * * 1-5', () => {
+  schedule.scheduleJob(`30 ${isDST ? 7 : 8} * * 1-5`, () => {
     makeLastCall();
   });
 
-  schedule.scheduleJob('30 7 * * 1-5', () => {
+  schedule.scheduleJob(`30 ${isDST ? 6 : 7} * * 1-5`, () => {
     loadUsers();
   });
 
-  schedule.scheduleJob('45 8 * * 1-5', () => {
+  schedule.scheduleJob(`45 ${isDST ? 7 : 8} * * 1-5`, () => {
     endOfOrders(restaurants.veglife);
   });
 
-  schedule.scheduleJob('46 8 * * 1-5', () => {
+  schedule.scheduleJob(`46 ${isDST ? 7 : 8} * * 1-5`, () => {
     endOfOrders(restaurants.presto);
   });
 
-  schedule.scheduleJob('45 9 * * 1-5', () => {
+  schedule.scheduleJob(`45 ${isDST ? 8 : 9} * * 1-5`, () => {
     endOfOrders(restaurants.spaghetti);
   });
 }
