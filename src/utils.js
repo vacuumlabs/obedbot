@@ -172,12 +172,12 @@ export async function userExists(userId) {
 export function parseOrders() {
   let presto = {
     soups: {},
-    meals: [0, 0, 0, 0, 0, 0],
+    meals: Array(7).fill(0),
   };
   let pizza = {};
   let spaghetti = {};
   let veglife = {
-    meals: [0, 0, 0, 0],
+    meals: Array(4).fill(0),
     soups: 0,
     salads: 0,
   };
