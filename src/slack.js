@@ -59,7 +59,7 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
 
   slack.web.chat.postMessage(
     config.slack.lunchChannelId,
-    willTherebeFood
+    willThereBeFood
     ? `Prišli obedy z ${callRestaurant} :slightly_smiling_face:`
     : `Dneska bohužiaľ obedy z ${callRestaurant} neprídu :disappointed:`,
     {as_user: true}
