@@ -252,11 +252,15 @@ export async function makeLastCall() {
 
   const messages = await getTodaysMessages();
   const users = await database.all('SELECT * FROM users');
+  const doNotDisturbUsers = {
+    U0RRABABE: 'Martin Macko',
+    U0KB8F7MZ: 'Milan Darjanin',
+    U0KB15213: 'Andrej Skok',
+  };
 
   for (let user of users) {
     if (!find(messages, ({text, user: userId}) => userId === user.user_id && isOrder(text))) {
-      // if the user is Martin Macko, do not send notification
-      if (user.user_id === 'U0RRABABE') {
+      if (user.user_id in doNotDisturbUsers) {
         continue;
       }
       slack.web.chat.postMessage(
