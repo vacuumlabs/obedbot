@@ -256,6 +256,7 @@ export async function makeLastCall() {
     U0RRABABE: 'Martin Macko',
     U0KB8F7MZ: 'Milan Darjanin',
     U0KB15213: 'Andrej Skok',
+    U0KBBGP47: 'Lucia Maršallová',
   };
 
   for (let user of users) {
