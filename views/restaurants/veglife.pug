@@ -1,25 +1,24 @@
 h3(id='title-veglife', class='title')
   b Veglife
 table(id='table-veglife', class='table')
-  tr
-    th
-    - for (var i = 0; i < 4; ++i) {
-      th= i + 1
-    - }
-  tr
-    td Veglife
-    - for (var i = 0; i < 4; ++i) {
-      if veglife.meals[i] !== 0
+  thead
+    tr
+      - var i = 0;
+      while i++ < 4
+        th= i
+  tbody
+    tr
+      each amount in veglife.meals
         td
-          b= veglife.meals[i]
-      else
-        td
-    - }
+          unless amount === 0
+            b=amount
 
 table(id='table-veglife-soups', class='table')
-  tr
-    th Polievky
-    th Šaláty
-  tr
-    td= veglife.soups
-    td= veglife.salads
+  thead
+    tr
+      th='Polievky'
+      th='Šaláty'
+  tbody
+    tr
+      td=veglife.soups
+      td=veglife.salads

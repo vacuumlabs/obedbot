@@ -1,24 +1,25 @@
 h3(id='title-presto', class='title')
   b Presto
 table(id='table-presto', class='table')
-  tr
-    th
-    - for (var i = 0; i < presto.meals.length; ++i) {
-      th= i + 1
-    - }
-  tr
-    td Presto
-    - for (var i = 0; i < presto.meals.length; ++i) {
+  thead
+    tr
+      - var i = 0;
+      while i < presto.meals.length
+        th= ++i
+  tbody
+    tr
+      each amount in presto.meals
         td
-          b= presto.meals[i] || ''
-    - }
+          unless amount === 0
+            b=amount
 
 table(id='table-presto-soups', class='table')
-  tr
-    th Číslo polievky
-    th Počet
-  - for (var key in presto.soups) {
+  thead
+    tr
+      th Číslo polievky
+      th Počet
+  tbody
+    each amount, soupNumber in presto.soups
       tr
-        td= key
-        td= presto.soups[key]
-  - }
+        td=soupNumber
+        td=amount

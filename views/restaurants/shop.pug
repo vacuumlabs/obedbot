@@ -1,9 +1,8 @@
 h3(id='title-nakup', class='title')
   b Nakup
-table(id='table-nakup', class='table table-bordered')
-  tr
+table(id='table-nakup', class='table')
+  thead
     th Objednávka
-  - for (var order of shop) {
+  each order in shop
     tr
-      td= order
-  - }
+      td=order
