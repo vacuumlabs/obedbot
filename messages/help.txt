@@ -25,3 +25,6 @@ Dúfame, že si v tom každý najde svoje :slightly_smiling_face:
 
 *MENU*
 Ak sa ti nechce hladať menu na strankach tychto restik, stačí ak do konverzácie na slacku napises `/veglife` alebo `/presto` a zobrazí sa ti menu reštiky na daný deň. Neboj, nikoho tým spamovať nebudeš. Menu je viditelné iba pre teba :slightly_smiling_face:
+
+*NOTIFIKÁCIE*
+Ak si chceš zapnúť notifikácie, aby si si nezabudol/dla objednať obed, môže ich zapnúť tak, že napíšeš priamo obedbot-ovi do správy `mute` alebo `unmute`

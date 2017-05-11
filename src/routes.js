@@ -1,8 +1,9 @@
 import express from 'express';
+import database from 'sqlite';
 import {Curl} from 'node-libcurl';
 
 import {restaurants, parseOrders, parseOrdersNamed, getTodaysPrestoMenu, getTodaysVeglifeMenu} from './utils';
-import {notifyAllThatOrdered} from './slack';
+import {notifyAllThatOrdered, changeMute} from './slack';
 import {logger} from './resources';
 import config from '../config';
 
@@ -21,12 +22,21 @@ async function renderOrders(req, res) {
 }
 
 async function renderOrdersNamed(req, res) {
-  const orders = await parseOrdersNamed();
+  const allOrders = await parseOrdersNamed();
 
   res.render('namedOrders', {
     title: 'Obedbot page',
     tableName: 'Dnešné objednávky',
-    orders: orders,
+    allOrders,
+  });
+}
+
+async function renderNotifications(req, res) {
+  const users = await database.all('SELECT * FROM users');
+
+  res.render('notifications', {
+    title: 'Stav notifikácií',
+    users,
   });
 }
 
@@ -39,6 +49,8 @@ export function startExpress() {
 
   app.get('/', renderOrders);
   app.get('/named', renderOrdersNamed);
+
+  app.get('/notifications', renderNotifications);
 
   // notification messages that food has arrived
   app.get('/veglife', (req, res) => {
@@ -72,6 +84,16 @@ export function startExpress() {
   app.get('/nospaghetti', (req, res) => {
     notifyAllThatOrdered(restaurants.spaghetti, false);
     res.redirect('/');
+  });
+
+  app.get('/mute', (req, res) => {
+    changeMute(req.query.channel, true)
+      .then(() => res.redirect('/notifications'));
+  });
+
+  app.get('/unmute', (req, res) => {
+    changeMute(req.query.channel, false)
+      .then(() => res.redirect('/notifications'));
   });
 
   // menu responses for slash commands

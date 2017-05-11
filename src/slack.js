@@ -21,7 +21,7 @@ import config from '../config';
 export function loadUsers() {
   slack.web.channels.info(config.slack.lunchChannelId)
     .then(async ({channel: {members}}) => {
-      for (let member of members) {
+      for (const member of members) {
         if (!(await userExists(member))) {
           saveUser(member);
         }
@@ -108,7 +108,7 @@ function unknownOrder(ts) {
   slack.web.chat.postMessage(
     config.slack.lunchChannelId,
     config.messages.unknownOrder,
-    {as_user: true}
+    {as_user: true, thread_ts: ts}
   );
 }
 
@@ -122,7 +122,6 @@ function removeConfirmation(ts) {
 /**
  * User has tried to order in private channel
  * send him message that this feature is deprecated
- *
  * @param {string} userChannel - IM channel of the user
  */
 function privateIsDeprecated(userChannel) {
@@ -135,10 +134,32 @@ function privateIsDeprecated(userChannel) {
 }
 
 /**
+ * Changes mute status for a single user.
+ * @param {string} userChannel - DM channel of the user
+ * @param {boolean} mute - new mute status for the user
+ */
+export async function changeMute(userChannel, mute) {
+  return database.run(
+    'UPDATE users SET notifications=$notifications WHERE channel_id=$userChannelId',
+    {$notifications: mute ? 0 : 1, $userChannelId: userChannel}
+  ).then(() => {
+    slack.web.chat.postMessage(
+      userChannel,
+      `Notifikácie ${mute ? 'vypnuté' : 'zapnuté'}`,
+      {as_user: true}
+    );
+  }).catch(() => {
+    slack.web.chat.postMessage(
+      userChannel,
+      'Stala sa chyba, skús operáciu vykonať znovu, poprípade kontaktuj administrátora',
+      {as_user: true}
+    );
+  });
+}
+
+/**
  * Function called by slack api after receiving message event
- *
  * @param {Object} res - response slack api received
- *
  */
 
 export async function messageReceived(msg) {
@@ -169,6 +190,10 @@ export async function messageReceived(msg) {
       // if the user sent order into private channel, notify him this feature is deprecated
       if (isOrder(messageText)) {
         privateIsDeprecated(channel);
+      } else if (messageText.includes('unmute')) {
+        changeMute(channel, false);
+      } else if (messageText.includes('mute')) {
+        changeMute(channel, true);
       }
     }
   } else if (msg.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
@@ -251,18 +276,10 @@ export async function makeLastCall() {
   logger.devLog('Making last call');
 
   const messages = await getTodaysMessages();
-  const users = await database.all('SELECT * FROM users');
-  const doNotDisturbUsers = {
-    U0RRABABE: 'Martin Macko',
-    U0KB8F7MZ: 'Milan Darjanin',
-    U0KB15213: 'Andrej Skok',
-  };
+  const users = await database.all('SELECT * FROM users WHERE notifications=1');
 
   for (let user of users) {
     if (!find(messages, ({text, user: userId}) => userId === user.user_id && isOrder(text))) {
-      if (user.user_id in doNotDisturbUsers) {
-        continue;
-      }
       slack.web.chat.postMessage(
         user.channel_id,
         'Nezabudni si dnes objednať obed :slightly_smiling_face:',

@@ -9,9 +9,13 @@ table {
 }
 
 table, td {
-  background-color: white;
   text-align: center;
   border-radius: 10px;
+  border-top: none;
+}
+
+td {
+  background-color: white;
   border-top: none;
 }
 
@@ -104,4 +108,10 @@ h1 .title {
   .named-title {
     font-size: 4em;
   }
+}
+
+.mute {
+  font-size: 1.5em;
+  padding-left: 20px;
+  padding-right: 20px;
 }

@@ -1,11 +1,12 @@
 h3(id='title-pizza', class='title')
   b Pizza
 table(id='table-pizza', class='table')
-  tr
-    th Číslo pizze
-    th Počet
-  - for (var key in pizza) {
+  thead
+    tr
+      th Číslo pizze
+      th Počet
+  tbody
+    each amount, pizzaType in pizza
       tr
-        td= key
-        td= pizza[key]
-  - }
+        td=pizzaType
+        td=amount
