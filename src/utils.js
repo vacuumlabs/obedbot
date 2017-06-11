@@ -96,7 +96,7 @@ export const restaurants = {
   presto: 'presto',
   pizza: 'pizza',
   veglife: 'veglife',
-  spaghetti: 'spaghetti',
+  mizza: 'mizza',
   shop: 'shop',
 };
 
@@ -106,7 +106,7 @@ export function identifyRestaurant(order) {
     {regex: regexes.presto, name: restaurants.presto},
     {regex: regexes.pizza, name: restaurants.pizza},
     {regex: regexes.veglife, name: restaurants.veglife},
-    {regex: regexes.spaghetti, name: restaurants.spaghetti},
+    {regex: regexes.mizza, name: restaurants.mizza},
     {regex: regexes.shop, name: restaurants.shop},
   ];
   let ans;
@@ -177,7 +177,7 @@ export function parseOrders() {
     meals: Array(7).fill(0),
   };
   let pizza = {};
-  let spaghetti = {};
+  let mizza = {a: 0, b: 0, c: 0};
   let veglife = {
     meals: Array(4).fill(0),
     soups: 0,
@@ -227,14 +227,16 @@ export function parseOrders() {
           } else {
             veglife.soups++;
           }
-        } else if (restaurant === restaurants.spaghetti) {
-          spaghetti[order] = get(spaghetti, order, 0) + 1;
+        } else if (restaurant === restaurants.mizza) {
+          // /mizza[ABC]/
+          const meal = order.slice(-1);
+          mizza[meal] = get(mizza, meal, 0) + 1;
         } else if (restaurant === restaurants.shop) {
           shop.push(order.substring(6));
         }
       }
 
-      return Promise.resolve({presto, pizza, spaghetti, veglife, shop});
+      return Promise.resolve({presto, pizza, mizza, veglife, shop});
     });
 }
 
@@ -243,7 +245,7 @@ export function parseOrdersNamed() {
     presto: [],
     pizza: [],
     veglife: [],
-    spaghetti: [],
+    mizza: [],
     shop: [],
   };
   let messages;
@@ -271,8 +273,9 @@ export function parseOrdersNamed() {
           orders.pizza.push(order);
         } else if (restaurant === restaurants.veglife) {
           orders.veglife.push(order);
-        } else if (restaurant === restaurants.spaghetti) {
-          orders.spaghetti.push(order);
+        } else if (restaurant === restaurants.mizza) {
+          order.order = order.order.slice(-1).toUpperCase();
+          orders.mizza.push(order);
         } else if (restaurant === restaurants.shop) {
           order.order = order.order.substring(6);
           orders.shop.push(order);
