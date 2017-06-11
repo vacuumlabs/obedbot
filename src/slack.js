@@ -4,17 +4,8 @@ import {isNil, find} from 'lodash';
 import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
 
 import {slack, logger} from './resources';
-import {
-  userExists,
-  saveUser,
-  isObedbotMentioned,
-  stripMention,
-  identifyRestaurant,
-  restaurants,
-  prettyPrint,
-  isChannelPublic,
-  alreadyReacted,
-  isOrder,
+import {userExists, saveUser, isObedbotMentioned, stripMention, identifyRestaurant,
+  restaurants, prettyPrint, isChannelPublic, alreadyReacted, isOrder,
 } from './utils';
 import config from '../config';
 
@@ -56,14 +47,24 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   logger.devLog('Notifying about food arrival', callRestaurant);
   const messages = await getTodaysMessages();
   const users = await database.all('SELECT * FROM users');
+  const restaurantNames = {
+    [restaurants.presto]: 'Pizza Presto',
+    [restaurants.pizza]: 'Pizza Presto',
+    [restaurants.mizza]: 'Pizza Mizza',
+    [restaurants.veglife]: 'Veglife',
+    [restaurants.shop]: 'obchodu',
+  };
 
-  slack.web.chat.postMessage(
-    config.slack.lunchChannelId,
-    willThereBeFood
-    ? `Prišli obedy z ${callRestaurant} :slightly_smiling_face:`
-    : `Dneska bohužiaľ obedy z ${callRestaurant} neprídu :disappointed:`,
-    {as_user: true}
-  );
+  // FIXME merge presto and pizza restaurants into one
+  if (callRestaurant !== restaurants.pizza) {
+    slack.web.chat.postMessage(
+      config.slack.lunchChannelId,
+      willThereBeFood
+      ? `Prišli obedy z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
+      : `Dneska bohužiaľ obedy z ${restaurantNames[callRestaurant]} neprídu :disappointed:`,
+      {as_user: true}
+    );
+  }
 
   for (let message of messages) {
     if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
@@ -72,12 +73,13 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
     const text = stripMention(message.text).toLowerCase().trim();
     const restaurant = identifyRestaurant(text);
 
+    // FIXME merge presto and pizza restaurants into one
     if (restaurant === callRestaurant ||
       (callRestaurant === restaurants.presto && restaurant === restaurants.pizza)) {
       const userChannelId = find(users, ({user_id}) => user_id === message.user).channel_id;
       const notification = willThereBeFood
-        ? `Prišiel ti obed ${text} z ${callRestaurant} :slightly_smiling_face:`
-        : `Dneska bohužiaľ obed z ${callRestaurant} nepríde :disappointed:`;
+        ? `Prišiel ti obed ${text} z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
+        : `Dneska bohužiaľ obed z ${restaurantNames[callRestaurant]} nepríde :disappointed:`;
 
       if (userChannelId) {
         slack.web.chat.postMessage(userChannelId, notification, {as_user: true});

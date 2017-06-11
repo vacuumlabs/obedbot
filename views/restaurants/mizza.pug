@@ -1,0 +1,14 @@
+h3(id='title-mizza', class='title')
+  b Pizza Mizza
+table(id='table-mizza', class='table')
+  thead
+    tr
+      each food in ['A', 'B', 'C']
+        th=food
+  tbody
+    tr
+      each food in ['a', 'b', 'c']
+        if mizza[food] > 0
+          td=mizza[food]
+        else
+          td

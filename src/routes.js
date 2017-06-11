@@ -8,16 +8,12 @@ import {logger} from './resources';
 import config from '../config';
 
 async function renderOrders(req, res) {
-  const {presto, pizza, veglife, spaghetti, shop} = await parseOrders();
+  const {presto, pizza, veglife, mizza, shop} = await parseOrders();
 
   res.render('index', {
     title: 'Obedbot page',
     tableName: 'Dnešné objednávky',
-    presto: presto,
-    pizza: pizza,
-    veglife: veglife,
-    spaghetti: spaghetti,
-    shop: shop,
+    presto, pizza, veglife, mizza, shop,
   });
 }
 
@@ -76,13 +72,13 @@ export function startExpress() {
     res.redirect('/');
   });
 
-  app.get('/spaghetti', (req, res) => {
-    notifyAllThatOrdered(restaurants.spaghetti, true);
+  app.get('/mizza', (req, res) => {
+    notifyAllThatOrdered(restaurants.mizza, true);
     res.redirect('/');
   });
 
-  app.get('/nospaghetti', (req, res) => {
-    notifyAllThatOrdered(restaurants.spaghetti, false);
+  app.get('/nomizza', (req, res) => {
+    notifyAllThatOrdered(restaurants.mizza, false);
     res.redirect('/');
   });
 

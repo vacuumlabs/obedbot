@@ -43,15 +43,15 @@ export function runServer() {
     loadUsers();
   });
 
-  schedule.scheduleJob(`45 ${isDST ? 7 : 8} * * 1-5`, () => {
+  schedule.scheduleJob(`40 ${isDST ? 7 : 8} * * 1-5`, () => {
     endOfOrders(restaurants.veglife);
   });
 
-  schedule.scheduleJob(`46 ${isDST ? 7 : 8} * * 1-5`, () => {
-    endOfOrders(restaurants.presto);
+  schedule.scheduleJob(`41 ${isDST ? 7 : 8} * * 1-5`, () => {
+    endOfOrders(restaurants.mizza);
   });
 
-  schedule.scheduleJob(`45 ${isDST ? 8 : 9} * * 1-5`, () => {
-    endOfOrders(restaurants.spaghetti);
+  schedule.scheduleJob(`00 ${isDST ? 8 : 9} * * 1-5`, () => {
+    endOfOrders(restaurants.presto);
   });
 }
