@@ -177,7 +177,7 @@ export function parseOrders() {
     meals: Array(7).fill(0),
   };
   let pizza = {};
-  let mizza = {a: 0, b: 0, c: 0};
+  let mizza = {a: 0, b: 0, c: 0, soups: 0};
   let veglife = {
     meals: Array(4).fill(0),
     soups: 0,
@@ -228,8 +228,14 @@ export function parseOrders() {
             veglife.soups++;
           }
         } else if (restaurant === restaurants.mizza) {
-          // /mizza[ABC]/
-          const meal = order.slice(-1);
+          // /mizza[abc][p]?/
+          let meal;
+          if (order.slice(-1) === 'p') {
+            mizza.soups++;
+            meal = order.charAt(order.length - 2);
+          } else {
+            meal = order.slice(-1);
+          }
           mizza[meal] = get(mizza, meal, 0) + 1;
         } else if (restaurant === restaurants.shop) {
           shop.push(order.substring(6));
@@ -274,7 +280,12 @@ export function parseOrdersNamed() {
         } else if (restaurant === restaurants.veglife) {
           orders.veglife.push(order);
         } else if (restaurant === restaurants.mizza) {
-          order.order = order.order.slice(-1).toUpperCase();
+          if (order.order.splice(-1) === 'p') {
+            order.order = order.order.charAt(order.order.length - 2);
+            order.order += 'p';
+          } else {
+            order.order = order.order.splice(-1).toUpperCase();
+          }
           orders.mizza.push(order);
         } else if (restaurant === restaurants.shop) {
           order.order = order.order.substring(6);
