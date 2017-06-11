@@ -280,11 +280,10 @@ export function parseOrdersNamed() {
         } else if (restaurant === restaurants.veglife) {
           orders.veglife.push(order);
         } else if (restaurant === restaurants.mizza) {
-          if (order.order.splice(-1) === 'p') {
-            order.order = order.order.charAt(order.order.length - 2);
-            order.order += 'p';
+          if (order.order.slice(-1) === 'p') {
+            order.order = `${order.order.charAt(order.order.length - 2).toUpperCase()}p`;
           } else {
-            order.order = order.order.splice(-1).toUpperCase();
+            order.order = order.order.slice(-1).toUpperCase();
           }
           orders.mizza.push(order);
         } else if (restaurant === restaurants.shop) {
