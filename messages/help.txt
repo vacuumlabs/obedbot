@@ -5,7 +5,7 @@ stačí nahlásiť do ~11:00, že budete papať a dostanete šalátik + mäsko, 
 
 *PIZZA PRESTO*
 `http://www.pizza-presto.sk/default.aspx?p=catalogpage&group=1`
-Tam si viete objednať do 9:45 v daný deň ľubovoľný obed z denného menu alebo pizzu.
+Tam si viete objednať do 10:00 v daný deň ľubovoľný obed z denného menu alebo pizzu.
 MENU: Napíšete do Slacku presto+"cislo"+"p"+(1/2), kde 1 alebo 2 na konci je čislo polievky.
 *Príklad:* `@obedbot: presto3p1` - chcem menu 3 s prvou polievkou v poradí na daný deň
 PIZZA: Napíšete do Slacku pizza+"cislo"+"v" (veľkosť) +(33/40/50)
@@ -18,7 +18,7 @@ Viete si objednať do 9:40 ľubovoľný obed z menu na stránke, teda buď A, B 
 
 *VEGLIFE*
 `http://www.veglife.sk/index.php/obedove-menu`
-Do 9:45 je možné si nahlásiť veg+číslo+pripadná polievka alebo šalát
+Do 9:40 je možné si nahlásiť veg+číslo+pripadná polievka alebo šalát
 Príklad: `@obedbot: veg4p` značí, že si dáte štvorku s polievkou z VegLife.
 Dúfame, že si v tom každý najde svoje :slightly_smiling_face:
 
