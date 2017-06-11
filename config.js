@@ -17,7 +17,7 @@ var config = {
     presto: /presto[1-7](p[1-2])?/,
     pizza: /pizza[0-9]{1,2}(v((33)|(40)|(50)))?/,
     veglife: /veg[1-4]\+?[ps]?/,
-    mizza: /mizza[abc]/,
+    mizza: /mizza[abc][p]?/,
     shop: /^((nakup)|(nákup)|(nakúp)).*/,
   },
   orderReaction: 'taco',

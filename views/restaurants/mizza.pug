@@ -3,11 +3,11 @@ h3(id='title-mizza', class='title')
 table(id='table-mizza', class='table')
   thead
     tr
-      each food in ['A', 'B', 'C']
+      each food in ['A', 'B', 'C', 'Polievky']
         th=food
   tbody
     tr
-      each food in ['a', 'b', 'c']
+      each food in ['a', 'b', 'c', 'soups']
         if mizza[food] > 0
           td=mizza[food]
         else
