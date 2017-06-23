@@ -296,10 +296,7 @@ export function parseOrdersNamed() {
     });
 }
 
-export function getTodaysPrestoMenu(menu) {
-  const entities = new AllHtmlEntities();
-  // CENA is there as a delimiter because the menu continues on with different things
-  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'CENA'];
+function getDayForMenu() {
   const now = moment();
   let today = now.day();
 
@@ -310,6 +307,15 @@ export function getTodaysPrestoMenu(menu) {
     today++;
   }
 
+  return today;
+}
+
+export function getTodaysPrestoMenu(menu) {
+  const entities = new AllHtmlEntities();
+  // CENA is there as a delimiter because the menu continues on with different things
+  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'CENA'];
+  const today = getDayForMenu();
+
   // delete all HTML tags
   menu = menu.replace(/<[^>]*>/g, '');
   menu = entities.decode(menu);
@@ -318,6 +324,7 @@ export function getTodaysPrestoMenu(menu) {
     .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
     .split('\n')
     .map((row) => row.trim())
+    // delete empty lines
     .filter((row) => row.length)
     .join('\n')
     // replace all multiple whitespaces with single space
@@ -328,15 +335,7 @@ export function getTodaysPrestoMenu(menu) {
 
 export function getTodaysVeglifeMenu(menu) {
   const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOTA'];
-  const now = moment();
-  let today = now.day();
-
-  // if it is Saturday or Sunday, set day to Monday
-  if (today === 0 || today === 6 || (today === 5 && now.hours() > 13)) {
-    today = 1;
-  } else if (now.hours() > 13) {
-    today++;
-  }
+  const today = getDayForMenu();
 
   return menu
     .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
@@ -344,6 +343,35 @@ export function getTodaysVeglifeMenu(menu) {
     .replace(/<[^>]*>/g, '')
     .split('\n')
     .map((row) => row.trim())
+    // delete empty lines
     .filter((row) => row.length)
     .join('\n');
+}
+
+/**
+ * Creates a readable menu for Pizza Mizza
+ *
+ * @param {string} menu - unparsed result of curl from the menu page
+ * @returns {string} - menu in a more readable format
+ */
+export function getTodaysMizzaMenu(menu) {
+  const entities = new AllHtmlEntities();
+  const slovakDays = ['', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Vaša'];
+  const today = getDayForMenu();
+
+  // delete all HTML tags
+  menu = menu.replace(/<[^>]*>/g, '');
+  menu = entities.decode(menu);
+
+  return menu
+    .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
+    // delete Add to Cart text
+    .replace(/Pridaj/g, '')
+    .split('\n')
+    .map((row) => row.trim())
+    // delete empty lines
+    .filter((row) => row.length)
+    .join('\n')
+    // replace all multiple whitespaces with single space
+    .replace(/\s\s+/g, ' ');
 }
