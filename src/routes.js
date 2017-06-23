@@ -2,7 +2,8 @@ import express from 'express';
 import database from 'sqlite';
 import {Curl} from 'node-libcurl';
 
-import {restaurants, parseOrders, parseOrdersNamed, getTodaysPrestoMenu, getTodaysVeglifeMenu} from './utils';
+import {restaurants, parseOrders, parseOrdersNamed,
+  getTodaysPrestoMenu, getTodaysVeglifeMenu, getTodaysMizzaMenu} from './utils';
 import {notifyAllThatOrdered, changeMute} from './slack';
 import {logger} from './resources';
 import config from '../config';
@@ -118,6 +119,23 @@ export function startExpress() {
       res
         .status(200)
         .send(`\`\`\`${getTodaysVeglifeMenu(body)}\`\`\``);
+      curl.close();
+    });
+    curl.on('error', () => {
+      res.status(500).send();
+      curl.close();
+    });
+    curl.perform();
+  });
+
+  app.get('/menumizza', (req, res) => {
+    const curl = new Curl();
+    curl.setOpt('URL', config.menuLinks.mizza);
+
+    curl.on('end', (status, body, headers) => {
+      res
+        .status(200)
+        .send(`\`\`\`${getTodaysMizzaMenu(body)}\`\`\``);
       curl.close();
     });
     curl.on('error', () => {

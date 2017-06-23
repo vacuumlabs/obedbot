@@ -12,6 +12,7 @@ var config = {
   menuLinks: {
     presto: process.env.OBEDBOT_PRESTO || '',
     veglife: process.env.OBEDBOT_VEGLIFE || '',
+    mizza: process.env.OBEDBOT_MIZZA || '',
   },
   orderRegex: {
     presto: /presto[1-7](p[1-2])?/,
