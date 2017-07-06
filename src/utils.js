@@ -132,8 +132,8 @@ export function saveUser(userId) {
       if (!config.dev) {
         slack.web.chat.postMessage(
           channelId,
-          'Ahoj, volám sa obedbot, našiel som ťa v channely #obedy ' +
-          'a nemal som ťa ešte v mojom zápisníčku, tak si ťa poznamenávam, ' +
+          'Ahoj, volám sa obedbot a všimol som si ťa na kanáli #obedy ' +
+          'ale nemal som ťa ešte v mojom zápisníčku, tak si ťa poznamenávam, ' +
           'budem ti odteraz posielať last cally, pokiaľ v daný deň nemáš nič objednané :)',
           {as_user: true}
         );
@@ -151,7 +151,7 @@ export function saveUser(userId) {
               if (!config.dev) {
                 slack.web.chat.postMessage(
                   channelId,
-                  'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať v channely ' +
+                  'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
                   '#obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
                   {as_user: true}
                 );
