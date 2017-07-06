@@ -1,5 +1,5 @@
 *ŠALÁT + MÄSO*
-stačí nahlásiť do ~11:00, že budete papať a dostanete šalátik + mäsko, aké si vypýtate z Billy. Bežne býva kuracie stehno, klobáska, no nájde sa občas aj sekaná, prso, bôčik, ...
+stačí nahlásiť do ~11:00, že budete papať a dostanete šalátik + mäsko, aké si vypýtate z Billy. Bežne býva kuracie stehno, klobáska, no nájde sa občas aj sekaná, prsia, bôčik, ...
 
 *Príklad:* `@obedbot: nakup stehno+salat`
 
@@ -23,7 +23,7 @@ Príklad: `@obedbot: veg4p` značí, že si dáte štvorku s polievkou z VegLife
 Dúfame, že si v tom každý najde svoje :slightly_smiling_face:
 
 *MENU*
-Ak sa ti nechce hladať menu na strankach tychto restik, stačí ak do konverzácie na slacku napises `/veglife` alebo `/presto` a zobrazí sa ti menu reštiky na daný deň. Neboj, nikoho tým spamovať nebudeš. Menu je viditelné iba pre teba :slightly_smiling_face:
+Ak sa ti nechce hľadať menu na stránkach týchto reštaurácií, stačí ak do konverzácie na Slacku napíšeš `/veglife` alebo `/presto` a zobrazí sa ti menu danej reštaurácie na daný deň. Neboj, nikoho tým spamovať nebudeš. Menu je viditelné iba pre teba :slightly_smiling_face:
 
 *NOTIFIKÁCIE*
 Ak si chceš zapnúť notifikácie, aby si si nezabudol/dla objednať obed, môže ich zapnúť tak, že napíšeš priamo obedbot-ovi do správy `mute` alebo `unmute`
