@@ -17,7 +17,7 @@ Viete si objednať do 9:40 ľubovoľný obed z menu na stránke, teda buď A, B 
 *Príklad*: `@obedbot: mizzaA`
 
 *VEGLIFE*
-`http://www.veglife.sk/index.php/obedove-menu`
+`http://www.veglife.sk/sk/menu-2/`
 Do 9:40 je možné si nahlásiť veg+číslo+pripadná polievka alebo šalát
 Príklad: `@obedbot: veg4p` značí, že si dáte štvorku s polievkou z VegLife.
 Dúfame, že si v tom každý najde svoje :slightly_smiling_face:
