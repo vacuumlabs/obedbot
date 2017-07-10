@@ -8,7 +8,7 @@ stačí nahlásiť do ~11:00, že budete papať a dostanete šalátik + mäsko, 
 Tam si viete objednať do 10:00 v daný deň ľubovoľný obed z denného menu alebo pizzu.
 MENU: Napíšete do Slacku presto+"cislo"+"p"+(1/2), kde 1 alebo 2 na konci je čislo polievky.
 *Príklad:* `@obedbot: presto3p1` - chcem menu 3 s prvou polievkou v poradí na daný deň
-PIZZA: Napíšete do Slacku pizza+"cislo"+"v" (veľkosť) +(33/40/50)
+PIZZA: Napíšete do Slacku pizza+"cislo"+"v" (veľkosť) +(33/40/50).
 *Príklad:* `@obedbot: pizza3v33` - chcem pizzu č. 3 veľkosti 33 cm
 
 *PIZZA MIZZA*
@@ -26,4 +26,4 @@ Dúfame, že si v tom každý najde svoje :slightly_smiling_face:
 Ak sa ti nechce hľadať menu na stránkach týchto reštaurácií, stačí ak do konverzácie na Slacku napíšeš `/presto`, `/mizza` alebo `/veglife` a zobrazí sa ti menu danej reštaurácie na daný deň. Neboj, nikoho tým spamovať nebudeš. Menu je viditelné iba pre teba :slightly_smiling_face:
 
 *NOTIFIKÁCIE*
-Ak si chceš zapnúť notifikácie, aby si si nezabudol/dla objednať obed, môže ich zapnúť tak, že napíšeš priamo obedbot-ovi do správy `mute` alebo `unmute`
+Ak si chceš zapnúť notifikácie, aby si si nezabudol/dla objednať obed, môžeš ich zapnúť tak, že napíšeš priamo obedbot-ovi do správy `mute` alebo `unmute`
