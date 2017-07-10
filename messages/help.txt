@@ -1,7 +1,10 @@
-*ŠALÁT + MÄSO*
-stačí nahlásiť do ~11:00, že budete papať a dostanete šalátik + mäsko, aké si vypýtate z Billy. Bežne býva kuracie stehno, klobáska, no nájde sa občas aj sekaná, prsia, bôčik, ...
+*STÁLA PONUKA*
+Každý deň sa v kuchyni pripravujú pečené kuracie stehná (asi 3kg) a dusená zelenina.
+Je to k dispozícii bez objednávania pre každého, až kým sa to nezje.
+V kuchyni sa tiež nachádzajú rôzne druhy zeleniny, ovocia, orieškov a iné pochutiny, ktorými sa môžete ponúknuť.
+Ak by ste chceli, aby sa do kuchyne nakúpilo ešte niečo ďalšie, môžete to nahlásiť takto:
 
-*Príklad:* `@obedbot: nakup stehno+salat`
+*Príklad:* `@obedbot: nakup makadamové orechy`
 
 *PIZZA PRESTO*
 `http://www.pizza-presto.sk/default.aspx?p=catalogpage&group=1`
