@@ -23,7 +23,7 @@ Príklad: `@obedbot: veg4p` značí, že si dáte štvorku s polievkou z VegLife
 Dúfame, že si v tom každý najde svoje :slightly_smiling_face:
 
 *MENU*
-Ak sa ti nechce hľadať menu na stránkach týchto reštaurácií, stačí ak do konverzácie na Slacku napíšeš `/presto`, `/mizza` alebo `/veglife` a zobrazí sa ti menu danej reštaurácie na daný deň. Neboj, nikoho tým spamovať nebudeš. Menu je viditelné iba pre teba :slightly_smiling_face:
+Ak sa vám nechce hľadať menu na stránkach týchto reštaurácií, stačí ak do konverzácie na Slacku napíšete `/presto`, `/mizza` alebo `/veglife` a zobrazí sa vám menu danej reštaurácie na daný deň. Nikoho tým spamovať nebudete, pretože odpoveď je viditelná iba pre vás :slightly_smiling_face:.
 
 *NOTIFIKÁCIE*
-Ak si chceš zapnúť notifikácie, aby si si nezabudol/dla objednať obed, môžeš ich zapnúť tak, že napíšeš priamo obedbot-ovi do správy `mute` alebo `unmute`
+Ak si chcete zapnúť notifikácie, aby ste si nezabudli objednať obed, môžete to urobiť tak, že napíšete priamo obedbot-ovi do správy `mute` alebo `unmute`.
