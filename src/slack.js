@@ -5,7 +5,7 @@ import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
 
 import {slack, logger} from './resources';
 import {userExists, saveUser, isObedbotMentioned, stripMention, identifyRestaurant,
-  restaurants, prettyPrint, isChannelPublic, alreadyReacted, isOrder,
+  restaurants, prettyPrint, isChannelPublic, alreadyReacted, isOrder, getAllMenus,
 } from './utils';
 import config from '../config';
 
@@ -279,14 +279,11 @@ export async function makeLastCall() {
 
   const messages = await getTodaysMessages();
   const users = await database.all('SELECT * FROM users WHERE notifications=1');
+  const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${await getAllMenus()}`;
 
   for (let user of users) {
     if (!find(messages, ({text, user: userId}) => userId === user.user_id && isOrder(text))) {
-      slack.web.chat.postMessage(
-        user.channel_id,
-        'Nezabudni si dnes objednať obed :slightly_smiling_face:',
-        {as_user: true}
-      );
+      slack.web.chat.postMessage(user.channel_id, message, {as_user: true});
     }
   }
 }

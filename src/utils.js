@@ -3,6 +3,7 @@ import Promise from 'bluebird';
 import {find, get} from 'lodash';
 import moment from 'moment';
 import {AllHtmlEntities} from 'html-entities';
+import request from 'request-promise';
 
 import {getTodaysMessages, processMessages} from './slack';
 import {slack, logger} from './resources';
@@ -310,7 +311,26 @@ function getDayForMenu() {
   return today;
 }
 
-export function getTodaysPrestoMenu(menu) {
+export async function getMenu(link, parseMenu, allergens) {
+  const block = '```';
+  try {
+    const body = await request(link);
+    return `${block}${parseMenu(body, allergens)}${block}`;
+  } catch (e) {
+    logger.error(e);
+    return `${block}Chyba počas načítavania menu :disappointed:${block}`;
+  }
+}
+
+export async function getAllMenus(allergens) {
+  const presto = await getMenu(config.menuLinks.presto, parseTodaysPrestoMenu);
+  const veglife = await getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu);
+  const mizza = await getMenu(config.menuLinks.mizza, parseTodaysMizzaMenu, allergens);
+
+  return `*Presto* ${presto} *Veglife* ${veglife} *Pizza Mizza* ${mizza}`;
+}
+
+export function parseTodaysPrestoMenu(menu) {
   const entities = new AllHtmlEntities();
   // CENA is there as a delimiter because the menu continues on with different things
   const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'CENA'];
@@ -333,11 +353,10 @@ export function getTodaysPrestoMenu(menu) {
   return menu;
 }
 
-export function getTodaysVeglifeMenu(menu) {
+export function parseTodaysVeglifeMenu(menu) {
   const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOTA'];
   const today = getDayForMenu();
-
-  return menu
+  menu = menu
     .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
     // delete all HTML tags
     .replace(/<[^>]*>/g, '')
@@ -345,7 +364,12 @@ export function getTodaysVeglifeMenu(menu) {
     .map((row) => row.trim())
     // delete empty lines
     .filter((row) => row.length)
-    .join('\n');
+    .join('\n')
+    // replace all multiple whitespaces with single space
+    .replace(/\s\s+/g, ' ');
+
+  // delete unnecessary part
+  return menu.substring(0, menu.indexOf('+ Pestrá'));
 }
 
 /**
@@ -354,7 +378,7 @@ export function getTodaysVeglifeMenu(menu) {
  * @param {string} menu - unparsed result of curl from the menu page
  * @returns {string} - menu in a more readable format
  */
-export function getTodaysMizzaMenu(menu) {
+export function parseTodaysMizzaMenu(menu, allergens) {
   const entities = new AllHtmlEntities();
   const slovakDays = ['', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Vaša'];
   const today = getDayForMenu();
@@ -362,8 +386,7 @@ export function getTodaysMizzaMenu(menu) {
   // delete all HTML tags
   menu = menu.replace(/<[^>]*>/g, '');
   menu = entities.decode(menu);
-
-  return menu
+  menu = menu
     .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
     // delete Add to Cart text
     .replace(/Pridaj/g, '')
@@ -371,6 +394,25 @@ export function getTodaysMizzaMenu(menu) {
     .map((row) => row.trim())
     // delete empty lines
     .filter((row) => row.length)
+    // delete rows with prices
+    .filter((row) => !row.includes('€'))
+    // delete rows with allergens if they are not required
+    .filter((row) => allergens || !row.includes('al.:'));
+
+  if (!allergens) {
+    for (let i = 0; i < menu.length; ++i) {
+      if (menu[i].length === 1) {
+        menu[i] = `${menu[i]}. ${menu[i + 1]}`;
+        menu.splice(i + 1, 1);
+      }
+    }
+  }
+
+  // put date on the first line
+  menu[0] = `${menu[0]} ${menu[1]}`;
+  menu.splice(1, 1);
+
+  return menu
     .join('\n')
     // replace all multiple whitespaces with single space
     .replace(/\s\s+/g, ' ');

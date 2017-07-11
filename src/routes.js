@@ -1,9 +1,8 @@
 import express from 'express';
 import database from 'sqlite';
-import {Curl} from 'node-libcurl';
 
-import {restaurants, parseOrders, parseOrdersNamed,
-  getTodaysPrestoMenu, getTodaysVeglifeMenu, getTodaysMizzaMenu} from './utils';
+import {restaurants, parseOrders, parseOrdersNamed, getMenu, getAllMenus,
+  parseTodaysPrestoMenu, parseTodaysVeglifeMenu, parseTodaysMizzaMenu} from './utils';
 import {notifyAllThatOrdered, changeMute} from './slack';
 import {logger} from './resources';
 import config from '../config';
@@ -94,55 +93,25 @@ export function startExpress() {
   });
 
   // menu responses for slash commands
-  app.get('/menupresto', (req, res) => {
-    const curl = new Curl();
-    curl.setOpt('URL', config.menuLinks.presto);
-
-    curl.on('end', (status, body, headers) => {
-      res
-        .status(200)
-        .send(`\`\`\`${getTodaysPrestoMenu(body)}\`\`\``);
-      curl.close();
-    });
-    curl.on('error', () => {
-      res.status(500).send();
-      curl.close();
-    });
-    curl.perform();
+  app.get('/menupresto', async (req, res) => {
+    const menu = await getMenu(config.menuLinks.presto, parseTodaysPrestoMenu);
+    res.status(200).send(menu);
   });
 
-  app.get('/menuveglife', (req, res) => {
-    const curl = new Curl();
-    curl.setOpt('URL', config.menuLinks.veglife);
-
-    curl.on('end', (status, body, headers) => {
-      res
-        .status(200)
-        .send(`\`\`\`${getTodaysVeglifeMenu(body)}\`\`\``);
-      curl.close();
-    });
-    curl.on('error', () => {
-      res.status(500).send();
-      curl.close();
-    });
-    curl.perform();
+  app.get('/menuveglife', async (req, res) => {
+    const menu = await getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu);
+    res.status(200).send(menu);
   });
 
-  app.get('/menumizza', (req, res) => {
-    const curl = new Curl();
-    curl.setOpt('URL', config.menuLinks.mizza);
+  app.get('/menumizza', async (req, res) => {
+    const allergens = req.query.text === 'a';
+    const menu = await getMenu(config.menuLinks.mizza, parseTodaysMizzaMenu, allergens);
+    res.status(200).send(menu);
+  });
 
-    curl.on('end', (status, body, headers) => {
-      res
-        .status(200)
-        .send(`\`\`\`${getTodaysMizzaMenu(body)}\`\`\``);
-      curl.close();
-    });
-    curl.on('error', () => {
-      res.status(500).send();
-      curl.close();
-    });
-    curl.perform();
+  app.get('/menus', async (req, res) => {
+    const allergens = req.query.text === 'a';
+    res.status(200).send(await getAllMenus(allergens));
   });
 
   app.get('/help', (req, res) => {
