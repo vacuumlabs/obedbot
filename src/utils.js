@@ -323,21 +323,23 @@ export async function getMenu(link, parseMenu, allergens) {
 }
 
 export async function getAllMenus(allergens) {
-  const presto = await getMenu(config.menuLinks.presto, parseTodaysPrestoMenu);
-  const veglife = await getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu);
-  const mizza = await getMenu(config.menuLinks.mizza, parseTodaysMizzaMenu, allergens);
+  const [presto, veglife, mizza] = await Promise.all([
+    getMenu(config.menuLinks.presto, parseTodaysPrestoMenu),
+    getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu),
+    getMenu(config.menuLinks.mizza, parseTodaysMizzaMenu, allergens),
+  ]);
 
   return `*Presto* ${presto} *Veglife* ${veglife} *Pizza Mizza* ${mizza}`;
 }
 
-export function parseTodaysPrestoMenu(menu) {
+export function parseTodaysPrestoMenu(rawMenu) {
   const entities = new AllHtmlEntities();
   // CENA is there as a delimiter because the menu continues on with different things
   const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'CENA'];
   const today = getDayForMenu();
 
   // delete all HTML tags
-  menu = menu.replace(/<[^>]*>/g, '');
+  let menu = rawMenu.replace(/<[^>]*>/g, '');
   menu = entities.decode(menu);
   menu = menu
     // presto has the whole menu on single page, cut out only today
@@ -353,11 +355,11 @@ export function parseTodaysPrestoMenu(menu) {
   return menu;
 }
 
-export function parseTodaysVeglifeMenu(menu) {
+export function parseTodaysVeglifeMenu(rawMenu) {
   const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOTA'];
   const today = getDayForMenu();
-  menu = menu
-    .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
+  let menu = rawMenu
+    .substring(rawMenu.indexOf(slovakDays[today]), rawMenu.indexOf(slovakDays[today + 1]))
     // delete all HTML tags
     .replace(/<[^>]*>/g, '')
     .split('\n')
@@ -378,13 +380,13 @@ export function parseTodaysVeglifeMenu(menu) {
  * @param {string} menu - unparsed result of curl from the menu page
  * @returns {string} - menu in a more readable format
  */
-export function parseTodaysMizzaMenu(menu, allergens) {
+export function parseTodaysMizzaMenu(rawMenu, allergens) {
   const entities = new AllHtmlEntities();
   const slovakDays = ['', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Vaša'];
   const today = getDayForMenu();
 
   // delete all HTML tags
-  menu = menu.replace(/<[^>]*>/g, '');
+  let menu = rawMenu.replace(/<[^>]*>/g, '');
   menu = entities.decode(menu);
   menu = menu
     .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
