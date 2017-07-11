@@ -1,6 +1,6 @@
 {
   "name": "obedbot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lunch bot for Vacuumlabs lunch orders in Slack",
   "scripts": {
     "start": "npm run build && node server.js",
