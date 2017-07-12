@@ -21,12 +21,16 @@ addons:
 
 before_deploy:
 - eval "$(ssh-agent -s)"
-- ssh-add <( echo -e "$VACUUMLABS_UBUNTU" )
-- ssh-add <( echo -e "$VACUUMLABS_OBEDBOT" )
+- echo -e "$VACUUMLABS_UBUNTU" > /tmp/ubuntu
+- echo -e "$VACUUMLABS_OBEDBOT" > /tmp/obedbot
+- chmod 600 /tmp/ubuntu
+- chmod 600 /tmp/obedbot
+- ssh-add /tmp/ubuntu
+- ssh-add /tmp/obedbot
 
 deploy:
   provider: script
   skip_cleanup: true
-  script: deploy.sh
+  script: ./deploy.sh
   on:
     branch: production

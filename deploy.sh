@@ -2,7 +2,7 @@
 ssh obedbot@vacuumlabs.com /bin/bash << EOF
   cd obedbot
   git fetch --all
-  git reset --hard origin/master
+  git reset --hard origin/production
   git pull
   npm install
   npm run build
