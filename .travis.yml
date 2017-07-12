@@ -3,14 +3,34 @@ notifications:
 
 language: node_js
 node_js:
-  - "6"
+- '8'
 
 cache:
   directories:
   - node_modules
 
+# Testing
 install:
-  - npm install
-
+- npm install
 script:
-  - npm run eslint
+- npm run eslint
+
+# Deploy settings
+addons:
+  ssh_known_hosts: vacuumlabs.com
+
+before_deploy:
+- eval "$(ssh-agent -s)"
+- echo -e "$VACUUMLABS_UBUNTU" > /tmp/ubuntu
+- echo -e "$VACUUMLABS_OBEDBOT" > /tmp/obedbot
+- chmod 600 /tmp/ubuntu
+- chmod 600 /tmp/obedbot
+- ssh-add /tmp/ubuntu
+- ssh-add /tmp/obedbot
+
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: ./deploy.sh
+  on:
+    branch: production
