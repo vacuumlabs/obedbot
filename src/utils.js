@@ -356,7 +356,7 @@ export function parseTodaysPrestoMenu(rawMenu) {
 }
 
 export function parseTodaysVeglifeMenu(rawMenu) {
-  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOTA'];
+  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOT'];
   const today = getDayForMenu();
   let menu = rawMenu
     .substring(rawMenu.indexOf(slovakDays[today]), rawMenu.indexOf(slovakDays[today + 1]))
@@ -382,7 +382,7 @@ export function parseTodaysVeglifeMenu(rawMenu) {
  */
 export function parseTodaysMizzaMenu(rawMenu, allergens) {
   const entities = new AllHtmlEntities();
-  const slovakDays = ['', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Vaša'];
+  const slovakDays = ['Piatok', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Pondelok'];
   const today = getDayForMenu();
 
   // delete all HTML tags
