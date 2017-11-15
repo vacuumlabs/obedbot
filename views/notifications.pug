@@ -3,22 +3,16 @@ html
   include includes/head.pug
 
   body
-    div(id='main')
-      div(class='row')
-          h1(id='title-main')
-            b=title
+    include includes/navbar.pug
 
-      div(class='row')
-        include includes/links.pug
-
-      div(class='row')
-        div(class='col-lg-3')
-        div(class='col-lg-6')
-          table(class='table table-notifications')
-            thead
+    .container
+      .row
+        .col
+          table.table.table-sm
+            thead.thead-light
               th='Meno'
               th='Notifikácie'
-              th='Mute'
+              th=''
             tbody
               each user in users
                 tr
@@ -27,8 +21,7 @@ html
                   td
                     if user.notifications
                       a(href='/mute?channel=' + user.channel_id)
-                        div(class='glyphicon glyphicon-volume-off mute')
+                        ='OFF'
                     else
                       a(href='/unmute?channel=' + user.channel_id)
-                        div(class='glyphicon glyphicon-volume-up mute')
-        div(class='col-lg-3')
+                        ='ON'

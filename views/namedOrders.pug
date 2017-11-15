@@ -3,28 +3,19 @@ html
   include includes/head.pug
 
   body
-    div(id='main')
-      div(class='row')
-        h1(id='title-main')
-          b= tableName
-
-      div(class='row')
-        include includes/links.pug
-
-      div(class='row')
-        div(class='col-lg-1 col-md-1 col-sm-12 col-xs-12')
+    include includes/navbar.pug
+    .container
+      .row
         each orders, restaurant in allOrders
-          div(class='col-lg-2 col-md-2 col-sm-12 col-xs-12')
-            h2(class='named-title')
-              b= restaurant.charAt(0).toUpperCase() + restaurant.slice(1)
-            table(class='table')
-              thead
+          .col-md-6.col-xs-12
+            h3= restaurant.charAt(0).toUpperCase() + restaurant.slice(1)
+            table.table.table-sm
+              thead.thead-light
                 tr
-                  th= 'Meno'
-                  th= 'Objednávka'
+                  th='Meno'
+                  th='Objednávka'
               tbody
                 each order in orders
                   tr
                     td= order.user
                     td= order.order
-        div(class='col-lg-1 col-md-1 col-sm-12 col-xs-12')
