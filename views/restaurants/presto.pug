@@ -1,7 +1,7 @@
-h3(id='title-presto', class='title')
-  b Presto
-table(id='table-presto', class='table')
-  thead
+h3='Presto '
+
+table.table.table-sm
+  thead.thead-light
     tr
       - var i = 0;
       while i < presto.meals.length
@@ -9,12 +9,13 @@ table(id='table-presto', class='table')
   tbody
     tr
       each amount in presto.meals
-        td
-          unless amount === 0
-            b=amount
+        if amount > 0
+          td=amount
+        else
+          td
 
-table(id='table-presto-soups', class='table')
-  thead
+table.table.table-sm
+  thead.thead-light
     tr
       th Číslo polievky
       th Počet
@@ -22,4 +23,15 @@ table(id='table-presto-soups', class='table')
     each amount, soupNumber in presto.soups
       tr
         td=soupNumber
+        td=amount
+
+table.table.table-sm
+  thead.thead-light
+    tr
+      th Číslo pizze
+      th Počet
+  tbody
+    each amount, pizzaType in presto.pizza
+      tr
+        td=pizzaType
         td=amount

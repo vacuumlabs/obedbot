@@ -176,8 +176,8 @@ export function parseOrders() {
   let presto = {
     soups: {},
     meals: Array(7).fill(0),
+    pizza: {},
   };
-  let pizza = {};
   let mizza = {a: 0, b: 0, c: 0, soups: 0};
   let veglife = {
     meals: Array(4).fill(0),
@@ -214,9 +214,10 @@ export function parseOrders() {
           const pizzaSize = order.match(/\d+/g)[1];
 
           if (!pizzaSize || pizzaSize === '33') {
-            pizza[pizzaNum] = get(pizza, pizzaNum, 0) + 1;
+            presto.pizza[pizzaNum] = get(presto.pizza, pizzaNum, 0) + 1;
           } else {
-            pizza[`${pizzaNum} veľkosti ${pizzaSize}`] = get(pizza, `${pizzaNum} veľkosti ${pizzaSize}`, 0) + 1;
+            presto.pizza[`${pizzaNum} veľkosti ${pizzaSize}`] =
+              get(presto.pizza, `${pizzaNum} veľkosti ${pizzaSize}`, 0) + 1;
           }
         } else if (restaurant === restaurants.veglife) {
           const mainMealNum = parseInt(order.charAt(3), 10) - 1;
@@ -243,7 +244,7 @@ export function parseOrders() {
         }
       }
 
-      return Promise.resolve({presto, pizza, mizza, veglife, shop});
+      return Promise.resolve({presto, mizza, veglife, shop});
     });
 }
 
