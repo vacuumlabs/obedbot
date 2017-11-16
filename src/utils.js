@@ -212,13 +212,11 @@ export function parseOrders() {
         } else if (restaurant === restaurants.pizza) {
           const pizzaNum = order.match(/\d+/g)[0];
           const pizzaSize = order.match(/\d+/g)[1];
+          const key = (!pizzaSize || pizzaSize === '33')
+            ? pizzaNum
+            : `${pizzaNum} veľkosti ${pizzaSize}`;
 
-          if (!pizzaSize || pizzaSize === '33') {
-            presto.pizza[pizzaNum] = get(presto.pizza, pizzaNum, 0) + 1;
-          } else {
-            presto.pizza[`${pizzaNum} veľkosti ${pizzaSize}`] =
-              get(presto.pizza, `${pizzaNum} veľkosti ${pizzaSize}`, 0) + 1;
-          }
+          presto.pizza[key] = get(presto.pizza, key, 0) + 1;
         } else if (restaurant === restaurants.veglife) {
           const mainMealNum = parseInt(order.charAt(3), 10) - 1;
           const saladOrSoup = order.charAt(order.length - 1);
