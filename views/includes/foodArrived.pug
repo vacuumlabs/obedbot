@@ -1,21 +1,17 @@
-h2(class='title')
-  b Prišlo jedlo!
-div(id='order-buttons' class='row')
-  div
-    a(href="/presto")
-      button(
-        class='btn btn-warning btn-responsive',
+
+h3='Prišlo jedlo!'
+.row
+  .col
+    .btn-group
+      a.btn.btn-warning(
+        href="/presto"
         onclick='return confirm(\'Are you sure?\')'
       ) Presto
-  div
-    a(href="/veglife")
-      button(
-        class='btn btn-success btn-responsive',
+      a.btn.btn-success(
+        href="/veglife"
         onclick='return confirm(\'Are you sure?\')'
       ) Veglife
-  div
-    a(href="/mizza")
-      button(
-        class='btn btn-info btn-responsive',
+      a.btn.btn-info(
+        href="/mizza"
         onclick='return confirm(\'Are you sure?\')'
       ) Pizza Mizza

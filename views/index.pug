@@ -3,33 +3,28 @@ html
   include includes/head.pug
 
   body
-    div(id='main')
-      div(class='row')
-        h1(id='title-main')
-          b= tableName
-      div(class='row')
-        div(class='col-lg-12 col-md-12 col-sm-12 col-xs-12')
-        include includes/links.pug
+    include includes/navbar.pug
 
-      div(class='row')
-        div(class='col-lg-3 col-md-3 col-sm-12 col-xs-12')
+    .container
+      .row
+        .col-md-3.col-xs-12
           include restaurants/presto.pug
+          hr.d-block.d-sm-none
 
-        div(class='col-lg-2 col-md-2 col-sm-12 col-xs-12')
-          include restaurants/pizza.pug
-
-        div(class='col-lg-2 col-md-2 col-sm-12 col-xs-12')
+        .col-md-3.col-xs-12
           include restaurants/veglife.pug
+          hr.d-block.d-sm-none
 
-        div(class='col-lg-2 col-md-2 col-sm-12 col-xs-12')
+        .col-md-3.col-xs-12
           include restaurants/mizza.pug
+          hr.d-block.d-sm-none
 
-        div(class='col-lg-3 col-md-3 col-sm-12 col-xs-12')
+        .col-md-3.col-xs-12
           include restaurants/shop.pug
-      div(class='row')
-        div(class='col-lg-3 col-md-3 hidden-sm hidden-xs')
-        div(class='col-lg-3 col-md-3 col-sm-12 col-xs-12')
+    hr
+    .container
+      .row
+        .col
           include includes/foodArrived.pug
-        div(class='col-lg-3 col-md-3 col-sm-12 col-xs-12')
+        .col
           include includes/foodWontArrive.pug
-        div(class='col-lg-3 col-md-3 hidden-sm hidden-xs')

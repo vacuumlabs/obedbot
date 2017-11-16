@@ -8,12 +8,12 @@ import {logger} from './resources';
 import config from '../config';
 
 async function renderOrders(req, res) {
-  const {presto, pizza, veglife, mizza, shop} = await parseOrders();
+  const {presto, veglife, mizza, shop} = await parseOrders();
 
   res.render('index', {
-    title: 'Obedbot page',
-    tableName: 'Dnešné objednávky',
-    presto, pizza, veglife, mizza, shop,
+    title: 'Dnešné objednávky',
+    activePage: 'index',
+    presto, veglife, mizza, shop,
   });
 }
 
@@ -21,8 +21,8 @@ async function renderOrdersNamed(req, res) {
   const allOrders = await parseOrdersNamed();
 
   res.render('namedOrders', {
-    title: 'Obedbot page',
-    tableName: 'Dnešné objednávky',
+    title: 'Objednávky s menami',
+    activePage: 'named',
     allOrders,
   });
 }
@@ -32,6 +32,7 @@ async function renderNotifications(req, res) {
 
   res.render('notifications', {
     title: 'Stav notifikácií',
+    activePage: 'notifications',
     users,
   });
 }
