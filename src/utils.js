@@ -382,14 +382,23 @@ export function parseTodaysVeglifeMenu(rawMenu) {
  */
 export function parseTodaysMizzaMenu(rawMenu, allergens) {
   const entities = new AllHtmlEntities();
-  const slovakDays = ['Piatok', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Pondelok'];
+  const slovakDays = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+  const daysCount = slovakDays.length;
   const today = getDayForMenu();
 
   // delete all HTML tags
   let menu = rawMenu.replace(/<[^>]*>/g, '');
   menu = entities.decode(menu);
+  const menuStart = menu.indexOf(slovakDays[today]);
+  let menuEnd = -1, nextDay = (today + 1) % daysCount;
+  for (;nextDay !== today && menuEnd === -1; nextDay = (nextDay + 1) % daysCount) {
+    menuEnd = menu.indexOf(slovakDays[nextDay]);
+  }
+  if (menuStart === -1 || menuEnd === -1 || menuStart >= menuEnd) {
+    return `Nepodarilo sa mi spracovať menu.\nPozri si menu na ${config.menuLinks.mizza}`;
+  }
   menu = menu
-    .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
+    .substring(menuStart, menuEnd)
     // delete Add to Cart text
     .replace(/Pridaj/g, '')
     .split('\n')
