@@ -1,7 +1,6 @@
-h3(id='title-veglife', class='title')
-  b Veglife
-table(id='table-veglife', class='table')
-  thead
+h3='Veglife'
+table.table.table-sm
+  thead.thead-light
     tr
       - var i = 0;
       while i++ < 4
@@ -9,12 +8,13 @@ table(id='table-veglife', class='table')
   tbody
     tr
       each amount in veglife.meals
-        td
-          unless amount === 0
-            b=amount
+        if amount > 0
+          td=amount
+        else
+          td
 
-table(id='table-veglife-soups', class='table')
-  thead
+table.table.table-sm
+  thead.thead-light
     tr
       th='Polievky'
       th='Šaláty'

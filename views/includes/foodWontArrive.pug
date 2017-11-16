@@ -1,21 +1,16 @@
-h2(class='title')
-  b Nepríde jedlo :-(
-div(id='order-buttons' class='row')
-  div
-    a(href="/nopresto")
-      button(
-        class='btn btn-warning btn-responsive',
+h3='Nepríde jedlo :-('
+.row
+  .col
+    .btn-group
+      a.btn.btn-warning(
+        href="/nopresto"
         onclick='return confirm(\'Are you sure?\')'
       ) Presto
-  div
-    a(href="/noveglife")
-      button(
-        class='btn btn-success btn-responsive',
+      a.btn.btn-success(
+        href="/noveglife"
         onclick='return confirm(\'Are you sure?\')'
       ) Veglife
-  div
-    a(href="/nomizza")
-      button(
-        class='btn btn-info btn-responsive',
+      a.btn.btn-info(
+        href="/nomizza"
         onclick='return confirm(\'Are you sure?\')'
       ) Pizza Mizza

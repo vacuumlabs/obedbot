@@ -1,0 +1,30 @@
+nav.navbar.navbar-expand-lg.navbar-dark.bg-dark.sticky-top
+  div.container
+    a.navbar-brand(href='/')='Obedbot '
+      small=title
+    button.navbar-toggler(
+      type='button'
+      data-toggle='collapse'
+      data-target='#navbarToggle'
+      aria-controls='navbarToggle'
+      aria-expanded='false'
+      aria-label='Toggle navigation'
+    )
+      span.navbar-toggler-icon
+    #navbarToggle.collapse.navbar-collapse
+      ul.nav.navbar-nav.ml-auto
+        li.nav-item
+          a.nav-link(
+            href='/'
+            class=`${activePage === 'index' ? 'active' : ''}`
+          )='Čísla'
+        li.nav-item
+          a.nav-link(
+            href='/named'
+            class=`${activePage === 'named' ? 'active' : ''}`
+          )='Mená'
+        li.nav-item
+          a.nav-link(
+            href='/notifications'
+            class=`${activePage === 'notifications' ? 'active' : ''}`
+          )='Notifikácie'

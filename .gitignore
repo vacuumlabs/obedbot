@@ -48,3 +48,6 @@ obedbot.db
 
 # Visual Studio Code workspace folder
 .vscode
+
+# Mac OS folder setting
+.DS_Store

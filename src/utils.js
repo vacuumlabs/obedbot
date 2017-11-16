@@ -176,8 +176,8 @@ export function parseOrders() {
   let presto = {
     soups: {},
     meals: Array(7).fill(0),
+    pizza: {},
   };
-  let pizza = {};
   let mizza = {a: 0, b: 0, c: 0, soups: 0};
   let veglife = {
     meals: Array(4).fill(0),
@@ -212,12 +212,11 @@ export function parseOrders() {
         } else if (restaurant === restaurants.pizza) {
           const pizzaNum = order.match(/\d+/g)[0];
           const pizzaSize = order.match(/\d+/g)[1];
+          const key = (!pizzaSize || pizzaSize === '33')
+            ? pizzaNum
+            : `${pizzaNum} veľkosti ${pizzaSize}`;
 
-          if (!pizzaSize || pizzaSize === '33') {
-            pizza[pizzaNum] = get(pizza, pizzaNum, 0) + 1;
-          } else {
-            pizza[`${pizzaNum} veľkosti ${pizzaSize}`] = get(pizza, `${pizzaNum} veľkosti ${pizzaSize}`, 0) + 1;
-          }
+          presto.pizza[key] = get(presto.pizza, key, 0) + 1;
         } else if (restaurant === restaurants.veglife) {
           const mainMealNum = parseInt(order.charAt(3), 10) - 1;
           const saladOrSoup = order.charAt(order.length - 1);
@@ -243,7 +242,7 @@ export function parseOrders() {
         }
       }
 
-      return Promise.resolve({presto, pizza, mizza, veglife, shop});
+      return Promise.resolve({presto, mizza, veglife, shop});
     });
 }
 
@@ -382,14 +381,23 @@ export function parseTodaysVeglifeMenu(rawMenu) {
  */
 export function parseTodaysMizzaMenu(rawMenu, allergens) {
   const entities = new AllHtmlEntities();
-  const slovakDays = ['Piatok', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Pondelok'];
+  const slovakDays = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+  const daysCount = slovakDays.length;
   const today = getDayForMenu();
 
   // delete all HTML tags
   let menu = rawMenu.replace(/<[^>]*>/g, '');
   menu = entities.decode(menu);
+  const menuStart = menu.indexOf(slovakDays[today]);
+  let menuEnd = -1, nextDay = (today + 1) % daysCount;
+  for (;nextDay !== today && menuEnd === -1; nextDay = (nextDay + 1) % daysCount) {
+    menuEnd = menu.indexOf(slovakDays[nextDay]);
+  }
+  if (menuStart === -1 || menuEnd === -1 || menuStart >= menuEnd) {
+    return `Nepodarilo sa mi spracovať menu.\nPozri si menu na ${config.menuLinks.mizza}`;
+  }
   menu = menu
-    .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
+    .substring(menuStart, menuEnd)
     // delete Add to Cart text
     .replace(/Pridaj/g, '')
     .split('\n')
