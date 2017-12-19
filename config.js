@@ -12,14 +12,12 @@ var config = {
   menuLinks: {
     presto: process.env.OBEDBOT_PRESTO || '',
     veglife: process.env.OBEDBOT_VEGLIFE || '',
-    mizza: process.env.OBEDBOT_MIZZA || '',
     hamka: process.env.OBEDBOT_HAMKA || '',
   },
   orderRegex: {
     presto: /presto[1-7](p[1-2])?/,
     pizza: /pizza[0-9]{1,2}(v((33)|(40)|(50)))?/,
     veglife: /veg[1-4]\+?[ps]?/,
-    mizza: /mizza[abc][p]?/,
     hamka: /ham[1-5].*/,
     shop: /^((nakup)|(nákup)|(nakúp)).*/,
   },

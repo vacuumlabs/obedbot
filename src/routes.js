@@ -2,18 +2,18 @@ import express from 'express';
 import database from 'sqlite';
 
 import {restaurants, parseOrders, parseOrdersNamed, getMenu, getAllMenus,
-  parseTodaysPrestoMenu, parseTodaysVeglifeMenu, parseTodaysMizzaMenu, parseTodaysHamkaMenu} from './utils';
+  parseTodaysPrestoMenu, parseTodaysVeglifeMenu, parseTodaysHamkaMenu} from './utils';
 import {notifyAllThatOrdered, changeMute} from './slack';
 import {logger} from './resources';
 import config from '../config';
 
 async function renderOrders(req, res) {
-  const {presto, veglife, mizza, hamka, shop} = await parseOrders();
+  const {presto, veglife, hamka, shop} = await parseOrders();
 
   res.render('index', {
     title: 'Dnešné objednávky',
     activePage: 'index',
-    presto, veglife, mizza, hamka, shop,
+    presto, veglife, hamka, shop,
   });
 }
 
@@ -73,16 +73,6 @@ export function startExpress() {
     res.redirect('/');
   });
 
-  app.get('/mizza', (req, res) => {
-    notifyAllThatOrdered(restaurants.mizza, true);
-    res.redirect('/');
-  });
-
-  app.get('/nomizza', (req, res) => {
-    notifyAllThatOrdered(restaurants.mizza, false);
-    res.redirect('/');
-  });
-
   app.get('/hamka', (req, res) => {
     notifyAllThatOrdered(restaurants.hamka, true);
     res.redirect('/');
@@ -114,20 +104,13 @@ export function startExpress() {
     res.status(200).send(menu);
   });
 
-  app.get('/menumizza', async (req, res) => {
-    const allergens = req.query.text === 'a';
-    const menu = await getMenu(config.menuLinks.mizza, parseTodaysMizzaMenu, allergens);
-    res.status(200).send(menu);
-  });
-
   app.get('/menuhamka', async (req, res) => {
     const menu = await getMenu(config.menuLinks.hamka, parseTodaysHamkaMenu);
     res.status(200).send(menu);
   });
 
   app.get('/menus', async (req, res) => {
-    const allergens = req.query.text === 'a';
-    res.status(200).send(await getAllMenus(allergens));
+    res.status(200).send(await getAllMenus());
   });
 
   app.get('/help', (req, res) => {

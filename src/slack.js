@@ -50,7 +50,6 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   const restaurantNames = {
     [restaurants.presto]: 'Pizza Presto',
     [restaurants.pizza]: 'Pizza Presto',
-    [restaurants.mizza]: 'Pizza Mizza',
     [restaurants.hamka]: 'Hamka',
     [restaurants.veglife]: 'Veglife',
     [restaurants.shop]: 'obchodu',
