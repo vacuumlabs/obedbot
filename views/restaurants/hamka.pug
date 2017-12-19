@@ -1,0 +1,17 @@
+h3='Hamka'
+
+each notes, number in hamka
+  if notes.length > 0
+    table.table.table-sm
+      thead.thead-light
+        tr
+          th Číslo
+          th Počet
+      tbody
+        tr
+          td=number
+          td=notes.length
+          each note in notes
+            if note != ''
+              tr
+                td(colspan="2")=note
