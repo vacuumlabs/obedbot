@@ -98,6 +98,7 @@ export const restaurants = {
   pizza: 'pizza',
   veglife: 'veglife',
   mizza: 'mizza',
+  hamka: 'hamka',
   shop: 'shop',
 };
 
@@ -108,6 +109,7 @@ export function identifyRestaurant(order) {
     {regex: regexes.pizza, name: restaurants.pizza},
     {regex: regexes.veglife, name: restaurants.veglife},
     {regex: regexes.mizza, name: restaurants.mizza},
+    {regex: regexes.hamka, name: restaurants.hamka},
     {regex: regexes.shop, name: restaurants.shop},
   ];
   let ans;
@@ -179,6 +181,7 @@ export function parseOrders() {
     pizza: {},
   };
   let mizza = {a: 0, b: 0, c: 0, soups: 0};
+  let hamka = Array(5 + 1).fill(0).map(() => ([]));
   let veglife = {
     meals: Array(4).fill(0),
     soups: 0,
@@ -237,12 +240,16 @@ export function parseOrders() {
             meal = order.slice(-1);
           }
           mizza[meal] = get(mizza, meal, 0) + 1;
+        } else if (restaurant === restaurants.hamka) {
+          const number = parseInt(order.charAt(3), 10);
+          const note = order.slice(order.charAt(4) === 'p' ? 5 : 4).trim();
+          hamka[number].push(note);
         } else if (restaurant === restaurants.shop) {
           shop.push(order.substring(6));
         }
       }
 
-      return Promise.resolve({presto, mizza, veglife, shop});
+      return Promise.resolve({presto, mizza, hamka, veglife, shop});
     });
 }
 
@@ -252,6 +259,7 @@ export function parseOrdersNamed() {
     pizza: [],
     veglife: [],
     mizza: [],
+    hamka: [],
     shop: [],
   };
   let messages;
@@ -286,6 +294,8 @@ export function parseOrdersNamed() {
             order.order = order.order.slice(-1).toUpperCase();
           }
           orders.mizza.push(order);
+        } else if (restaurant === restaurants.hamka) {
+          orders.hamka.push(order);
         } else if (restaurant === restaurants.shop) {
           order.order = order.order.substring(6);
           orders.shop.push(order);
@@ -296,23 +306,19 @@ export function parseOrdersNamed() {
     });
 }
 
-function getDayForMenu() {
-  const now = moment();
-  let today = now.day();
-
-  // if it is Saturday, Sunday or Friday afternoon, set day to Monday
-  if (today === 0 || today === 6 || (today === 5 && now.hours() > 13)) {
-    today = 1;
-  } else if (now.hours() > 13) {
-    today++;
-  }
-
-  return today;
+function getMomentForMenu() {
+  let mom;
+  for (mom = moment(); mom.day() === 0 || mom.day() === 6 || mom.hours() > 13; mom.add(1, 'days').startOf('day'));
+  return mom;
 }
 
 export async function getMenu(link, parseMenu, allergens) {
   const block = '```';
   try {
+    if (link.endsWith('date=')) {
+      const date = getMomentForMenu().format('D.M.YYYY');
+      link = `${link}${date}`;
+    }
     const body = await request(link);
     return `${block}${parseMenu(body, allergens)}${block}`;
   } catch (e) {
@@ -322,20 +328,21 @@ export async function getMenu(link, parseMenu, allergens) {
 }
 
 export async function getAllMenus(allergens) {
-  const [presto, veglife, mizza] = await Promise.all([
+  const [presto, veglife, mizza, hamka] = await Promise.all([
     getMenu(config.menuLinks.presto, parseTodaysPrestoMenu),
     getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu),
     getMenu(config.menuLinks.mizza, parseTodaysMizzaMenu, allergens),
+    getMenu(config.menuLinks.hamka, parseTodaysHamkaMenu),
   ]);
 
-  return `*Presto* ${presto} *Veglife* ${veglife} *Pizza Mizza* ${mizza}`;
+  return `*Presto* ${presto} *Veglife* ${veglife} *Pizza Mizza* ${mizza} *Hamka* ${hamka}`;
 }
 
 export function parseTodaysPrestoMenu(rawMenu) {
   const entities = new AllHtmlEntities();
   // CENA is there as a delimiter because the menu continues on with different things
   const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'CENA'];
-  const today = getDayForMenu();
+  const today = getMomentForMenu().day();
 
   // delete all HTML tags
   let menu = rawMenu.replace(/<[^>]*>/g, '');
@@ -356,7 +363,7 @@ export function parseTodaysPrestoMenu(rawMenu) {
 
 export function parseTodaysVeglifeMenu(rawMenu) {
   const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOT'];
-  const today = getDayForMenu();
+  const today = getMomentForMenu().day();
   let menu = rawMenu
     .substring(rawMenu.indexOf(slovakDays[today]), rawMenu.indexOf(slovakDays[today + 1]))
     // delete all HTML tags
@@ -383,7 +390,7 @@ export function parseTodaysMizzaMenu(rawMenu, allergens) {
   const entities = new AllHtmlEntities();
   const slovakDays = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
   const daysCount = slovakDays.length;
-  const today = getDayForMenu();
+  const today = getMomentForMenu().day();
 
   // delete all HTML tags
   let menu = rawMenu.replace(/<[^>]*>/g, '');
@@ -426,4 +433,14 @@ export function parseTodaysMizzaMenu(rawMenu, allergens) {
     .join('\n')
     // replace all multiple whitespaces with single space
     .replace(/\s\s+/g, ' ');
+}
+
+export function parseTodaysHamkaMenu(rawMenu) {
+  const menuStart = rawMenu.indexOf('<p class');
+  const menuEnd = rawMenu.indexOf('</div>', menuStart);
+  const menu = rawMenu
+    .substring(menuStart, menuEnd)
+    .replace(/<p[^>]*>(.*?)<\/p>/g, '$1\n')
+    .replace(/<[^>]*>/g, '');
+  return menu;
 }

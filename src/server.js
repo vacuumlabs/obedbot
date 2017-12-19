@@ -51,6 +51,10 @@ export function runServer() {
     endOfOrders(restaurants.mizza);
   });
 
+  schedule.scheduleJob(`42 ${isDST ? 7 : 8} * * 1-5`, () => {
+    endOfOrders(restaurants.hamka);
+  });
+
   schedule.scheduleJob(`00 ${isDST ? 8 : 9} * * 1-5`, () => {
     endOfOrders(restaurants.presto);
   });
