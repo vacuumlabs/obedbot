@@ -48,7 +48,7 @@ export function runServer() {
   });
 
   schedule.scheduleJob(`41 ${isDST ? 7 : 8} * * 1-5`, () => {
-    endOfOrders(restaurants.mizza);
+    endOfOrders(restaurants.hamka);
   });
 
   schedule.scheduleJob(`00 ${isDST ? 8 : 9} * * 1-5`, () => {

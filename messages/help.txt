@@ -14,24 +14,24 @@ MENU: Napíšete do Slacku presto+"cislo"+"p"+(1/2), kde 1 alebo 2 na konci je �
 PIZZA: Napíšete do Slacku pizza+"cislo"+"v" (veľkosť) +(33/40/50).
 *Príklad:* `@obedbot: pizza3v33` - chcem pizzu č. 3 veľkosti 33 cm
 
-*PIZZA MIZZA*
-`http://www.pizzamizza.sk/obed_do_firmy/bratislava`
-Viete si objednať do 9:40 ľubovoľný obed z menu na stránke, teda buď A, B alebo C.
-*Príklad*: `@obedbot: mizzaA`
-
 *VEGLIFE*
 `http://www.veglife.sk/sk/menu-2/`
 Do 9:40 je možné si nahlásiť veg+číslo+pripadná polievka alebo šalát
 Príklad: `@obedbot: veg4p` značí, že si dáte štvorku s polievkou z VegLife.
 Dúfame, že si v tom každý najde svoje :slightly_smiling_face:
 
+*HAMKA*
+`http://hamka.sk/`
+Objednávať si môžte do 9:40 v tvare ham+číslo, polievka je súčasťou
+každej objednávky. Pokiaľ je na výber viacero príloh, môžte to dopísať
+hneď za to.
+Príklad: `ham4 hranloky, tat. omáčka` -> polievka a menu č. 4 s hranolkami a tat. omáčkou
+
 *MENU*
 Ak sa vám nechce hľadať menu na stránkach týchto reštaurácií, stačí ak do konverzácie na Slacku
-napíšete `/presto`, `/mizza` alebo `/veglife` a zobrazí sa vám menu danej reštaurácie na daný deň.
+napíšete `/presto`, `/veglife` alebo `/hamka` a zobrazí sa vám menu danej reštaurácie na daný deň.
 Taktiež môžete použiť `/menu` aby sa vám zobrazili všetky reštaurácie naraz.
 Nikoho tým spamovať nebudete, pretože odpoveď je viditelná iba pre vás :slightly_smiling_face:
-Pokiaľ patríte medzi menej tolerantných, pre verzie príkazov s alergénmi stačí pridať za príkaz parameter `a`,
-napr. `/mizza a`.
 
 *NOTIFIKÁCIE*
 Ak si chcete zapnúť notifikácie, aby ste si nezabudli objednať obed, môžete to urobiť tak, že napíšete priamo obedbot-ovi do správy `mute` alebo `unmute`.
