@@ -1,12 +1,12 @@
 h3='Hamka'
 
-each notes, number in hamka
-  if notes.length > 0
-    table.table.table-sm
-      thead.thead-light
-        tr
-          th Číslo
-          th Počet
+table.table.table-sm
+  thead.thead-light
+    tr
+      th Číslo
+      th Počet
+  each notes, number in hamka
+    if notes.length > 0
       tbody
         tr
           td=number
@@ -14,4 +14,4 @@ each notes, number in hamka
           each note in notes
             if note != ''
               tr
-                td(colspan="2")=note
+                td.note(colspan="2")=note

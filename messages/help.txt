@@ -9,29 +9,29 @@ Ak by ste chceli, aby sa do kuchyne nakúpilo ešte niečo ďalšie, môžete to
 *PIZZA PRESTO*
 `http://www.pizza-presto.sk/default.aspx?p=catalogpage&group=1`
 Tam si viete objednať do 10:00 v daný deň ľubovoľný obed z denného menu alebo pizzu.
-MENU: Napíšete do Slacku presto+"cislo"+"p"+(1/2), kde 1 alebo 2 na konci je čislo polievky.
+MENU: Napíšete do Slacku presto+"číslo"+"p"+(1/2), kde 1 alebo 2 na konci je číslo polievky.
 *Príklad:* `@obedbot: presto3p1` - chcem menu 3 s prvou polievkou v poradí na daný deň
-PIZZA: Napíšete do Slacku pizza+"cislo"+"v" (veľkosť) +(33/40/50).
+PIZZA: Napíšete do Slacku pizza+"číslo"+"v" (veľkosť) +(33/40/50).
 *Príklad:* `@obedbot: pizza3v33` - chcem pizzu č. 3 veľkosti 33 cm
 
 *VEGLIFE*
 `http://www.veglife.sk/sk/menu-2/`
-Do 9:40 je možné si nahlásiť veg+číslo+pripadná polievka alebo šalát
+Do 9:40 je možné si nahlásiť veg+"číslo"+prípadná polievka alebo šalát
 Príklad: `@obedbot: veg4p` značí, že si dáte štvorku s polievkou z VegLife.
-Dúfame, že si v tom každý najde svoje :slightly_smiling_face:
+Dúfame, že si v tom každý nájde svoje :slightly_smiling_face:
 
 *HAMKA*
 `http://hamka.sk/`
-Objednávať si môžte do 9:40 v tvare ham+číslo, polievka je súčasťou
+Objednávať si môžte do 9:40 v tvare ham+"číslo", polievka je súčasťou
 každej objednávky. Pokiaľ je na výber viacero príloh, môžte to dopísať
 hneď za to.
-Príklad: `ham4 hranloky, tat. omáčka` -> polievka a menu č. 4 s hranolkami a tat. omáčkou
+Príklad: `ham4 hranolky, tat. omáčka` -> polievka a menu č. 4 s hranolkami a tat. omáčkou
 
 *MENU*
 Ak sa vám nechce hľadať menu na stránkach týchto reštaurácií, stačí ak do konverzácie na Slacku
 napíšete `/presto`, `/veglife` alebo `/hamka` a zobrazí sa vám menu danej reštaurácie na daný deň.
 Taktiež môžete použiť `/menu` aby sa vám zobrazili všetky reštaurácie naraz.
-Nikoho tým spamovať nebudete, pretože odpoveď je viditelná iba pre vás :slightly_smiling_face:
+Nikoho tým spamovať nebudete, pretože odpoveď je viditeľná iba pre vás :slightly_smiling_face:
 
 *NOTIFIKÁCIE*
 Ak si chcete zapnúť notifikácie, aby ste si nezabudli objednať obed, môžete to urobiť tak, že napíšete priamo obedbot-ovi do správy `mute` alebo `unmute`.
