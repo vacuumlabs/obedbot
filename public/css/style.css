@@ -33,3 +33,8 @@ th + th {
 .col {
   margin-bottom: 1rem;
 }
+
+td.note {
+  padding-left: 25px;
+  font-style: italic;
+}
