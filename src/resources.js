@@ -15,7 +15,7 @@ function getTime() {
 export const logger = {
   log: (text) => console.log(`[${getTime()}] ${text}`),
   devLog: (text) => config.dev && console.log(`[${getTime()}] ${text}`),
-  error: (text, err) => console.error(`[${getTime()}] ${text}`, err),
+  error: (text, err) => console.error(`[${getTime()}] ${text}`, err || ''),
 };
 
 export let orders = [];
