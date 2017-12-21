@@ -279,6 +279,8 @@ export function parseOrdersNamed() {
 
 function getMomentForMenu() {
   let mom;
+
+  // if it is Saturday, Sunday or Friday afternoon, set day to Monday
   for (mom = moment(); mom.day() === 0 || mom.day() === 6 || mom.hours() > 13; mom.add(1, 'days').startOf('day'));
   return mom;
 }
@@ -352,7 +354,9 @@ export function parseTodaysVeglifeMenu(rawMenu) {
 
 export function parseTodaysHamkaMenu(rawMenu) {
   const menuStart = rawMenu.indexOf('<p class');
+  if (menuStart === -1) throw new Error('Parsing Hamka menu: "<p class" not found');
   const menuEnd = rawMenu.indexOf('</div>', menuStart);
+  if (menuEnd === -1) throw new Error('Parsing Hamka menu: "</div>" not found');
   const menu = rawMenu
     .substring(menuStart, menuEnd)
     .replace(/<p[^>]*>(.*?)<\/p>/g, '$1\n')
