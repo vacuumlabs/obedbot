@@ -348,8 +348,15 @@ export function parseTodaysVeglifeMenu(rawMenu) {
     // replace all multiple whitespaces with single space
     .replace(/\s\s+/g, ' ');
 
-  // delete unnecessary part
-  return menu.substring(0, menu.indexOf('+ Pestrá'));
+  let infoIndex = menu.indexOf('+ Pestrá');
+  if (infoIndex === -1) {
+    infoIndex = menu.indexOf('Nemôžete prísť?');
+  }
+  if (infoIndex !== -1) {
+    // delete unnecessary part
+    menu = menu.substring(0, infoIndex);
+  }
+  return menu;
 }
 
 export function parseTodaysHamkaMenu(rawMenu) {
