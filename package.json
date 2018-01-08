@@ -24,7 +24,7 @@
     "pug": "^2.0.0-beta6",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
-    "sqlite": "^2.8.0"
+    "sqlite": "^2.9.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
@@ -37,6 +37,9 @@
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-babel": "^3.3.0",
     "eslint-plugin-import": "^2.7.0",
-    "jsdoc": "^3.4.0"
+    "jsdoc": "^3.5.5"
+  },
+  "resolutions": {
+    "**/marked": "^0.3.9"
   }
 }
