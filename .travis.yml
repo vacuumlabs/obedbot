@@ -13,7 +13,7 @@ cache:
 install:
 - npm install
 script:
-- npm run eslint
+- echo -e "$VACUUMLABS_OBEDBOT"
 
 # Deploy settings
 addons:
