@@ -1,10 +1,11 @@
 #!/bin/sh
+ssh-keyscan -H vacuumlabs.com >> ~/.ssh/known_hosts
 ssh obedbot@vacuumlabs.com /bin/bash << EOF
   cd obedbot
   git fetch --all
   git reset --hard origin/production
   git pull
-  npm install
-  npm run build
+  yarn
+  yarn run build
+  sudo service obedbot restart
 EOF
-ssh ubuntu@vacuumlabs.com -C "sudo service obedbot restart"

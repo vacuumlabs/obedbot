@@ -1,0 +1,38 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/node:8
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # Find a cache corresponding to this specific yarn.lock checksum.
+            - v2-yarn-cache-{{ checksum "yarn.lock" }}
+            # Find the most recent cache regardless of yarn.lock checksum.
+            - v2-yarn-cache-
+      - run: yarn
+      - save_cache:
+          key: v2-yarn-cache-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+      - run: yarn test
+
+  deploy:
+    docker:
+      - image: circleci/node:8
+    steps:
+      - checkout
+      - run: ./deploy.sh
+
+workflows:
+  version: 2
+  test-deploy:
+    jobs:
+      - test
+      - deploy:
+          requires:
+            - test
+          filters:
+            branches:
+              only: production
