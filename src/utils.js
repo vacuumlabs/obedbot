@@ -289,7 +289,7 @@ export async function getMenu(link, parseMenu) {
   const block = '```';
   try {
     if (link.endsWith('date=')) {
-      const date = getMomentForMenu().format('D.M.YYYY');
+      const date = getMomentForMenu().format('DD.MM.YYYY');
       link = `${link}${date}`;
     }
     const body = await request(link);
