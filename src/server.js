@@ -35,7 +35,7 @@ export function runServer() {
   const isDST = moment().tz('Europe/Prague').isDST();
 
   // set up last calls for each restaurant
-  schedule.scheduleJob(`30 ${isDST ? 7 : 8} * * 1-5`, () => {
+  schedule.scheduleJob(`15 ${isDST ? 7 : 8} * * 1-5`, () => {
     makeLastCall();
   });
 
@@ -43,12 +43,12 @@ export function runServer() {
     loadUsers();
   });
 
-  schedule.scheduleJob(`40 ${isDST ? 7 : 8} * * 1-5`, () => {
-    endOfOrders(restaurants.veglife);
+  schedule.scheduleJob(`30 ${isDST ? 7 : 8} * * 1-5`, () => {
+    endOfOrders(restaurants.hamka);
   });
 
-  schedule.scheduleJob(`41 ${isDST ? 7 : 8} * * 1-5`, () => {
-    endOfOrders(restaurants.hamka);
+  schedule.scheduleJob(`40 ${isDST ? 7 : 8} * * 1-5`, () => {
+    endOfOrders(restaurants.veglife);
   });
 
   schedule.scheduleJob(`00 ${isDST ? 8 : 9} * * 1-5`, () => {
