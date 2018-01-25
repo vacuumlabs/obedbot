@@ -4,8 +4,6 @@ Podporované príkazy sú:
 @obedbot nakup [item]
 @obedbot presto[code]
 @obedbot veg[code]
-@obedbot mizza[code]
 @obedbot ham[code]
-@obedbot [code]
 ```
 Napíš `/obedy` pre viac informácií
