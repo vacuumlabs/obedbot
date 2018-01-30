@@ -13,6 +13,10 @@ export function loadUsers() {
   slack.web.channels.info(config.slack.lunchChannelId)
     .then(async ({channel: {members}}) => {
       for (const member of members) {
+        if (member === config.slack.botId) {
+          logger.devLog('Skipping member obedbot');
+          continue;
+        }
         if (!(await userExists(member))) {
           saveUser(member);
         }
@@ -49,22 +53,18 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   const users = await database.all('SELECT * FROM users');
   const restaurantNames = {
     [restaurants.presto]: 'Pizza Presto',
-    [restaurants.pizza]: 'Pizza Presto',
     [restaurants.hamka]: 'Hamka',
     [restaurants.veglife]: 'Veglife',
     [restaurants.shop]: 'obchodu',
   };
 
-  // FIXME merge presto and pizza restaurants into one
-  if (callRestaurant !== restaurants.pizza) {
-    slack.web.chat.postMessage(
-      config.slack.lunchChannelId,
-      willThereBeFood
-      ? `Prišli obedy z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
-      : `Dneska bohužiaľ obedy z ${restaurantNames[callRestaurant]} neprídu :disappointed:`,
-      {as_user: true}
-    );
-  }
+  slack.web.chat.postMessage(
+    config.slack.lunchChannelId,
+    willThereBeFood
+    ? `Prišli obedy z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
+    : `Dneska bohužiaľ obedy z ${restaurantNames[callRestaurant]} neprídu :disappointed:`,
+    {as_user: true}
+  );
 
   for (let message of messages) {
     if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
@@ -253,6 +253,11 @@ export async function processMessages(messages) {
     logger.devLog(prettyPrint(message));
 
     const {text: messageText, ts: timestamp, user, reactions} = message;
+
+    if (user === config.slack.botId) {
+      logger.devLog('Message was from obedbot');
+      return;
+    }
 
     if (!(await userExists(user))) {
       saveUser(user);
