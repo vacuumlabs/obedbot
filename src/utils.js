@@ -160,7 +160,7 @@ export function saveUser(userId) {
             }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
         });
     }).catch(
-      () => logger.error('Trying to save bot or disabled user')
+      () => logger.error(`Trying to save bot or disabled user ${userId}`)
     );
 }
 

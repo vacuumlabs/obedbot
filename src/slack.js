@@ -13,6 +13,10 @@ export function loadUsers() {
   slack.web.channels.info(config.slack.lunchChannelId)
     .then(async ({channel: {members}}) => {
       for (const member of members) {
+        if (member === config.slack.botId) {
+          logger.devLog('Skipping member obedbot');
+          continue;
+        }
         if (!(await userExists(member))) {
           saveUser(member);
         }
@@ -249,6 +253,11 @@ export async function processMessages(messages) {
     logger.devLog(prettyPrint(message));
 
     const {text: messageText, ts: timestamp, user, reactions} = message;
+
+    if (user === config.slack.botId) {
+      logger.devLog('Message was from obedbot');
+      return;
+    }
 
     if (!(await userExists(user))) {
       saveUser(user);
