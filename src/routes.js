@@ -62,14 +62,12 @@ export function startExpress() {
 
   app.get('/presto', (req, res) => {
     notifyAllThatOrdered(restaurants.presto, true);
-    notifyAllThatOrdered(restaurants.pizza, true);
     res.redirect('/');
   });
 
   // notification messages that food will not arrive
   app.get('/nopresto', (req, res) => {
     notifyAllThatOrdered(restaurants.presto, false);
-    notifyAllThatOrdered(restaurants.pizza, false);
     res.redirect('/');
   });
 
