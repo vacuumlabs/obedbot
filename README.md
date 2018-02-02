@@ -1,10 +1,10 @@
 # obedbot
 
-Because ordering lunches is just way too hard
+Because ordering lunches is just way too hard.
 
 ## How to set it up
 
-You need a working installation of [Node.js](https://nodejs.org/en/), preferably in version 8.1.3+
+You need a working installation of [Node.js](https://nodejs.org/en/), preferably in version 8.1.3+.
 
 Copy `.env.template` into `.env` and fill it in with your information.
 `OBEDBOT_CHANNEL_ID` is the id of the channel which the bot should be monitoring.
@@ -13,16 +13,18 @@ whether to use transpiled code from `build` or directly from `src` with babel-wa
 
 For production
 ```
-git clone https://github.cm/kubik369/obedbot.git && cd obedbot
-cp obedbot.template.db obedbot.db
-npm install
-npm start
+git clone https://github.com/vacuumlabs/obedbot.git && cd obedbot
+cp obedbot-template.db obedbot.db
+cp .env.template .env
+yarn
+yarn start
 ```
 
 For development - do not forget to set `OBEDBOT_DEV` and tokens correctly!
 ```
-git clone https://github.cm/kubik369/obedbot.git && cd obedbot
-cp obedbot.template.db obedbot.db
-npm install
-npm run dev
+git clone https://github.com/vacuumlabs/obedbot.git && cd obedbot
+cp obedbot-template.db obedbot.db
+cp .env.template .env
+yarn
+yarn run dev
 ```
