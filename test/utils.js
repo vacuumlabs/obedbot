@@ -73,9 +73,14 @@ describe('Utils', () => {
 
   describe('isOrder should identify', () => {
     it('presto orders', () => {
-      const input = `${botHandle} presto1p2`;
+      const inputsTrue = [
+        `${botHandle} presto1p2`,
+        `${botHandle} presto1p2 pre Viktora`,
+      ];
 
-      expect(isOrder(input)).to.be.true;
+      inputsTrue.forEach((input) => {
+        expect(isOrder(input)).to.be.true;
+      });
     });
 
     describe('pizza orders', () => {
@@ -87,15 +92,20 @@ describe('Utils', () => {
       });
 
       it('with size', () => {
-        const inputs = [
+        const inputsTrue = [
           `${botHandle} pizza4v33`,
           `${botHandle} pizza5v40`,
           `${botHandle} pizza3v50`,
+          `${botHandle} pizza3v50 pre Viktora`,
         ];
 
-        inputs.forEach((input) => {
+        const inputFalse = `${botHandle} pizza4v55`; // wrong pizza size
+
+        inputsTrue.forEach((input) => {
           expect(isOrder(input)).to.be.true;
         });
+
+        expect(isOrder(inputFalse)).to.be.false;
       });
     });
 
@@ -104,6 +114,7 @@ describe('Utils', () => {
         `${botHandle} veg3p`,
         `${botHandle} veg2`,
         `${botHandle} veg1s`,
+        `${botHandle} veg1s pre Viktora`,
       ];
 
       inputs.forEach((input) => {
