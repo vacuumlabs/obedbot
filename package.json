@@ -5,10 +5,10 @@
   "scripts": {
     "start": "yarn run build && node server.js",
     "dev": "babel-watch server.js",
-    "test": "yarn run build && yarn run eslint && yarn run mocha",
+    "test": "yarn run eslint && yarn run build && yarn run mocha",
     "build": "babel src/ -d build/ -s",
     "eslint": "eslint src/** test/**",
-    "mocha": "TEST=1 mocha --require babel-core/register"
+    "mocha": "CIRCLECI=1 mocha --require babel-core/register"
   },
   "author": "Jakub Simo",
   "license": "ISC",
