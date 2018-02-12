@@ -49,7 +49,7 @@ export function startExpress() {
 
   app.get('/notifications', renderNotifications);
 
-  // notification messages that food has arrived
+  // notification messages that food has arrived or won't arrive
   app.get('/veglife', (req, res) => {
     notifyAllThatOrdered(restaurants.veglife, true);
     res.redirect('/');
@@ -65,7 +65,6 @@ export function startExpress() {
     res.redirect('/');
   });
 
-  // notification messages that food will not arrive
   app.get('/nopresto', (req, res) => {
     notifyAllThatOrdered(restaurants.presto, false);
     res.redirect('/');
