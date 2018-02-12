@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
 
-import {stripMention, isObedbotMentioned, isChannelPublic, alreadyReacted, isOrder} from '../build/utils';
+import {stripMention, isObedbotMentioned, isChannelPublic, alreadyReacted, isOrder} from '../src/utils';
 import config from '../config';
 
 const botHandle = `<@${config.slack.botId}>`;
