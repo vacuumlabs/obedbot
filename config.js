@@ -1,7 +1,7 @@
 // load .env variables into process.env
 require('dotenv').config();
 
-var config = {
+const config = {
   dev: (process.env.OBEDBOT_DEV === 'true') || false,
   port: process.env.OBEDBOT_PORT || 4000,
   slack: {
@@ -28,7 +28,8 @@ var config = {
 };
 
 if (!config.slack.token || !config.slack.lunchChannelId
-  || !config.slack.botId || !config.menuLinks.presto || !config.menuLinks.veglife) {
+  || !config.slack.botId || !config.menuLinks.presto || !config.menuLinks.veglife
+  || !config.menuLinks.hamka) {
   console.error('Missing env variables!');
   process.exit(1);
 }
