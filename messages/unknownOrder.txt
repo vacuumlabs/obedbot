@@ -3,6 +3,7 @@ Podporované príkazy sú:
 ```
 @obedbot nakup [item]
 @obedbot presto[code]
+@obedbot pizza[code]
 @obedbot veg[code]
 @obedbot ham[code]
 ```
