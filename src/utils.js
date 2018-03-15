@@ -319,9 +319,12 @@ export function parseTodaysPrestoMenu(rawMenu) {
   // delete all HTML tags
   let menu = rawMenu.replace(/<[^>]*>/g, '');
   menu = entities.decode(menu);
+  const menuStart = menu.indexOf(slovakDays[today]);
+  const menuEnd = menu.indexOf(slovakDays[today + 1]);
+  if (menuStart === -1 || menuEnd === -1) throw new Error('Parsing Presto menu: unable to find menu for today');
   menu = menu
     // presto has the whole menu on single page, cut out only today
-    .substring(menu.indexOf(slovakDays[today]), menu.indexOf(slovakDays[today + 1]))
+    .substring(menuStart, menuEnd)
     .split('\n')
     .map((row) => row.trim())
     // delete empty lines
@@ -336,8 +339,11 @@ export function parseTodaysPrestoMenu(rawMenu) {
 export function parseTodaysVeglifeMenu(rawMenu) {
   const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOT'];
   const today = getMomentForMenu().day();
+  const menuStart = rawMenu.indexOf(slovakDays[today]);
+  const menuEnd = rawMenu.indexOf(slovakDays[today + 1]);
+  if (menuStart === -1 || menuEnd === -1) throw new Error('Parsing Veglife menu: unable to find menu for today');
   let menu = rawMenu
-    .substring(rawMenu.indexOf(slovakDays[today]), rawMenu.indexOf(slovakDays[today + 1]))
+    .substring(menuStart, menuEnd)
     // delete all HTML tags
     .replace(/<[^>]*>/g, '')
     .split('\n')
