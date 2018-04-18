@@ -27,6 +27,11 @@ každej objednávky. Pokiaľ je na výber viacero príloh, môžte to dopísať
 hneď za to.
 Príklad: `@obedbot: ham4 hranolky, tat. omáčka` - polievka a menu č. 4 s hranolkami a tat. omáčkou
 
+*CLICK*
+`https://clickfood.sk/`
+Objednávať si môžte do 9:45 v tvare click+"číslo"+p+"číslo polievky".
+Príklad: `@obedbot: click4p3` - menu č. 4 a polievka č. 3.
+
 *MENU*
 Ak sa vám nechce hľadať menu na stránkach týchto reštaurácií, stačí ak do konverzácie na Slacku
 napíšete `/presto`, `/veglife` alebo `/hamka` a zobrazí sa vám menu danej reštaurácie na daný deň.
