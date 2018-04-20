@@ -392,17 +392,21 @@ export function parseTodaysHamkaMenu(rawMenu) {
   return menu;
 }
 
-function getIndicesOf(searchStr, str) {
-  const searchStrLen = searchStr.length;
-  if (searchStrLen === 0) {
+function getIndicesOf(searchStrFrom, searchStrTo, str) {
+  const searchStrFromLen = searchStrFrom.length;
+  const searchStrToLen = searchStrTo.length;
+  if (searchStrFromLen === 0 || searchStrToLen === 0) {
     return [];
   }
   let startIndex = 0;
   let index;
   const indices = [];
-  while ((index = str.indexOf(searchStr, startIndex)) > -1) {
-    indices.push(index);
-    startIndex = index + searchStrLen;
+  while ((index = str.indexOf(searchStrFrom, startIndex)) > -1) {
+    const from = index;
+    startIndex = index + searchStrFromLen;
+    const to = str.indexOf(searchStrTo, startIndex);
+    startIndex = to + searchStrToLen;
+    indices.push({from, to});
   }
   return indices;
 }
@@ -413,36 +417,33 @@ export function parseTodaysClickMenu(rawMenu) {
   if (menuStart === -1) {
     throw new Error('Parsing Click menu: "<div id="menu-" not found');
   }
-  const menuEnd = rawMenu.indexOf('<div id="salaty" class="category category-big">', menuStart);
+  const menuEnd = rawMenu.indexOf('<div id="salaty"', menuStart);
   if (menuEnd === -1) {
-    throw new Error('Parsing Click menu: "<div id="salaty" class="category category-big">" not found');
+    throw new Error('Parsing Click menu: "<div id="salaty"" not found');
   }
   const menu = rawMenu
     .substring(menuStart, menuEnd);
 
-  const indicesFrom = getIndicesOf('<h4 class="modal-title">', menu);
-  const indicesTo = getIndicesOf('<h4 class="modal-product-price modal-title">', menu);
+  const indices = getIndicesOf('<h4 class="modal-title">', '</h4>', menu);
+  const dayStartIndex = menu.indexOf('Menu ') + 'Menu '.length;
+  const dayEndIndex = menu.indexOf('<', dayStartIndex);
+  const indexOfPolievky = menu.indexOf('<div id="polievky"');
 
-  const dayStartIndice = menu.indexOf('Menu ') + 5;
-  const dayEndIndice = menu.indexOf('<', dayStartIndice);
-  const day = menu.substring(dayStartIndice, dayEndIndice);
-  let parsedMenu = `Menu na ${day} Polievky: `;
-  for (let i = 6; i < indicesFrom.length; ++i) {
-    parsedMenu = parsedMenu.concat(
-      menu
-        .substring(indicesFrom[i] + 24, indicesTo[i] - 14)
-        .trim().replace(/(\n)/gm, '').replace('          ', ''),
-      ' '
-    );
-  }
-  parsedMenu = parsedMenu.concat('Hlavné jedlo: ');
-  for (let i = 0; i < 5; ++i) {
-    parsedMenu = parsedMenu.concat(
-      menu
-        .substring(indicesFrom[i] + 24, indicesTo[i] - 14)
-        .trim().replace(/(\n)/gm, '').replace('          ', ''),
-      ' '
-    );
-  }
-  return parsedMenu;
+  const day = menu.substring(dayStartIndex, dayEndIndex);
+  const soup = [];
+  const main = [];
+  let parsedMenu = `Menu na ${day} Polievky: \n`;
+  indices.forEach((index) => {
+    const item = menu
+      .substring(index.from + '<h4 class="modal-title">'.length, index.to - '</h4>'.length)
+      .trim().replace(/\s+/, '');
+    if (index.from < indexOfPolievky) {
+      if (parseInt(item, 10) > 120) { //filter dessert
+        main.push(item);
+      }
+    } else {
+      soup.push(item);
+    }
+  });
+  return parsedMenu.concat(soup.join('\n'), '\nHlavné jedlo: \n', main.join('\n'));
 }
