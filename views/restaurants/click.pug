@@ -1,0 +1,26 @@
+h3='Click '
+
+table.table.table-sm
+  thead.thead-light
+    tr
+      - var i = 0;
+      while i < click.meals.length
+        th= ++i
+  tbody
+    tr
+      each amount in click.meals
+        if amount > 0
+          td=amount
+        else
+          td
+
+table.table.table-sm
+  thead.thead-light
+    tr
+      th Číslo polievky
+      th Počet
+  tbody
+    each amount, soupNumber in click.soups
+      tr
+        td=soupNumber
+        td=amount

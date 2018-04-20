@@ -98,6 +98,7 @@ export const restaurants = {
   pizza: 'pizza',
   veglife: 'veglife',
   hamka: 'hamka',
+  click: 'click',
   shop: 'shop',
 };
 
@@ -108,6 +109,7 @@ export function identifyRestaurant(order) {
     {regex: regexes.pizza, name: restaurants.pizza},
     {regex: regexes.veglife, name: restaurants.veglife},
     {regex: regexes.hamka, name: restaurants.hamka},
+    {regex: regexes.click, name: restaurants.click},
     {regex: regexes.shop, name: restaurants.shop},
   ];
   let ans;
@@ -184,6 +186,10 @@ export function parseOrders() {
     soups: 0,
     salads: 0,
   };
+  let click = {
+    soups: {},
+    meals: Array(5).fill(0),
+  };
   let shop = [];
 
   logger.devLog('Parsing orders for webpage display');
@@ -231,12 +237,19 @@ export function parseOrders() {
           const number = parseInt(order.charAt(3), 10);
           const note = order.slice(order.charAt(4) === 'p' ? 5 : 4).trim();
           hamka[number].push(note);
+        } else if (restaurant === restaurants.click) {
+          const mainMealNum = parseInt(order.charAt(5), 10) - 1;
+          const soup = order.substring(7);
+          click.meals[mainMealNum]++;
+          if (soup) {
+            click.soups[soup] = get(click.soups, soup, 0) + 1;
+          }
         } else if (restaurant === restaurants.shop) {
           shop.push(order.substring(6));
         }
       }
 
-      return Promise.resolve({presto, hamka, veglife, shop});
+      return Promise.resolve({presto, hamka, click, veglife, shop});
     });
 }
 
@@ -246,6 +259,7 @@ export function parseOrdersNamed() {
     pizza: [],
     veglife: [],
     hamka: [],
+    click: [],
     shop: [],
   };
   let messages;
@@ -301,13 +315,14 @@ export async function getMenu(link, parseMenu) {
 }
 
 export async function getAllMenus() {
-  const [presto, veglife, hamka] = await Promise.all([
+  const [presto, veglife, hamka, click] = await Promise.all([
     getMenu(config.menuLinks.presto, parseTodaysPrestoMenu),
     getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu),
     getMenu(config.menuLinks.hamka, parseTodaysHamkaMenu),
+    getMenu(config.menuLinks.click, parseTodaysClickMenu),
   ]);
 
-  return `*Presto* ${presto} *Veglife* ${veglife} *Hamka* ${hamka}`;
+  return `*Presto*\n${presto}\n\n*Veglife*\n${veglife}\n\n*Hamka*\n${hamka}\n\n*Click*\n${click}`;
 }
 
 export function parseTodaysPrestoMenu(rawMenu) {
@@ -375,4 +390,64 @@ export function parseTodaysHamkaMenu(rawMenu) {
     .replace(/<p[^>]*>(.*?)<\/p>/g, '$1\n')
     .replace(/<[^>]*>/g, '');
   return menu;
+}
+
+function getIndicesOf(searchStrFrom, searchStrTo, str) {
+  const searchStrFromLen = searchStrFrom.length;
+  const searchStrToLen = searchStrTo.length;
+  if (searchStrFromLen === 0 || searchStrToLen === 0) {
+    return [];
+  }
+  let startIndex = 0;
+  let index;
+  const indices = [];
+  while ((index = str.indexOf(searchStrFrom, startIndex)) > -1) {
+    const from = index + searchStrFromLen;
+    const to = str.indexOf(searchStrTo, from);
+    indices.push({from, to});
+    startIndex = to + searchStrToLen;
+  }
+  return indices;
+}
+
+
+export function parseTodaysClickMenu(rawMenu) {
+  const menuStart = rawMenu.indexOf('<div id="menu-');
+  if (menuStart === -1) {
+    throw new Error('Parsing Click menu: "<div id="menu-" not found');
+  }
+  const menuEnd = rawMenu.indexOf('<div id="salaty"', menuStart);
+  if (menuEnd === -1) {
+    throw new Error('Parsing Click menu: "<div id="salaty"" not found');
+  }
+  const menu = rawMenu
+    .substring(menuStart, menuEnd);
+
+  const indices = getIndicesOf('<h4 class="modal-title">', '</h4>', menu);
+  const dayStartIndex = menu.indexOf('Menu ') + 'Menu '.length;
+  const dayEndIndex = menu.indexOf('<', dayStartIndex);
+  const soupsIndex = menu.indexOf('<div id="polievky"');
+
+  const day = menu.substring(dayStartIndex, dayEndIndex);
+  const soup = [], main = [];
+  indices.forEach((index) => {
+    const item = menu
+      .substring(index.from, index.to)
+      .trim()
+      .replace(/\s+/, ' ');
+    if (index.from < soupsIndex) {
+      if (parseInt(item, 10) > 120) { // filter dessert
+        main.push(item);
+      }
+    } else {
+      soup.push(item);
+    }
+  });
+  return [
+    `Menu na ${day}`,
+    'Polievky:',
+    ...soup,
+    'Hlavné jedlo:',
+    ...main,
+  ].join('\n');
 }

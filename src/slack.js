@@ -54,6 +54,7 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   const restaurantNames = {
     [restaurants.presto]: 'Pizza Presto',
     [restaurants.hamka]: 'Hamka',
+    [restaurants.click]: 'Click',
     [restaurants.veglife]: 'Veglife',
     [restaurants.shop]: 'obchodu',
   };
