@@ -322,7 +322,7 @@ export async function getAllMenus() {
     getMenu(config.menuLinks.click, parseTodaysClickMenu),
   ]);
 
-  return `*Presto* ${presto} *Veglife* ${veglife} *Hamka* ${hamka} *Click* ${click}`;
+  return `*Presto*\n${presto}\n\n*Veglife*\n${veglife}\n\n*Hamka*\n${hamka}\n\n*Click*\n${click}`;
 }
 
 export function parseTodaysPrestoMenu(rawMenu) {
@@ -402,11 +402,10 @@ function getIndicesOf(searchStrFrom, searchStrTo, str) {
   let index;
   const indices = [];
   while ((index = str.indexOf(searchStrFrom, startIndex)) > -1) {
-    const from = index;
-    startIndex = index + searchStrFromLen;
-    const to = str.indexOf(searchStrTo, startIndex);
-    startIndex = to + searchStrToLen;
+    const from = index + searchStrFromLen;
+    const to = str.indexOf(searchStrTo, from);
     indices.push({from, to});
+    startIndex = to + searchStrToLen;
   }
   return indices;
 }
@@ -427,23 +426,28 @@ export function parseTodaysClickMenu(rawMenu) {
   const indices = getIndicesOf('<h4 class="modal-title">', '</h4>', menu);
   const dayStartIndex = menu.indexOf('Menu ') + 'Menu '.length;
   const dayEndIndex = menu.indexOf('<', dayStartIndex);
-  const indexOfPolievky = menu.indexOf('<div id="polievky"');
+  const soupsIndex = menu.indexOf('<div id="polievky"');
 
   const day = menu.substring(dayStartIndex, dayEndIndex);
-  const soup = [];
-  const main = [];
-  let parsedMenu = `Menu na ${day} Polievky: \n`;
+  const soup = [], main = [];
   indices.forEach((index) => {
     const item = menu
-      .substring(index.from + '<h4 class="modal-title">'.length, index.to - '</h4>'.length)
-      .trim().replace(/\s+/, '');
-    if (index.from < indexOfPolievky) {
-      if (parseInt(item, 10) > 120) { //filter dessert
+      .substring(index.from, index.to)
+      .trim()
+      .replace(/\s+/, ' ');
+    if (index.from < soupsIndex) {
+      if (parseInt(item, 10) > 120) { // filter dessert
         main.push(item);
       }
     } else {
       soup.push(item);
     }
   });
-  return parsedMenu.concat(soup.join('\n'), '\nHlavné jedlo: \n', main.join('\n'));
+  return [
+    `Menu na ${day}`,
+    'Polievky:',
+    ...soup,
+    'Hlavné jedlo:',
+    ...main,
+  ].join('\n');
 }
