@@ -392,22 +392,31 @@ export function parseTodaysHamkaMenu(rawMenu) {
   return menu;
 }
 
-function getIndicesOf(searchStrFrom, searchStrTo, str) {
-  const searchStrFromLen = searchStrFrom.length;
-  const searchStrToLen = searchStrTo.length;
-  if (searchStrFromLen === 0 || searchStrToLen === 0) {
+function getIndicesOf(menuStrFrom, menuStrTo, priceStrFrom, priceStrTo, str) {
+  const menuStrFromLen = menuStrFrom.length;
+  const menuStrToLen = menuStrTo.length;
+  const priceStrFromLen = priceStrFrom.length;
+  const priceStrToLen = priceStrTo.length;
+  if (menuStrFromLen === 0 || menuStrToLen === 0 || priceStrFromLen === 0 || priceStrToLen === 0) {
     return [];
   }
   let startIndex = 0;
   let index;
   const indices = [];
-  while ((index = str.indexOf(searchStrFrom, startIndex)) > -1) {
-    const from = index + searchStrFromLen;
-    const to = str.indexOf(searchStrTo, from);
-    indices.push({from, to});
-    startIndex = to + searchStrToLen;
+  while ((index = str.indexOf(menuStrFrom, startIndex)) > -1) {
+    const from = index + menuStrFromLen;
+    const to = str.indexOf(menuStrTo, from);
+    const priceFrom = str.indexOf(priceStrFrom, to) + priceStrFromLen;
+    const priceTo = str.indexOf(priceStrTo, priceFrom);
+    startIndex = priceTo + priceStrToLen;
+
+    indices.push({from, to, priceFrom, priceTo});
   }
   return indices;
+}
+
+function getPriceOfItem(index, menu) {
+  return parseFloat(menu.substring(index.priceFrom, index.priceTo).replace(',', '.'));
 }
 
 
@@ -423,7 +432,13 @@ export function parseTodaysClickMenu(rawMenu) {
   const menu = rawMenu
     .substring(menuStart, menuEnd);
 
-  const indices = getIndicesOf('<h4 class="modal-title">', '</h4>', menu);
+  const indices = getIndicesOf(
+    '<h4 class="modal-title">',
+    '</h4>',
+    '<h4 class="modal-product-price modal-title">',
+    '</h4>',
+    menu
+  );
   const dayStartIndex = menu.indexOf('Menu ') + 'Menu '.length;
   const dayEndIndex = menu.indexOf('<', dayStartIndex);
   const soupsIndex = menu.indexOf('<div id="polievky"');
@@ -436,7 +451,7 @@ export function parseTodaysClickMenu(rawMenu) {
       .trim()
       .replace(/\s+/, ' ');
     if (index.from < soupsIndex) {
-      if (parseInt(item, 10) > 120) { // filter dessert
+      if (getPriceOfItem(index, menu) > 3.50) { // filter dessert
         main.push(item);
       }
     } else {
