@@ -344,6 +344,8 @@ export function parseTodaysPrestoMenu(rawMenu) {
     .map((row) => row.trim())
     // delete empty lines
     .filter((row) => row.length)
+    // add numbers (after DAY and SOUP rows)
+    .map((row, i) => i > 1 ? `${i - 1}. ${row}` : row)
     .join('\n')
     // replace all multiple whitespaces with single space
     .replace(/\s\s+/g, ' ');
