@@ -1,6 +1,6 @@
 import database from 'sqlite';
 import Promise from 'bluebird';
-import {find, get} from 'lodash';
+import {find, get, capitalize} from 'lodash';
 import moment from 'moment';
 import {AllHtmlEntities} from 'html-entities';
 import request from 'request-promise';
@@ -8,6 +8,8 @@ import request from 'request-promise';
 import {getTodaysMessages, processMessages} from './slack';
 import {slack, logger} from './resources';
 import config from '../config';
+
+const htmlEntities = new AllHtmlEntities();
 
 /**
  * Returns string with pretty printed json object
@@ -326,14 +328,13 @@ export async function getAllMenus() {
 }
 
 export function parseTodaysPrestoMenu(rawMenu) {
-  const entities = new AllHtmlEntities();
   // CENA is there as a delimiter because the menu continues on with different things
   const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'CENA'];
   const today = getMomentForMenu().day();
 
   // delete all HTML tags
   let menu = rawMenu.replace(/<[^>]*>/g, '');
-  menu = entities.decode(menu);
+  menu = htmlEntities.decode(menu);
   const menuStart = menu.indexOf(slovakDays[today]);
   const menuEnd = menu.indexOf(slovakDays[today + 1]);
   if (menuStart === -1 || menuEnd === -1) throw new Error('Parsing Presto menu: unable to find menu for today');
@@ -392,77 +393,70 @@ export function parseTodaysHamkaMenu(rawMenu) {
   return menu;
 }
 
-function getIndicesOf(menuStrFrom, menuStrTo, priceStrFrom, priceStrTo, str) {
+function getIndicesOf(menuStrFrom, menuStrTo, str) {
   const menuStrFromLen = menuStrFrom.length;
   const menuStrToLen = menuStrTo.length;
-  const priceStrFromLen = priceStrFrom.length;
-  const priceStrToLen = priceStrTo.length;
-  if (menuStrFromLen === 0 || menuStrToLen === 0 || priceStrFromLen === 0 || priceStrToLen === 0) {
+  if (menuStrFromLen === 0 || menuStrToLen === 0) {
     return [];
   }
   let startIndex = 0;
   let index;
   const indices = [];
   while ((index = str.indexOf(menuStrFrom, startIndex)) > -1) {
-    const from = index + menuStrFromLen;
-    const to = str.indexOf(menuStrTo, from);
-    const priceFrom = str.indexOf(priceStrFrom, to) + priceStrFromLen;
-    const priceTo = str.indexOf(priceStrTo, priceFrom);
-    startIndex = priceTo + priceStrToLen;
+    const from = index;
+    const to = str.indexOf(menuStrTo, from + menuStrFromLen);
+    startIndex = to + menuStrToLen;
 
-    indices.push({from, to, priceFrom, priceTo});
+    indices.push({from, to});
   }
   return indices;
 }
 
-function getPriceOfItem(index, menu) {
-  return parseFloat(menu.substring(index.priceFrom, index.priceTo).replace(',', '.'));
+function getPriceOfItem(item) {
+  const priceMatch = item.match(/\b(\d+[,.]\d+)\s*€/);
+  return priceMatch && parseFloat(priceMatch[1].replace(',', '.'));
 }
 
-
 export function parseTodaysClickMenu(rawMenu) {
-  const menuStart = rawMenu.indexOf('<div id="menu-');
+  const menuStart = rawMenu.indexOf('<div id="kategoria-menu-');
   if (menuStart === -1) {
-    throw new Error('Parsing Click menu: "<div id="menu-" not found');
+    throw new Error('Parsing Click menu: "<div id="kategoria-menu-" not found');
   }
-  const menuEnd = rawMenu.indexOf('<div id="salaty"', menuStart);
+  const menuEnd = rawMenu.indexOf('<div id="kategoria-salaty"', menuStart);
   if (menuEnd === -1) {
-    throw new Error('Parsing Click menu: "<div id="salaty"" not found');
+    throw new Error('Parsing Click menu: "<div id="kategoria-salaty"" not found');
   }
-  const menu = rawMenu
-    .substring(menuStart, menuEnd);
+  const menu = rawMenu.substring(menuStart, menuEnd);
+  const dayMatch = menu.match(/kategoria-menu-(\w+)/);
+  const day = dayMatch ? capitalize(dayMatch[1]) : '?';
+  const indices = getIndicesOf('<li', '</li>', menu);
+  const soupsIndex = menu.indexOf('<div id="kategoria-polievky"');
 
-  const indices = getIndicesOf(
-    '<h4 class="modal-title">',
-    '</h4>',
-    '<h4 class="modal-product-price modal-title">',
-    '</h4>',
-    menu
-  );
-  const dayStartIndex = menu.indexOf('Menu ') + 'Menu '.length;
-  const dayEndIndex = menu.indexOf('<', dayStartIndex);
-  const soupsIndex = menu.indexOf('<div id="polievky"');
-
-  const day = menu.substring(dayStartIndex, dayEndIndex);
-  const soup = [], main = [];
+  const soup = [],
+    main = [];
   indices.forEach((index) => {
-    const item = menu
+    let item = menu
       .substring(index.from, index.to)
-      .trim()
-      .replace(/\s+/, ' ');
+      // delete all HTML tags
+      .replace(/<[^>]*>/g, '');
+    item = htmlEntities
+      .decode(item)
+      // remove item comments
+      .replace(/\([^)]*\)/g, '')
+      // remove multiple spaces
+      .replace(/\s+/g, ' ')
+      // remove add to cart symbol
+      .replace(/\s\+\s/g, ' ')
+      .trim();
     if (index.from < soupsIndex) {
-      if (getPriceOfItem(index, menu) > 3.50) { // filter dessert
-        main.push(item);
+      const price = getPriceOfItem(item);
+      if (price == null || price > 3.5) {
+        // filter dessert
+        main.push(`${main.length + 1}. ${item}`);
       }
     } else {
-      soup.push(item);
+      soup.push(`${soup.length + 1}. ${item}`);
     }
   });
-  return [
-    `Menu na ${day}`,
-    'Polievky:',
-    ...soup,
-    'Hlavné jedlo:',
-    ...main,
-  ].join('\n');
+  return [`Menu ${day}`, 'Polievky:', ...soup, 'Hlavné jedlo:', ...main].join('\n');
 }
