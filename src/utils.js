@@ -190,7 +190,7 @@ export function parseOrders() {
   };
   let click = {
     soups: {},
-    meals: Array(5).fill(0),
+    meals: Array(6).fill(0),
   };
   let shop = [];
 
