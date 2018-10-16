@@ -1,5 +1,6 @@
 import database from 'sqlite';
 import Promise from 'bluebird';
+import JSSoup from 'jssoup';
 import {find, get, capitalize} from 'lodash';
 import moment from 'moment';
 import {AllHtmlEntities} from 'html-entities';
@@ -384,15 +385,20 @@ export function parseTodaysVeglifeMenu(rawMenu) {
 }
 
 export function parseTodaysHamkaMenu(rawMenu) {
-  const menuStart = rawMenu.indexOf('<p class');
-  if (menuStart === -1) throw new Error('Parsing Hamka menu: "<p class" not found');
-  const menuEnd = rawMenu.indexOf('</div>', menuStart);
-  if (menuEnd === -1) throw new Error('Parsing Hamka menu: "</div>" not found');
-  const menu = rawMenu
-    .substring(menuStart, menuEnd)
-    .replace(/<p[^>]*>(.*?)<\/p>/g, '$1\n')
-    .replace(/<[^>]*>/g, '');
-  return menu;
+  const soup = new JSSoup(rawMenu);
+  const dayMenu = soup
+    .find('ul', 'menu_1')
+    .findAll('li')
+    .slice(7)
+    .map((row, idx) =>
+      row.text
+        .replace(/^ +|( ){2,}|\t|\n|\r/g, '')
+        .replace(/[A-Z]\./, (idx - 1)
+        .toString() + ': ')
+    ).join('\n');
+  const day = soup.find('div', 'plan-name').text;
+  const date = soup.find('span', 'price').text;
+  return day + ' ' + date + '\n' + dayMenu;
 }
 
 function getIndicesOf(menuStrFrom, menuStrTo, str) {
