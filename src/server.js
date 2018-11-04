@@ -51,7 +51,7 @@ export function runServer() {
     endOfOrders(restaurants.veglife);
   });
 
-  schedule.scheduleJob(`45 ${isDST ? 7 : 8} * * 1-5`, () => {
+  schedule.scheduleJob(`00 ${isDST ? 8 : 9} * * 1-5`, () => {
     endOfOrders(restaurants.click);
   });
 

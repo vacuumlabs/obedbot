@@ -1,6 +1,6 @@
 #!/bin/sh
-ssh-keyscan -H vacuumlabs.com >> ~/.ssh/known_hosts
-ssh obedbot@vacuumlabs.com /bin/bash << EOF
+ssh-keyscan -H aws.vacuumlabs.com >> ~/.ssh/known_hosts
+ssh obedbot@aws.vacuumlabs.com /bin/bash << EOF
   cd obedbot
   git fetch --all
   git reset --hard origin/production
