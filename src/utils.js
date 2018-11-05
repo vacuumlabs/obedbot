@@ -389,12 +389,11 @@ export function parseTodaysHamkaMenu(rawMenu) {
   const dayMenu = soup
     .find('ul', 'menu_1')
     .findAll('li')
-    .slice(7)
+    .slice(6)
     .map((row, idx) =>
       row.text
         .replace(/^ +|( ){2,}|\t|\n|\r/g, '')
-        .replace(/[A-Z]\./, (idx - 1)
-        .toString() + ': ')
+        .replace(/([A-Z])\./, (idx).toString() + ': ')
     ).join('\n');
   const day = soup.find('div', 'plan-name').text;
   const date = soup.find('span', 'price').text;

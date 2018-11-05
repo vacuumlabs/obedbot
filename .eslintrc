@@ -4,6 +4,14 @@
     "import/parser": "babel-eslint",
     "import/ignore": ["node_modules", "assets", "\\.(scss|less|css)$"],
   },
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "modules": true,
+      "jsx": true
+    }
+  },
   "rules": {
     "block-spacing": [2, "never"],
     "brace-style": [2, "1tbs", {"allowSingleLine": true}],
@@ -169,7 +177,4 @@
     "Map": true,
     "Set": true,
   },
-  "ecmaFeatures": {
-    "jsx": true
-  }
 }
