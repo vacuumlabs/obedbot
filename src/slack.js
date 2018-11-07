@@ -130,8 +130,7 @@ function removeConfirmation(ts) {
 function privateIsDeprecated(userChannel) {
   slack.web.chat.postMessage(
     userChannel,
-    'Objednávanie v súkromných kanáloch bolo vypnuté, ' +
-    'pošli prosím svoju objednávku do #obedy :slightly_smiling_face:',
+    config.messages.privateIsDeprecated,
     {as_user: true}
   );
 }
