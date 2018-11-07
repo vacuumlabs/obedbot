@@ -29,7 +29,7 @@ Príklad: `@obedbot: ham4 hranolky, tat. omáčka` - polievka a menu č. 4 s hra
 
 *CLICK*
 `https://clickfood.sk/`
-Objednávať si môžte do 9:45 v tvare click+"číslo"+p+"číslo polievky".
+Objednávať si môžte do 10:00 v tvare click+"číslo"+p+"číslo polievky".
 Príklad: `@obedbot: click4p3` - menu č. 4 a polievka č. 3.
 
 *MENU*
