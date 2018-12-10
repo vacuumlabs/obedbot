@@ -3,11 +3,12 @@
   "version": "1.0.3",
   "description": "Lunch bot for Vacuumlabs lunch orders in Slack",
   "scripts": {
-    "start": "npm run build && node server.js",
+    "start": "node -- server.js",
     "dev": "babel-watch server.js",
     "test": "eslint src/**",
     "build": "babel src/ -d build/ -s",
-    "eslint": "eslint src/**"
+    "eslint": "eslint src/**",
+    "deploy-now": "now `sed 's/#.*$//;/^\\s*$/d;s/^/-e /' .env`"
   },
   "author": "Jakub Simo",
   "license": "ISC",

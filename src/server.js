@@ -18,6 +18,7 @@ export function runServer() {
 
   // setup the database
   Promise.resolve().then(() => database.open(config.dbPath, {Promise}))
+    .then((db) => db.migrate())
     .then(loadUsers);
 
   const rtm = slack.rtm;
