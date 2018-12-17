@@ -1,5 +1,4 @@
 import express from 'express';
-import database from 'sqlite';
 
 import {restaurants, parseOrders, parseOrdersNamed, getMenu, getAllMenus,
   parseTodaysPrestoMenu, parseTodaysVeglifeMenu, parseTodaysHamkaMenu, parseTodaysClickMenu} from './utils';
@@ -29,8 +28,7 @@ async function renderOrdersNamed(req, res) {
 }
 
 async function renderNotifications(req, res) {
-  const users = await database.all('SELECT * FROM users');
-  // const users = await listRecords('users');
+  const users = await listRecords('users');
   res.render('notifications', {
     title: 'Stav notifikácií',
     activePage: 'notifications',

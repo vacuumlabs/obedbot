@@ -1,4 +1,3 @@
-import database from 'sqlite';
 import Promise from 'bluebird';
 import {find, get, capitalize} from 'lodash';
 import moment from 'moment';
@@ -8,7 +7,7 @@ import request from 'request-promise';
 import {getTodaysMessages, processMessages} from './slack';
 import {slack, logger} from './resources';
 import config from '../config';
-import {createRecord, listRecords} from './airtable';
+import {createRecord, findId, listRecords, updateRecord} from './airtable';
 
 const htmlEntities = new AllHtmlEntities();
 
@@ -83,7 +82,8 @@ export function isOrder(order) {
 /**
  * Loads the orders since the last noon
  */
-export function loadTodayOrders() {
+export async function loadTodayOrders() {
+  // await updateRecord(config.airtable.tableName, 'D80JXNV52', true);
   logger.devLog('Loading today\'s orders');
 
   getTodaysMessages().then(processMessages);
@@ -146,28 +146,26 @@ export function saveUser(userId) {
       }
 
       slack.web.users.info(userId)
-        .then((userInfo) => {
+        .then(async (userInfo) => {
           const realname = userInfo.user.profile.real_name;
-          database.run(
-            'INSERT INTO users(user_id, channel_id, username) VALUES($userId, $channelId, $username)',
-            {$userId: userId, $channelId: channelId, $username: realname}
-          ).then(() => {
-          // createRecord(config.airtable.tableName, {
-          //   user_id: userId,
-          //   channel_id: channelId,
-          //   username: realname,
-          //   notifications: false,
-          // }).then(() => {
-            logger.devLog(`User ${realname} has been added to database`);
-            if (!config.dev) {
-              slack.web.chat.postMessage(
+          if (!(await findId(config.airtable.tableName, channelId))) {
+            createRecord(config.airtable.tableName, {
+              user_id: userId,
+              channel_id: channelId,
+              username: realname,
+              notifications: false,
+            }).then(() => {
+              logger.devLog(`User ${realname} has been added to database`);
+              if (!config.dev) {
+                slack.web.chat.postMessage(
                   channelId,
                   'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
                   '#ba-obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
                   {as_user: true}
                 );
-            }
-          }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
+              }
+            }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
+          }
         });
     }).catch(
       () => logger.error(`Trying to save bot or disabled user ${userId}`)
@@ -175,12 +173,7 @@ export function saveUser(userId) {
 }
 
 export async function userExists(userId) {
-  // return listRecords('users', userId).then((result) => !!result);
-  return database
-    .get(
-      'SELECT * FROM users WHERE user_id=$userId',
-      {$userId: userId}
-    ).then((result) => !!result);
+  return listRecords('users', userId).then((result) => !!result);
 }
 
 export function parseOrders() {
@@ -276,8 +269,7 @@ export function parseOrdersNamed() {
   return getTodaysMessages()
     .then((history) => {
       messages = history;
-      return database.all('SELECT * FROM users');
-      // return listRecords('users');
+      return listRecords('users');
     }).then((users) => {
       for (let message of messages) {
         if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {

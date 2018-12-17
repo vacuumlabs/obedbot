@@ -15,6 +15,10 @@ function sleep(till) {
   return new Promise((resolve) => setTimeout(resolve(), till - Date.now()));
 }
 
+function sleep2(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 (async function throttleRequests() {
   for (; ;) {
     while (times.length >= countLimit) {
@@ -54,12 +58,13 @@ export async function listRecords(table, userId = undefined) {
       listedRecords.push(record.fields);
     });
   });
+  await sleep2(2000);
   return listedRecords;
 }
 
 export async function findId(table, channelId) {
   await waitForRequest();
-  let recordId = 0;
+  let recordId;
   base(table).select({
     view: config.airtable.viewName,
   }).firstPage((err, records) => {
@@ -69,19 +74,24 @@ export async function findId(table, channelId) {
     }
     records.forEach((record) => {
       const recordChannelId = record.get('channel_id');
-      if (recordChannelId !== channelId) return;
-      recordId = record.getId();
+      if (recordChannelId === channelId) recordId = record.getId();
     });
   });
+  await sleep2(2000);
   return recordId;
 }
 
 export async function updateRecord(table, userChannel, mute) {
-  const recordId = findId(table, userChannel);
+  const recordId = await findId(table, userChannel);
+  await sleep2(2000);
   base(table).update(recordId, {
     notifications: mute,
   }, (err, record) => {
-    if (err) {console.error(err); return;}
-    logger.log(record.get('username') + '\'s notifications updated');
+    if (err) {
+      logger.error(err);
+      return;
+    }
+    logger.devLog(record.get('username') + '\'s notifications updated');
   });
+  await sleep2(2000);
 }

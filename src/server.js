@@ -2,7 +2,6 @@ import {RTM_EVENTS, CLIENT_EVENTS} from '@slack/client';
 import schedule from 'node-schedule';
 import moment from 'moment-timezone';
 import Promise from 'bluebird';
-import database from 'sqlite';
 
 import {slack, logger} from './resources';
 import {startExpress} from './routes';
@@ -16,10 +15,7 @@ import config from '../config';
 export function runServer() {
   startExpress();
 
-  // setup the database
-  Promise.resolve().then(() => database.open(config.dbPath, {Promise}))
-    .then(loadUsers);
-  // loadUsers();
+  loadUsers();
   const rtm = slack.rtm;
   logger.log('Starting Slack RTM client');
   rtm.start();

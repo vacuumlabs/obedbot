@@ -1,4 +1,3 @@
-import database from 'sqlite';
 import moment from 'moment';
 import Airtable from 'airtable';
 import {isNil, find} from 'lodash';
@@ -45,16 +44,13 @@ export async function getTodaysMessages() {
     latest: now.valueOf() / 1000,
     oldest: lastNoon.valueOf() / 1000,
   };
-
-  return (await slack.web.channels.history(config.slack.lunchChannelId, timeRange)).messages;
+  return await slack.web.channels.history(config.slack.lunchChannelId, timeRange).messages;
 }
 
 export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   logger.devLog('Notifying about food arrival', callRestaurant);
   const messages = await getTodaysMessages();
-  const users = await database.all('SELECT * FROM users');
-  logger.log('notify users', users);
-  // const users = await listRecords('users');
+  const users = await listRecords('users');
   const restaurantNames = {
     [restaurants.presto]: 'Pizza Presto',
     [restaurants.hamka]: 'Hamka',
@@ -145,11 +141,7 @@ function privateIsDeprecated(userChannel) {
  * @param {boolean} mute - new mute status for the user
  */
 export async function changeMute(userChannel, mute) {
-  return database.run(
-    'UPDATE users SET notifications=$notifications WHERE channel_id=$userChannelId',
-    {$notifications: mute ? 0 : 1, $userChannelId: userChannel}
-  ).then(() => {
-  // return updateRecord('users', userChannel, mute).then(() => {
+  return await updateRecord('users', userChannel, mute).then(() => {
     slack.web.chat.postMessage(
       userChannel,
       `Notifikácie ${mute ? 'vypnuté' : 'zapnuté'}`,
@@ -253,7 +245,6 @@ export async function messageReceived(msg) {
 }
 
 export async function processMessages(messages) {
-  // listRecords('users');
   for (let message of messages) {
     logger.devLog('Processing message');
     logger.devLog(prettyPrint(message));
@@ -289,8 +280,7 @@ export async function makeLastCall() {
   logger.devLog('Making last call');
 
   const messages = await getTodaysMessages();
-  const users = await database.all('SELECT * FROM users WHERE notifications=1');
-  // const users = await listRecords('users');
+  const users = await listRecords('users');
   const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${await getAllMenus()}`;
 
   for (let user of users) {
