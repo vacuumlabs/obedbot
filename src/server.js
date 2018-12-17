@@ -19,7 +19,7 @@ export function runServer() {
   // setup the database
   Promise.resolve().then(() => database.open(config.dbPath, {Promise}))
     .then(loadUsers);
-
+  // loadUsers();
   const rtm = slack.rtm;
   logger.log('Starting Slack RTM client');
   rtm.start();

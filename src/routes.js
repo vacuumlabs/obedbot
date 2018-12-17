@@ -6,6 +6,7 @@ import {restaurants, parseOrders, parseOrdersNamed, getMenu, getAllMenus,
 import {notifyAllThatOrdered, changeMute} from './slack';
 import {logger} from './resources';
 import config from '../config';
+import {listRecords} from './airtable';
 
 async function renderOrders(req, res) {
   const {presto, veglife, hamka, click, shop} = await parseOrders();
@@ -29,7 +30,7 @@ async function renderOrdersNamed(req, res) {
 
 async function renderNotifications(req, res) {
   const users = await database.all('SELECT * FROM users');
-
+  // const users = await listRecords('users');
   res.render('notifications', {
     title: 'Stav notifikácií',
     activePage: 'notifications',

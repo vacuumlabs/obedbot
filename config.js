@@ -4,6 +4,12 @@ require('dotenv').config();
 const config = {
   dev: (process.env.OBEDBOT_DEV === 'true') || false,
   port: process.env.OBEDBOT_PORT || 4000,
+  airtable: {
+    apiKey: process.env.API_KEY || '',
+    baseId: process.env.BASE_ID || '',
+    tableName: process.env.TABLE_NAME || '',
+    viewName: process.env.VIEW_NAME || '',
+  },
   slack: {
     token: process.env.OBEDBOT_BOT_TOKEN || '',
     lunchChannelId: process.env.OBEDBOT_CHANNEL_ID || '',

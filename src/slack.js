@@ -1,5 +1,6 @@
 import database from 'sqlite';
 import moment from 'moment';
+import Airtable from 'airtable';
 import {isNil, find} from 'lodash';
 import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
 
@@ -8,6 +9,7 @@ import {userExists, saveUser, isObedbotMentioned, stripMention, identifyRestaura
   restaurants, prettyPrint, isChannelPublic, alreadyReacted, isOrder, getAllMenus,
 } from './utils';
 import config from '../config';
+import {createRecord, listRecords, updateRecord} from './airtable';
 
 export function loadUsers() {
   slack.web.channels.info(config.slack.lunchChannelId)
@@ -51,6 +53,8 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   logger.devLog('Notifying about food arrival', callRestaurant);
   const messages = await getTodaysMessages();
   const users = await database.all('SELECT * FROM users');
+  logger.log('notify users', users);
+  // const users = await listRecords('users');
   const restaurantNames = {
     [restaurants.presto]: 'Pizza Presto',
     [restaurants.hamka]: 'Hamka',
@@ -145,6 +149,7 @@ export async function changeMute(userChannel, mute) {
     'UPDATE users SET notifications=$notifications WHERE channel_id=$userChannelId',
     {$notifications: mute ? 0 : 1, $userChannelId: userChannel}
   ).then(() => {
+  // return updateRecord('users', userChannel, mute).then(() => {
     slack.web.chat.postMessage(
       userChannel,
       `Notifikácie ${mute ? 'vypnuté' : 'zapnuté'}`,
@@ -248,6 +253,7 @@ export async function messageReceived(msg) {
 }
 
 export async function processMessages(messages) {
+  // listRecords('users');
   for (let message of messages) {
     logger.devLog('Processing message');
     logger.devLog(prettyPrint(message));
@@ -284,6 +290,7 @@ export async function makeLastCall() {
 
   const messages = await getTodaysMessages();
   const users = await database.all('SELECT * FROM users WHERE notifications=1');
+  // const users = await listRecords('users');
   const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${await getAllMenus()}`;
 
   for (let user of users) {

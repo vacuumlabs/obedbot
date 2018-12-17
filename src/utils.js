@@ -8,6 +8,7 @@ import request from 'request-promise';
 import {getTodaysMessages, processMessages} from './slack';
 import {slack, logger} from './resources';
 import config from '../config';
+import {createRecord, listRecords} from './airtable';
 
 const htmlEntities = new AllHtmlEntities();
 
@@ -148,20 +149,25 @@ export function saveUser(userId) {
         .then((userInfo) => {
           const realname = userInfo.user.profile.real_name;
           database.run(
-              'INSERT INTO users(user_id, channel_id, username) VALUES($userId, $channelId, $username)',
-              {$userId: userId, $channelId: channelId, $username: realname}
-            )
-            .then(() => {
-              logger.devLog(`User ${realname} has been added to database`);
-              if (!config.dev) {
-                slack.web.chat.postMessage(
+            'INSERT INTO users(user_id, channel_id, username) VALUES($userId, $channelId, $username)',
+            {$userId: userId, $channelId: channelId, $username: realname}
+          ).then(() => {
+          // createRecord(config.airtable.tableName, {
+          //   user_id: userId,
+          //   channel_id: channelId,
+          //   username: realname,
+          //   notifications: false,
+          // }).then(() => {
+            logger.devLog(`User ${realname} has been added to database`);
+            if (!config.dev) {
+              slack.web.chat.postMessage(
                   channelId,
                   'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
                   '#ba-obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
                   {as_user: true}
                 );
-              }
-            }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
+            }
+          }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
         });
     }).catch(
       () => logger.error(`Trying to save bot or disabled user ${userId}`)
@@ -169,6 +175,7 @@ export function saveUser(userId) {
 }
 
 export async function userExists(userId) {
+  // return listRecords('users', userId).then((result) => !!result);
   return database
     .get(
       'SELECT * FROM users WHERE user_id=$userId',
@@ -270,6 +277,7 @@ export function parseOrdersNamed() {
     .then((history) => {
       messages = history;
       return database.all('SELECT * FROM users');
+      // return listRecords('users');
     }).then((users) => {
       for (let message of messages) {
         if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
