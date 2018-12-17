@@ -45,10 +45,10 @@ export async function listRecords(table, userId = undefined) {
   }).firstPage();
 
   let listedRecords = [];
-  Object.keys(records).forEach((key) => {
-    const recordUserId = records[key].get('user_id');
+  records.forEach((record) => {
+    const recordUserId = record.get('user_id');
     if (userId && recordUserId !== userId) return;
-    listedRecords.push(records[key].fields);
+    listedRecords.push(record.fields);
   });
   if (listedRecords.length === 0) return false;
   return listedRecords;
@@ -61,9 +61,9 @@ export async function findId(table, channelId) {
   }).firstPage();
 
   let recordId;
-  Object.keys(records).forEach((key) => {
-    const recordChannelId = records[key].get('channel_id');
-    if (recordChannelId === channelId) recordId = records[key].getId();
+  records.forEach((record) => {
+    const recordChannelId = record.get('channel_id');
+    if (recordChannelId === channelId) recordId = record.getId();
   });
   return recordId;
 }
@@ -73,4 +73,5 @@ export async function updateRecord(table, userChannel, mute) {
   await base(table).update(recordId, {
     notifications: mute,
   });
+  logger.devLog('Notifications updated for user with ID ' + recordId);
 }
