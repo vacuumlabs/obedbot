@@ -7,7 +7,7 @@ import request from 'request-promise';
 import {getTodaysMessages, processMessages} from './slack';
 import {slack, logger} from './resources';
 import config from '../config';
-import {createRecord, findId, listRecords, updateRecord} from './airtable';
+import {createRecord, findId, listRecords} from './airtable';
 
 const htmlEntities = new AllHtmlEntities();
 
@@ -173,7 +173,7 @@ export function saveUser(userId) {
 }
 
 export async function userExists(userId) {
-  return listRecords('users', userId).then((result) => !!result);
+  return listRecords(config.airtable.tableName, userId).then((result) => !!result);
 }
 
 export function parseOrders() {
@@ -269,7 +269,7 @@ export function parseOrdersNamed() {
   return getTodaysMessages()
     .then((history) => {
       messages = history;
-      return listRecords('users');
+      return listRecords(config.airtable.tableName);
     }).then((users) => {
       for (let message of messages) {
         if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
