@@ -31,7 +31,6 @@ const config = {
   },
   orderReaction: 'taco',
   orderUnknownReaction: 'question',
-  dbPath: './obedbot.db',
   messages: require('./messages'),
 };
 

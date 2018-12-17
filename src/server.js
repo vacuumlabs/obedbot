@@ -1,13 +1,11 @@
 import {RTM_EVENTS, CLIENT_EVENTS} from '@slack/client';
 import schedule from 'node-schedule';
 import moment from 'moment-timezone';
-import Promise from 'bluebird';
 
 import {slack, logger} from './resources';
 import {startExpress} from './routes';
 import {loadTodayOrders, restaurants} from './utils';
 import {loadUsers, messageReceived, endOfOrders, makeLastCall} from './slack';
-import config from '../config';
 
 /**
  * Starts the bot server

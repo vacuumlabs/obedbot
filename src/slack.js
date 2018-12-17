@@ -1,5 +1,4 @@
 import moment from 'moment';
-import Airtable from 'airtable';
 import {isNil, find} from 'lodash';
 import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
 
