@@ -15,10 +15,6 @@ function sleep(till) {
   return new Promise((resolve) => setTimeout(resolve(), till - Date.now()));
 }
 
-function sleep2(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 (async function throttleRequests() {
   for (; ;) {
     while (times.length >= countLimit) {
@@ -44,57 +40,37 @@ export async function createRecord(table, record) {
 
 export async function listRecords(table, userId = undefined) {
   await waitForRequest();
-  const listedRecords = [];
-  await sleep2(2000);
-  base(table).select({
+  const records = await base(table).select({
     view: config.airtable.viewName,
-  }).eachPage((records, fetchNextPage) => {
+  }).firstPage();
 
-    records.forEach((record) => {
-      const recordUserId = record.get('user_id');
-      if (userId && recordUserId !== userId) return;
-      listedRecords.push(record.fields);
-    });
-
-    fetchNextPage();
-
-  }, (err) => {
-    if (err) {logger.error(err); return;}
+  let listedRecords = [];
+  Object.keys(records).forEach((key) => {
+    const recordUserId = records[key].get('user_id');
+    if (userId && recordUserId !== userId) return;
+    listedRecords.push(records[key].fields);
   });
-  await sleep2(2000);
+  if (listedRecords.length === 0) return false;
   return listedRecords;
 }
 
 export async function findId(table, channelId) {
   await waitForRequest();
-  let recordId;
-  base(table).select({
+  let records = await base(table).select({
     view: config.airtable.viewName,
-  }).firstPage((err, records) => {
-    if (err) {
-      logger.error(err);
-      return;
-    }
-    records.forEach((record) => {
-      const recordChannelId = record.get('channel_id');
-      if (recordChannelId === channelId) recordId = record.getId();
-    });
+  }).firstPage();
+
+  let recordId;
+  Object.keys(records).forEach((key) => {
+    const recordChannelId = records[key].get('channel_id');
+    if (recordChannelId === channelId) recordId = records[key].getId();
   });
-  await sleep2(2000);
   return recordId;
 }
 
 export async function updateRecord(table, userChannel, mute) {
   const recordId = await findId(table, userChannel);
-  await sleep2(2000);
-  base(table).update(recordId, {
+  await base(table).update(recordId, {
     notifications: mute,
-  }, (err, record) => {
-    if (err) {
-      logger.error(err);
-      return;
-    }
-    logger.devLog(record.get('username') + '\'s notifications updated');
   });
-  await sleep2(2000);
 }

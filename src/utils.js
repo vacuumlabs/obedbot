@@ -173,7 +173,7 @@ export function saveUser(userId) {
 }
 
 export async function userExists(userId) {
-  return listRecords(config.airtable.tableName, userId).then((result) => !!result);
+  return !!(await listRecords(config.airtable.tableName, userId));
 }
 
 export function parseOrders() {

@@ -44,7 +44,7 @@ export async function getTodaysMessages() {
     latest: now.valueOf() / 1000,
     oldest: lastNoon.valueOf() / 1000,
   };
-  return await slack.web.channels.history(config.slack.lunchChannelId, timeRange).messages;
+  return (await slack.web.channels.history(config.slack.lunchChannelId, timeRange)).messages;
 }
 
 export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
