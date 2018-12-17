@@ -45,18 +45,21 @@ export async function createRecord(table, record) {
 export async function listRecords(table, userId = undefined) {
   await waitForRequest();
   const listedRecords = [];
+  await sleep2(2000);
   base(table).select({
     view: config.airtable.viewName,
-  }).firstPage((err, records) => {
-    if (err) {
-      console.error(err);
-      return;
-    }
+  }).eachPage((records, fetchNextPage) => {
+
     records.forEach((record) => {
       const recordUserId = record.get('user_id');
       if (userId && recordUserId !== userId) return;
       listedRecords.push(record.fields);
     });
+
+    fetchNextPage();
+
+  }, (err) => {
+    if (err) {logger.error(err); return;}
   });
   await sleep2(2000);
   return listedRecords;
