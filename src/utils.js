@@ -83,7 +83,6 @@ export function isOrder(order) {
  * Loads the orders since the last noon
  */
 export async function loadTodayOrders() {
-  // await updateRecord(config.airtable.tableName, 'D80JXNV52', true);
   logger.devLog('Loading today\'s orders');
 
   getTodaysMessages().then(processMessages);
@@ -148,8 +147,8 @@ export function saveUser(userId) {
       slack.web.users.info(userId)
         .then(async (userInfo) => {
           const realname = userInfo.user.profile.real_name;
-          if (!(await findId(config.airtable.tableName, channelId))) {
-            createRecord(config.airtable.tableName, {
+          if (!(await findId(channelId))) {
+            createRecord({
               user_id: userId,
               channel_id: channelId,
               username: realname,
@@ -173,7 +172,7 @@ export function saveUser(userId) {
 }
 
 export async function userExists(userId) {
-  return !!(await listRecords(config.airtable.tableName, userId));
+  return !!(await listRecords(userId));
 }
 
 export function parseOrders() {
@@ -269,7 +268,7 @@ export function parseOrdersNamed() {
   return getTodaysMessages()
     .then((history) => {
       messages = history;
-      return listRecords(config.airtable.tableName);
+      return listRecords();
     }).then((users) => {
       for (let message of messages) {
         if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {

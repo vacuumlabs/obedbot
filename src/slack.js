@@ -49,7 +49,7 @@ export async function getTodaysMessages() {
 export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   logger.devLog('Notifying about food arrival', callRestaurant);
   const messages = await getTodaysMessages();
-  const users = await listRecords(config.airtable.tableName);
+  const users = await listRecords();
   const restaurantNames = {
     [restaurants.presto]: 'Pizza Presto',
     [restaurants.hamka]: 'Hamka',
@@ -140,7 +140,7 @@ function privateIsDeprecated(userChannel) {
  * @param {boolean} mute - new mute status for the user
  */
 export async function changeMute(userChannel, mute) {
-  return await updateRecord(config.airtable.tableName, userChannel, mute).then(() => {
+  return await updateRecord(userChannel, mute).then(() => {
     slack.web.chat.postMessage(
       userChannel,
       `Notifikácie ${mute ? 'vypnuté' : 'zapnuté'}`,
@@ -279,7 +279,7 @@ export async function makeLastCall() {
   logger.devLog('Making last call');
 
   const messages = await getTodaysMessages();
-  const users = await listRecords(config.airtable.tableName);
+  const users = await listRecords();
   const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${await getAllMenus()}`;
 
   for (let user of users) {

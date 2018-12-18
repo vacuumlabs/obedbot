@@ -4,6 +4,7 @@ import {createChannel} from 'yacol';
 import {logger} from './resources';
 
 const base = new Airtable({apiKey: config.airtable.apiKey}).base(config.airtable.baseId);
+const table = base(config.airtable.tableName);
 
 const times = [];
 const countLimit = 5;
@@ -33,14 +34,14 @@ function waitForRequest() {
 }
 
 
-export async function createRecord(table, record) {
+export async function createRecord(record) {
   await waitForRequest();
-  return await base(table).create(record);
+  return (await table.create(record));
 }
 
-export async function listRecords(table, userId = undefined) {
+export async function listRecords(userId = undefined) {
   await waitForRequest();
-  const records = await base(table).select({
+  const records = await table.select({
     view: config.airtable.viewName,
   }).firstPage();
 
@@ -54,9 +55,9 @@ export async function listRecords(table, userId = undefined) {
   return listedRecords;
 }
 
-export async function findId(table, channelId) {
+export async function findId(channelId) {
   await waitForRequest();
-  let records = await base(table).select({
+  let records = await table.select({
     view: config.airtable.viewName,
   }).firstPage();
 
@@ -68,10 +69,10 @@ export async function findId(table, channelId) {
   return recordId;
 }
 
-export async function updateRecord(table, userChannel, mute) {
-  const recordId = await findId(table, userChannel);
-  await base(table).update(recordId, {
+export async function updateRecord(userChannel, mute) {
+  const recordId = await findId(userChannel);
+  await table.update(recordId, {
     notifications: mute,
   });
-  logger.devLog('Notifications updated for user with ID ' + recordId);
+  logger.devLog('Notifications updated for channel ' + userChannel);
 }
