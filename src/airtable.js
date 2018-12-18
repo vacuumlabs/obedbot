@@ -2,6 +2,7 @@ import Airtable from 'airtable';
 import config from '../config';
 import {createChannel} from 'yacol';
 import {logger} from './resources';
+import {filter} from 'lodash';
 
 const base = new Airtable({apiKey: config.airtable.apiKey}).base(config.airtable.baseId);
 const table = base(config.airtable.tableName);
@@ -39,7 +40,7 @@ export async function createRecord(record) {
   return (await table.create(record));
 }
 
-export async function listRecords(userId = undefined) {
+export async function listRecords() {
   await waitForRequest();
   const records = await table.select({
     view: config.airtable.viewName,
@@ -47,30 +48,16 @@ export async function listRecords(userId = undefined) {
 
   let listedRecords = [];
   records.forEach((record) => {
-    const recordUserId = record.get('user_id');
-    if (userId && recordUserId !== userId) return;
-    listedRecords.push(record.fields);
+    const recordId = record.fields;
+    recordId.id = record.getId();
+    listedRecords.push(recordId);
   });
-  if (listedRecords.length === 0) return false;
   return listedRecords;
 }
 
-export async function findId(channelId) {
-  await waitForRequest();
-  let records = await table.select({
-    view: config.airtable.viewName,
-  }).firstPage();
-
-  let recordId;
-  records.forEach((record) => {
-    const recordChannelId = record.get('channel_id');
-    if (recordChannelId === channelId) recordId = record.getId();
-  });
-  return recordId;
-}
-
 export async function updateRecord(userChannel, mute) {
-  const recordId = await findId(userChannel);
+  const records = await listRecords();
+  const recordId = filter(records, {channel_id: userChannel})[0].id;
   await table.update(recordId, {
     notifications: mute,
   });

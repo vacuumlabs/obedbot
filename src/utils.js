@@ -1,5 +1,5 @@
 import Promise from 'bluebird';
-import {find, get, capitalize} from 'lodash';
+import {find, get, capitalize, some} from 'lodash';
 import moment from 'moment';
 import {AllHtmlEntities} from 'html-entities';
 import request from 'request-promise';
@@ -7,7 +7,7 @@ import request from 'request-promise';
 import {getTodaysMessages, processMessages} from './slack';
 import {slack, logger} from './resources';
 import config from '../config';
-import {createRecord, findId, listRecords} from './airtable';
+import {createRecord, listRecords} from './airtable';
 
 const htmlEntities = new AllHtmlEntities();
 
@@ -147,7 +147,9 @@ export function saveUser(userId) {
       slack.web.users.info(userId)
         .then(async (userInfo) => {
           const realname = userInfo.user.profile.real_name;
-          if (!(await findId(channelId))) {
+          const records = await listRecords();
+          const exists = some(records, {channel_id: channelId});
+          if (!exists) {
             createRecord({
               user_id: userId,
               channel_id: channelId,
@@ -172,7 +174,8 @@ export function saveUser(userId) {
 }
 
 export async function userExists(userId) {
-  return !!(await listRecords(userId));
+  const records = (await listRecords());
+  return some(records, {user_id: userId});
 }
 
 export function parseOrders() {
