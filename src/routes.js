@@ -28,7 +28,7 @@ async function renderOrdersNamed(req, res) {
 }
 
 async function renderNotifications(req, res) {
-  const users = await listRecords(config.airtable.tableName);
+  const users = await listRecords();
   res.render('notifications', {
     title: 'Stav notifikácií',
     activePage: 'notifications',
