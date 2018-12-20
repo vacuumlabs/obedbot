@@ -49,7 +49,8 @@ export async function getTodaysMessages() {
 export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   logger.devLog('Notifying about food arrival', callRestaurant);
   const messages = await getTodaysMessages();
-  const users = await listRecords();
+  const filter = 'NOT({notifications} = \'\')';
+  const users = await listRecords(filter);
   const restaurantNames = {
     [restaurants.presto]: 'Pizza Presto',
     [restaurants.hamka]: 'Hamka',
@@ -279,7 +280,8 @@ export async function makeLastCall() {
   logger.devLog('Making last call');
 
   const messages = await getTodaysMessages();
-  const users = await listRecords();
+  const filter = '({notifications} = \'true\')';
+  const users = await listRecords(filter);
   const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${await getAllMenus()}`;
 
   for (let user of users) {

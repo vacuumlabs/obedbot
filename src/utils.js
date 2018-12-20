@@ -1,5 +1,5 @@
 import Promise from 'bluebird';
-import {find, get, capitalize, some} from 'lodash';
+import {find, get, capitalize} from 'lodash';
 import moment from 'moment';
 import {AllHtmlEntities} from 'html-entities';
 import request from 'request-promise';
@@ -82,7 +82,7 @@ export function isOrder(order) {
 /**
  * Loads the orders since the last noon
  */
-export async function loadTodayOrders() {
+export function loadTodayOrders() {
   logger.devLog('Loading today\'s orders');
 
   getTodaysMessages().then(processMessages);
@@ -145,28 +145,29 @@ export function saveUser(userId) {
       }
 
       slack.web.users.info(userId)
-        .then(async (userInfo) => {
+        .then((userInfo) => {
           const realname = userInfo.user.profile.real_name;
-          const records = await listRecords();
-          const exists = some(records, {channel_id: channelId});
-          if (!exists) {
-            createRecord({
-              user_id: userId,
-              channel_id: channelId,
-              username: realname,
-              notifications: false,
-            }).then(() => {
-              logger.devLog(`User ${realname} has been added to database`);
-              if (!config.dev) {
-                slack.web.chat.postMessage(
-                  channelId,
-                  'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
-                  '#ba-obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
-                  {as_user: true}
-                );
-              }
-            }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
-          }
+          const filter = '({channel_id} = \'' + channelId + '\')';
+          listRecords(filter).then((records) => {
+            if (!records[0]) {
+              createRecord({
+                user_id: userId,
+                channel_id: channelId,
+                username: realname,
+                notifications: false,
+              }).then(() => {
+                logger.devLog(`User ${realname} has been added to database`);
+                if (!config.dev) {
+                  slack.web.chat.postMessage(
+                    channelId,
+                    'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
+                    '#ba-obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
+                    {as_user: true}
+                  );
+                }
+              }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
+            }
+          });
         });
     }).catch(
       () => logger.error(`Trying to save bot or disabled user ${userId}`)
@@ -174,8 +175,9 @@ export function saveUser(userId) {
 }
 
 export async function userExists(userId) {
-  const records = (await listRecords());
-  return some(records, {user_id: userId});
+  const filter = '({user_id} = \'' + userId + '\')';
+  const records = await listRecords(filter);
+  return !!records[0];
 }
 
 export function parseOrders() {

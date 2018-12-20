@@ -5,10 +5,10 @@ const config = {
   dev: (process.env.OBEDBOT_DEV === 'true') || false,
   port: process.env.OBEDBOT_PORT || 4000,
   airtable: {
-    apiKey: process.env.API_KEY || '',
-    baseId: process.env.BASE_ID || '',
-    tableName: process.env.TABLE_NAME || '',
-    viewName: process.env.VIEW_NAME || '',
+    apiKey: process.env.OBEDBOT_API_KEY || '',
+    baseId: process.env.OBEDBOT_BASE_ID || '',
+    tableName: process.env.OBEDBOT_TABLE_NAME || '',
+    viewName: process.env.OBEDBOT_VIEW_NAME || '',
   },
   slack: {
     token: process.env.OBEDBOT_BOT_TOKEN || '',
