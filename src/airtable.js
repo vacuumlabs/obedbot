@@ -10,14 +10,15 @@ export function createRecord(record) {
 }
 
 export async function listRecords(filter) {
-  return (await table.select({
+  let records = [];
+  await table.select({
     view: config.airtable.viewName,
     filterByFormula: filter || '',
-  }).firstPage()).map((record) => {
-    const recordId = record.fields;
-    recordId.id = record.getId();
-    return recordId;
+  }).eachPage((recordsPage, fetchNextPage) => {
+    records = [...records, ...recordsPage];
+    fetchNextPage();
   });
+  return records;
 }
 
 export async function updateRecord(userChannel, mute) {

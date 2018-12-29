@@ -49,8 +49,7 @@ export async function getTodaysMessages() {
 export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   logger.devLog('Notifying about food arrival', callRestaurant);
   const messages = await getTodaysMessages();
-  const filter = 'NOT({notifications} = \'\')';
-  const users = await listRecords(filter);
+  const users = await listRecords();
   const restaurantNames = {
     [restaurants.presto]: 'Pizza Presto',
     [restaurants.hamka]: 'Hamka',
@@ -62,8 +61,8 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   slack.web.chat.postMessage(
     config.slack.lunchChannelId,
     willThereBeFood
-    ? `Prišli obedy z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
-    : `Dneska bohužiaľ obedy z ${restaurantNames[callRestaurant]} neprídu :disappointed:`,
+      ? `Prišli obedy z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
+      : `Dneska bohužiaľ obedy z ${restaurantNames[callRestaurant]} neprídu :disappointed:`,
     {as_user: true}
   );
 
@@ -77,7 +76,7 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
     // FIXME merge presto and pizza restaurants into one
     if (restaurant === callRestaurant ||
       (callRestaurant === restaurants.presto && restaurant === restaurants.pizza)) {
-      const userChannelId = find(users, ({user_id}) => user_id === message.user).channel_id;
+      const userChannelId = find(users, ({fields}) => fields.user_id === message.user).fields.channel_id;
       const notification = willThereBeFood
         ? `Prišiel ti obed ${text} z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
         : `Dneska bohužiaľ obed z ${restaurantNames[callRestaurant]} nepríde :disappointed:`;
@@ -285,8 +284,8 @@ export async function makeLastCall() {
   const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${await getAllMenus()}`;
 
   for (let user of users) {
-    if (!find(messages, ({text, user: userId}) => userId === user.user_id && isOrder(text))) {
-      slack.web.chat.postMessage(user.channel_id, message, {as_user: true});
+    if (!find(messages, ({text, user: userId}) => userId === user.fields.user_id && isOrder(text))) {
+      slack.web.chat.postMessage(user.fields.channel_id, message, {as_user: true});
     }
   }
 }

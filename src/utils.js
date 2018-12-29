@@ -170,8 +170,8 @@ export function saveUser(userId) {
           });
         });
     }).catch(
-      () => logger.error(`Trying to save bot or disabled user ${userId}`)
-    );
+    () => logger.error(`Trying to save bot or disabled user ${userId}`)
+  );
 }
 
 export async function userExists(userId) {
@@ -283,7 +283,7 @@ export function parseOrdersNamed() {
 
         const restaurant = identifyRestaurant(text);
         const order = {
-          user: find(users, {user_id: message.user}).username,
+          user: find(users, {user_id: message.user}).fields.username,
           order: getOrderFromMessage(text, restaurant),
         };
 
@@ -343,7 +343,7 @@ export function parseTodaysPrestoMenu(rawMenu) {
   const menuEnd = menu.indexOf(slovakDays[today + 1]);
   if (menuStart === -1 || menuEnd === -1) throw new Error('Parsing Presto menu: unable to find menu for today');
   menu = menu
-    // presto has the whole menu on single page, cut out only today
+  // presto has the whole menu on single page, cut out only today
     .substring(menuStart, menuEnd)
     .split('\n')
     .map((row) => row.trim())
