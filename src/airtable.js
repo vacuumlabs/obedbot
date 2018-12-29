@@ -18,6 +18,11 @@ export async function listRecords(filter) {
     records = [...records, ...recordsPage];
     fetchNextPage();
   });
+  records.map((record) => {
+    let recordInfo = record.fields;
+    recordInfo.id = record.getId();
+    return recordInfo;
+  });
   return records;
 }
 
