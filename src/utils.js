@@ -1,4 +1,3 @@
-import database from 'sqlite';
 import Promise from 'bluebird';
 import {find, get, capitalize} from 'lodash';
 import moment from 'moment';
@@ -8,6 +7,7 @@ import request from 'request-promise';
 import {getTodaysMessages, processMessages} from './slack';
 import {slack, logger} from './resources';
 import config from '../config';
+import {createRecord, listRecords} from './airtable';
 
 const htmlEntities = new AllHtmlEntities();
 
@@ -147,33 +147,37 @@ export function saveUser(userId) {
       slack.web.users.info(userId)
         .then((userInfo) => {
           const realname = userInfo.user.profile.real_name;
-          database.run(
-              'INSERT INTO users(user_id, channel_id, username) VALUES($userId, $channelId, $username)',
-              {$userId: userId, $channelId: channelId, $username: realname}
-            )
-            .then(() => {
-              logger.devLog(`User ${realname} has been added to database`);
-              if (!config.dev) {
-                slack.web.chat.postMessage(
-                  channelId,
-                  'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
-                  '#ba-obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
-                  {as_user: true}
-                );
-              }
-            }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
+          const filter = '({channel_id} = \'' + channelId + '\')';
+          listRecords(filter).then((records) => {
+            if (!records[0]) {
+              createRecord({
+                user_id: userId,
+                channel_id: channelId,
+                username: realname,
+                notifications: true,
+              }).then(() => {
+                logger.devLog(`User ${realname} has been added to database`);
+                if (!config.dev) {
+                  slack.web.chat.postMessage(
+                    channelId,
+                    'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
+                    '#ba-obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
+                    {as_user: true}
+                  );
+                }
+              }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
+            }
+          });
         });
     }).catch(
-      () => logger.error(`Trying to save bot or disabled user ${userId}`)
-    );
+    () => logger.error(`Trying to save bot or disabled user ${userId}`)
+  );
 }
 
 export async function userExists(userId) {
-  return database
-    .get(
-      'SELECT * FROM users WHERE user_id=$userId',
-      {$userId: userId}
-    ).then((result) => !!result);
+  const filter = '({user_id} = \'' + userId + '\')';
+  const records = await listRecords(filter);
+  return !!records[0];
 }
 
 export function parseOrders() {
@@ -269,7 +273,7 @@ export function parseOrdersNamed() {
   return getTodaysMessages()
     .then((history) => {
       messages = history;
-      return database.all('SELECT * FROM users');
+      return listRecords();
     }).then((users) => {
       for (let message of messages) {
         if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
@@ -339,7 +343,7 @@ export function parseTodaysPrestoMenu(rawMenu) {
   const menuEnd = menu.indexOf(slovakDays[today + 1]);
   if (menuStart === -1 || menuEnd === -1) throw new Error('Parsing Presto menu: unable to find menu for today');
   menu = menu
-    // presto has the whole menu on single page, cut out only today
+  // presto has the whole menu on single page, cut out only today
     .substring(menuStart, menuEnd)
     .split('\n')
     .map((row) => row.trim())
