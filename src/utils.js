@@ -154,7 +154,7 @@ export function saveUser(userId) {
                 user_id: userId,
                 channel_id: channelId,
                 username: realname,
-                notifications: false,
+                notifications: 1,
               }).then(() => {
                 logger.devLog(`User ${realname} has been added to database`);
                 if (!config.dev) {
