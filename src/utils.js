@@ -283,7 +283,7 @@ export function parseOrdersNamed() {
 
         const restaurant = identifyRestaurant(text);
         const order = {
-          user: find(users, {user_id: message.user}).fields.username,
+          user: find(users, {user_id: message.user}).username,
           order: getOrderFromMessage(text, restaurant),
         };
 
