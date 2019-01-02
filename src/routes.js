@@ -90,12 +90,12 @@ export function startExpress() {
   });
 
   app.get('/mute', (req, res) => {
-    changeMute(req.query.channel, 0)
+    changeMute(req.query.channel, false)
       .then(() => res.redirect('/notifications'));
   });
 
   app.get('/unmute', (req, res) => {
-    changeMute(req.query.channel, 1)
+    changeMute(req.query.channel, true)
       .then(() => res.redirect('/notifications'));
   });
 
