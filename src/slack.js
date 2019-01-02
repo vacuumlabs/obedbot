@@ -138,7 +138,7 @@ function privateIsDeprecated(userChannel) {
 /**
  * Changes mute status for a single user.
  * @param {string} userChannel - DM channel of the user
- * @param {number} mute - new mute status for the user
+ * @param {boolean} mute - new mute status for the user
  */
 export async function changeMute(userChannel, mute) {
   return await updateRecord(userChannel, mute).then(() => {
@@ -190,9 +190,9 @@ export async function messageReceived(msg) {
       if (isOrder(messageText)) {
         privateIsDeprecated(channel);
       } else if (messageText.includes('unmute')) {
-        changeMute(channel, 1);
+        changeMute(channel, true);
       } else if (messageText.includes('mute')) {
-        changeMute(channel, 0);
+        changeMute(channel, false);
       }
     }
   } else if (msg.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
@@ -280,7 +280,7 @@ export async function makeLastCall() {
   logger.devLog('Making last call');
 
   const messages = await getTodaysMessages();
-  const filter = '({notifications} = \'1\')';
+  const filter = '({notifications} = 1)';
   const users = await listRecords(filter);
   const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${await getAllMenus()}`;
 

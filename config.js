@@ -8,7 +8,6 @@ const config = {
     apiKey: process.env.OBEDBOT_API_KEY || '',
     baseId: process.env.OBEDBOT_BASE_ID || '',
     tableName: process.env.OBEDBOT_TABLE_NAME || '',
-    viewName: process.env.OBEDBOT_VIEW_NAME || '',
   },
   slack: {
     token: process.env.OBEDBOT_BOT_TOKEN || '',
@@ -34,9 +33,19 @@ const config = {
   messages: require('./messages'),
 };
 
-if (!config.slack.token || !config.slack.lunchChannelId
-  || !config.slack.botId || !config.menuLinks.presto || !config.menuLinks.veglife
-  || !config.menuLinks.hamka) {
+const requiredConfig = [
+  config.slack.token,
+  config.slack.lunchChannelId,
+  config.slack.botId,
+  config.menuLinks.presto,
+  config.menuLinks.veglife,
+  config.menuLinks.hamka,
+  config.airtable.apiKey,
+  config.airtable.baseId,
+  config.airtable.tableName,
+];
+
+if (requiredConfig.some((value) => !value)) {
   console.error('Missing env variables!');
   process.exit(1);
 }

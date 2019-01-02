@@ -12,7 +12,6 @@ export function createRecord(record) {
 export async function listRecords(filter) {
   let records = [];
   await table.select({
-    view: config.airtable.viewName,
     filterByFormula: filter || '',
   }).eachPage((recordsPage, fetchNextPage) => {
     records = [...records, ...recordsPage];
