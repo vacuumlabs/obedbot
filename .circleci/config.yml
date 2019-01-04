@@ -23,10 +23,10 @@ jobs:
       - image: circleci/node:8
     steps:
       - checkout
-      - run: yarn global add now
+      - run: sudo yarn global add now
       - run: >
-          now --token $ZEIT_TOKEN
-          now --token $ZEIT_TOKEN alias
+          now --token $ZEIT_TOKEN &&
+          now --token $ZEIT_TOKEN alias &&
           now --token $ZEIT_TOKEN rm obedbot --safe --yes
 
 workflows:
