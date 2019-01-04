@@ -10,8 +10,8 @@
         }
     },
     "env": {
-        "OBEDBOT_DEV": false,
-        "OBEDBOT_PORT": 8000,
+        "OBEDBOT_DEV": "false",
+        "OBEDBOT_PORT": "8000",
         "OBEDBOT_BOT_TOKEN": "@obedbot-bot-token",
         "OBEDBOT_BOT_ID": "U1TPWSV7H",
         "OBEDBOT_CHANNEL_ID": "C0KBBCTT4",
