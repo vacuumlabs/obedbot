@@ -23,12 +23,8 @@ jobs:
       - image: circleci/node:8
     steps:
       - checkout
-      - run:
-        name: Install Now CLI
-        command: yarn global add now
-      - run:
-        name: Deploy & Alias & Clean
-        command: |
+      - run: yarn global add now
+      - run: >
           now --token $ZEIT_TOKEN
           now --token $ZEIT_TOKEN alias
           now --token $ZEIT_TOKEN rm obedbot --safe --yes
