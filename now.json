@@ -3,7 +3,6 @@
     "name": "obedbot",
     "type": "npm",
     "alias": "obedbot.vacuumlabs.com",
-    "regions": "bru",
     "scale": {
         "bru1": {
             "min": 1,
