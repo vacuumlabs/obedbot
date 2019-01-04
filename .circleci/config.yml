@@ -25,10 +25,9 @@ jobs:
       - checkout
       - run: sudo yarn global add now
       - run: >
-          now --token $ZEIT_TOKEN switch vacuumlabs &&
-          now --token $ZEIT_TOKEN &&
-          now --token $ZEIT_TOKEN alias &&
-          now --token $ZEIT_TOKEN rm obedbot --safe --yes
+          now --token $ZEIT_TOKEN --team vacuumlabs &&
+          now --token $ZEIT_TOKEN --team vacuumlabs alias &&
+          now --token $ZEIT_TOKEN --team vacuumlabs rm obedbot --safe --yes
 
 workflows:
   version: 2
