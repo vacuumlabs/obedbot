@@ -25,12 +25,10 @@ export async function listRecords(filter) {
   return records;
 }
 
-export async function updateRecord(userChannel, mute) {
+export async function updateRecord(userChannel, notifications) {
   const filter = '({channel_id} = \'' + userChannel + '\')';
   const records = await listRecords(filter);
   const recordId = records[0].id;
-  await table.update(recordId, {
-    notifications: mute,
-  });
+  await table.update(recordId, {notifications});
   logger.devLog('Notifications updated for channel ' + userChannel);
 }

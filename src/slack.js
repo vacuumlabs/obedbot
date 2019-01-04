@@ -136,15 +136,15 @@ function privateIsDeprecated(userChannel) {
 }
 
 /**
- * Changes mute status for a single user.
+ * Changes notification status for a single user.
  * @param {string} userChannel - DM channel of the user
- * @param {boolean} mute - new mute status for the user
+ * @param {boolean} notifications - new notifications status for the user
  */
-export async function changeMute(userChannel, mute) {
-  return await updateRecord(userChannel, mute).then(() => {
+export async function changeMute(userChannel, notifications) {
+  return await updateRecord(userChannel, notifications).then(() => {
     slack.web.chat.postMessage(
       userChannel,
-      `Notifikácie ${mute ? 'vypnuté' : 'zapnuté'}`,
+      `Notifikácie ${notifications ? 'zapnuté' : 'vypnuté'}`,
       {as_user: true}
     );
   }).catch(() => {
