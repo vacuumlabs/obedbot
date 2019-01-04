@@ -1,4 +1,3 @@
-import database from 'sqlite';
 import moment from 'moment';
 import {isNil, find} from 'lodash';
 import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
@@ -8,6 +7,7 @@ import {userExists, saveUser, isObedbotMentioned, stripMention, identifyRestaura
   restaurants, prettyPrint, isChannelPublic, alreadyReacted, isOrder, getAllMenus,
 } from './utils';
 import config from '../config';
+import {listRecords, updateRecord} from './airtable';
 
 export function loadUsers() {
   slack.web.channels.info(config.slack.lunchChannelId)
@@ -50,7 +50,7 @@ export async function getTodaysMessages() {
 export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   logger.devLog('Notifying about food arrival', callRestaurant);
   const messages = await getTodaysMessages();
-  const users = await database.all('SELECT * FROM users');
+  const users = await listRecords();
   const restaurantNames = {
     [restaurants.presto]: 'Pizza Presto',
     [restaurants.hamka]: 'Hamka',
@@ -62,8 +62,8 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   slack.web.chat.postMessage(
     config.slack.lunchChannelId,
     willThereBeFood
-    ? `Prišli obedy z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
-    : `Dneska bohužiaľ obedy z ${restaurantNames[callRestaurant]} neprídu :disappointed:`,
+      ? `Prišli obedy z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
+      : `Dneska bohužiaľ obedy z ${restaurantNames[callRestaurant]} neprídu :disappointed:`,
     {as_user: true}
   );
 
@@ -136,18 +136,15 @@ function privateIsDeprecated(userChannel) {
 }
 
 /**
- * Changes mute status for a single user.
+ * Changes notification status for a single user.
  * @param {string} userChannel - DM channel of the user
- * @param {boolean} mute - new mute status for the user
+ * @param {boolean} notifications - new notifications status for the user
  */
-export async function changeMute(userChannel, mute) {
-  return database.run(
-    'UPDATE users SET notifications=$notifications WHERE channel_id=$userChannelId',
-    {$notifications: mute ? 0 : 1, $userChannelId: userChannel}
-  ).then(() => {
+export async function changeMute(userChannel, notifications) {
+  return await updateRecord(userChannel, notifications).then(() => {
     slack.web.chat.postMessage(
       userChannel,
-      `Notifikácie ${mute ? 'vypnuté' : 'zapnuté'}`,
+      `Notifikácie ${notifications ? 'zapnuté' : 'vypnuté'}`,
       {as_user: true}
     );
   }).catch(() => {
@@ -193,9 +190,9 @@ export async function messageReceived(msg) {
       if (isOrder(messageText)) {
         privateIsDeprecated(channel);
       } else if (messageText.includes('unmute')) {
-        changeMute(channel, false);
-      } else if (messageText.includes('mute')) {
         changeMute(channel, true);
+      } else if (messageText.includes('mute')) {
+        changeMute(channel, false);
       }
     }
   } else if (msg.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
@@ -283,7 +280,8 @@ export async function makeLastCall() {
   logger.devLog('Making last call');
 
   const messages = await getTodaysMessages();
-  const users = await database.all('SELECT * FROM users WHERE notifications=1');
+  const filter = '({notifications} = 1)';
+  const users = await listRecords(filter);
   const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${await getAllMenus()}`;
 
   for (let user of users) {

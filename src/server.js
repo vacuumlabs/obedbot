@@ -1,14 +1,11 @@
 import {RTM_EVENTS, CLIENT_EVENTS} from '@slack/client';
 import schedule from 'node-schedule';
 import moment from 'moment-timezone';
-import Promise from 'bluebird';
-import database from 'sqlite';
 
 import {slack, logger} from './resources';
 import {startExpress} from './routes';
 import {loadTodayOrders, restaurants} from './utils';
 import {loadUsers, messageReceived, endOfOrders, makeLastCall} from './slack';
-import config from '../config';
 
 /**
  * Starts the bot server
@@ -16,10 +13,7 @@ import config from '../config';
 export function runServer() {
   startExpress();
 
-  // setup the database
-  Promise.resolve().then(() => database.open(config.dbPath, {Promise}))
-    .then(loadUsers);
-
+  loadUsers();
   const rtm = slack.rtm;
   logger.log('Starting Slack RTM client');
   rtm.start();

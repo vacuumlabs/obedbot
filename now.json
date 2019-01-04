@@ -1,0 +1,20 @@
+{
+    "version": 1,
+    "name": "obedbot",
+    "type": "npm",
+    "alias": "obedbot.vacuumlabs.com",
+    "env": {
+        "OBEDBOT_DEV": false,
+        "OBEDBOT_PORT": 8000,
+        "OBEDBOT_BOT_TOKEN": "@obedbot-bot-token",
+        "OBEDBOT_BOT_ID": "U1TPWSV7H",
+        "OBEDBOT_CHANNEL_ID": "C0KBBCTT4",
+        "OBEDBOT_API_KEY": "@obedbot-airtable-api-key",
+        "OBEDBOT_BASE_ID": "appWu10LVjO0pMtuX",
+        "OBEDBOT_TABLE_NAME": "Users",
+        "OBEDBOT_PRESTO": "http://www.pizza-presto.sk/default.aspx?p=catalogpage&group=1",
+        "OBEDBOT_VEGLIFE": "http://www.veglife.sk/sk/menu-2/",
+        "OBEDBOT_HAMKA": "http://hamka.sk/print.php?menu=1&uid=3&date=",
+        "OBEDBOT_CLICK": "http://m.clickfood.sk/sk/menu/"
+    }
+}

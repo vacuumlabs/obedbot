@@ -1,11 +1,11 @@
 import express from 'express';
-import database from 'sqlite';
 
 import {restaurants, parseOrders, parseOrdersNamed, getMenu, getAllMenus,
   parseTodaysPrestoMenu, parseTodaysVeglifeMenu, parseTodaysHamkaMenu, parseTodaysClickMenu} from './utils';
 import {notifyAllThatOrdered, changeMute} from './slack';
 import {logger} from './resources';
 import config from '../config';
+import {listRecords} from './airtable';
 
 async function renderOrders(req, res) {
   const {presto, veglife, hamka, click, shop} = await parseOrders();
@@ -28,8 +28,7 @@ async function renderOrdersNamed(req, res) {
 }
 
 async function renderNotifications(req, res) {
-  const users = await database.all('SELECT * FROM users');
-
+  const users = await listRecords();
   res.render('notifications', {
     title: 'Stav notifikácií',
     activePage: 'notifications',
@@ -91,12 +90,12 @@ export function startExpress() {
   });
 
   app.get('/mute', (req, res) => {
-    changeMute(req.query.channel, true)
+    changeMute(req.query.channel, false)
       .then(() => res.redirect('/notifications'));
   });
 
   app.get('/unmute', (req, res) => {
-    changeMute(req.query.channel, false)
+    changeMute(req.query.channel, true)
       .then(() => res.redirect('/notifications'));
   });
 
