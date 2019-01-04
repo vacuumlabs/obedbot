@@ -23,7 +23,17 @@ jobs:
       - image: circleci/node:8
     steps:
       - checkout
-      - run: ./deploy.sh
+      - run:
+        name: Install Now CLI
+        command: yarn global add now
+      - run:
+        name: Deploy & Alias & Clean
+        command: |
+          if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            now --token $ZEIT_TOKEN
+            now --token $ZEIT_TOKEN alias
+            now --token $ZEIT_TOKEN rm obedbot --safe --yes
+          fi
 
 workflows:
   version: 2
