@@ -29,11 +29,9 @@ jobs:
       - run:
         name: Deploy & Alias & Clean
         command: |
-          if [ "${CIRCLE_BRANCH}" == "master" ]; then
-            now --token $ZEIT_TOKEN
-            now --token $ZEIT_TOKEN alias
-            now --token $ZEIT_TOKEN rm obedbot --safe --yes
-          fi
+          now --token $ZEIT_TOKEN
+          now --token $ZEIT_TOKEN alias
+          now --token $ZEIT_TOKEN rm obedbot --safe --yes
 
 workflows:
   version: 2
