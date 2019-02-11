@@ -407,12 +407,12 @@ function normalizeWhitespace(str) {
 function parseClickList($, listElement) {
   return $(listElement)
     .find('li')
-    .map((_, el) => {
+    .map((index, el) => {
       const name = normalizeWhitespace($(el).find('.product-name').text());
       const description = normalizeWhitespace($(el).find('.product-description').text());
       const weight = normalizeWhitespace($(el).find('.product-bar span').first().text());
       const price = normalizeWhitespace($(el).find('.product-price').text());
-      return `${name}: ${description}, ${weight}, ${price}`;
+      return `${index + 1}. ${name}: ${description}, ${weight}, ${price}`;
     })
     .get();
 }
