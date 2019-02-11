@@ -1,8 +1,9 @@
 import Promise from 'bluebird';
-import {find, get, capitalize} from 'lodash';
+import {find, get} from 'lodash';
 import moment from 'moment';
 import {AllHtmlEntities} from 'html-entities';
 import request from 'request-promise';
+import cheerio from 'cheerio';
 
 import {getTodaysMessages, processMessages} from './slack';
 import {slack, logger} from './resources';
@@ -399,70 +400,31 @@ export function parseTodaysHamkaMenu(rawMenu) {
   return menu;
 }
 
-function getIndicesOf(menuStrFrom, menuStrTo, str) {
-  const menuStrFromLen = menuStrFrom.length;
-  const menuStrToLen = menuStrTo.length;
-  if (menuStrFromLen === 0 || menuStrToLen === 0) {
-    return [];
-  }
-  let startIndex = 0;
-  let index;
-  const indices = [];
-  while ((index = str.indexOf(menuStrFrom, startIndex)) > -1) {
-    const from = index;
-    const to = str.indexOf(menuStrTo, from + menuStrFromLen);
-    startIndex = to + menuStrToLen;
-
-    indices.push({from, to});
-  }
-  return indices;
+function normalizeWhitespace(str) {
+  return str.split('\n').map((l) => l.trim()).filter((l) => l.length > 0).join(' ');
 }
 
-function getPriceOfItem(item) {
-  const priceMatch = item.match(/\b(\d+[,.]\d+)\s*€/);
-  return priceMatch && parseFloat(priceMatch[1].replace(',', '.'));
+function parseClickList($, listElement) {
+  return $(listElement)
+    .find('li')
+    .map((_, el) => {
+      const name = normalizeWhitespace($(el).find('.product-name').text());
+      const description = normalizeWhitespace($(el).find('.product-description').text());
+      const weight = normalizeWhitespace($(el).find('.product-bar span').first().text());
+      const price = normalizeWhitespace($(el).find('.product-price').text());
+      return `${name}: ${description}, ${weight}, ${price}`;
+    })
+    .get();
 }
 
 export function parseTodaysClickMenu(rawMenu) {
-  const menuStart = rawMenu.indexOf('<div id="kategoria-menu-');
-  if (menuStart === -1) {
-    throw new Error('Parsing Click menu: "<div id="kategoria-menu-" not found');
-  }
-  const menuEnd = rawMenu.indexOf('<div id="kategoria-salaty"', menuStart);
-  if (menuEnd === -1) {
-    throw new Error('Parsing Click menu: "<div id="kategoria-salaty"" not found');
-  }
-  const menu = rawMenu.substring(menuStart, menuEnd);
-  const dayMatch = menu.match(/kategoria-menu-(\w+)/);
-  const day = dayMatch ? capitalize(dayMatch[1]) : '?';
-  const indices = getIndicesOf('<li', '</li>', menu);
-  const soupsIndex = menu.indexOf('<div id="kategoria-polievky"');
+  const $ = cheerio.load(rawMenu);
 
-  const soup = [],
-    main = [];
-  indices.forEach((index) => {
-    let item = menu
-      .substring(index.from, index.to)
-      // delete all HTML tags
-      .replace(/<[^>]*>/g, '');
-    item = htmlEntities
-      .decode(item)
-      // remove item comments
-      .replace(/\([^)]*\)/g, '')
-      // remove multiple spaces
-      .replace(/\s+/g, ' ')
-      // remove add to cart symbol
-      .replace(/\s\+\s/g, ' ')
-      .trim();
-    if (index.from < soupsIndex) {
-      const price = getPriceOfItem(item);
-      if (price == null || price > 3.5) {
-        // filter dessert
-        main.push(`${main.length + 1}. ${item}`);
-      }
-    } else {
-      soup.push(`${soup.length + 1}. ${item}`);
-    }
-  });
-  return [`Menu ${day}`, 'Polievky:', ...soup, 'Hlavné jedlo:', ...main].join('\n');
+  const mainMenu = $('.panel').first();
+  const dayTitle = normalizeWhitespace($(mainMenu).find('.title').text());
+
+  const main = parseClickList($, mainMenu);
+  const soups = parseClickList($, $('#kategoria-polievky'));
+
+  return [`${dayTitle}`, 'Polievky:', ...soups, 'Hlavné jedlo:', ...main].join('\n');
 }
