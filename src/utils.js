@@ -401,7 +401,7 @@ export function parseTodaysHamkaMenu(rawMenu) {
 }
 
 function normalizeWhitespace(str) {
-  return str.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
+  return str.split('\n').map((l) => l.trim()).filter((l) => l.length > 0).join(' ');
 }
 
 function parseClickList($, listElement) {
