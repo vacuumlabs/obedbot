@@ -333,25 +333,28 @@ export async function getAllMenus() {
 }
 
 export function parseTodaysPrestoMenu(rawMenu) {
-  // CENA is there as a delimiter because the menu continues on with different things
-  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'CENA'];
+  const slovakDays = ['', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
   const today = getMomentForMenu().day();
 
-  // delete all HTML tags
-  let menu = rawMenu.replace(/<[^>]*>/g, '');
-  menu = htmlEntities.decode(menu);
+  let menu = htmlEntities.decode(rawMenu);
   const menuStart = menu.indexOf(slovakDays[today]);
   const menuEnd = menu.indexOf(slovakDays[today + 1]);
   if (menuStart === -1 || menuEnd === -1) throw new Error('Parsing Presto menu: unable to find menu for today');
-  menu = menu
   // presto has the whole menu on single page, cut out only today
-    .substring(menuStart, menuEnd)
+  menu = menu.substring(menuStart, menuEnd)
     .split('\n')
     .map((row) => row.trim())
-    // delete empty lines
-    .filter((row) => row.length)
-    // add numbers (after DAY and SOUP rows)
-    .map((row, i) => i > 1 ? `${i - 1}. ${row}` : row)
+    .filter(Boolean)
+    .join('')
+    .split(/<tr>/)
+    .slice(1)
+    .map((row) =>
+      row
+        .split(/<\/td><td[^>]*>/)
+        .map((part) => part.replace(/<[^>]*>/g, ''))
+        .filter(Boolean)
+        .join(', ')
+    )
     .join('\n')
     // replace all multiple whitespaces with single space
     .replace(/\s\s+/g, ' ');
