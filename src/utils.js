@@ -332,34 +332,43 @@ export async function getAllMenus() {
   return `*Presto*\n${presto}\n\n*Veglife*\n${veglife}\n\n*Hamka*\n${hamka}\n\n*Click*\n${click}`;
 }
 
+function parsePrestoMenuRow($, row) {
+  return $('td', row)
+      .map((index, col) => {
+        if (typeof (col.children[0]) !== 'undefined') {
+          return col.children[0].data;
+        }
+      })
+      .get()
+      .join(' ');
+}
+
 export function parseTodaysPrestoMenu(rawMenu) {
   const slovakDays = ['', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
   const today = getMomentForMenu().day();
 
-  let menu = htmlEntities.decode(rawMenu);
-  const menuStart = menu.indexOf(slovakDays[today]);
-  const menuEnd = menu.indexOf(slovakDays[today + 1]);
-  if (menuStart === -1 || menuEnd === -1) throw new Error('Parsing Presto menu: unable to find menu for today');
-  // presto has the whole menu on single page, cut out only today
-  menu = menu.substring(menuStart, menuEnd)
-    .split('\n')
-    .map((row) => row.trim())
-    .filter(Boolean)
-    .join('')
-    .split(/<tr>/)
-    .slice(1)
-    .map((row) =>
-      row
-        .split(/<\/td><td[^>]*>/)
-        .map((part) => part.replace(/<[^>]*>/g, ''))
-        .filter(Boolean)
-        .join(', ')
-    )
-    .join('\n')
-    // replace all multiple whitespaces with single space
-    .replace(/\s\s+/g, ' ');
+  const $ = cheerio.load(rawMenu);
+  const dayTitle = slovakDays[today];
+  const menuTable = $('tr');
+  let menuStartNew = -1, menuEndNew = -1;
 
-  return menu;
+  for (let row = 0; row < menuTable.length; row++) {
+    if ($('tr.first b', menuTable[row]) &&
+        ($('b', menuTable[row]).text()).includes(slovakDays[today])) {
+      menuStartNew = row;
+    }
+    if ($('tr.first b', menuTable[row]) &&
+        ($('b', menuTable[row]).text()).includes(slovakDays[today + 1])) {
+      menuEndNew = row;
+    }
+  }
+  const meals = menuTable.map((ind, row) => {
+    if (ind > menuStartNew && menuEndNew > ind) {
+      return parsePrestoMenuRow($, row);
+    }
+  });
+
+  return [`${dayTitle}`, ...meals].join('\n');
 }
 
 export function parseTodaysVeglifeMenu(rawMenu) {
