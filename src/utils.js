@@ -1,7 +1,6 @@
 import Promise from 'bluebird';
 import {find, get} from 'lodash';
 import moment from 'moment';
-import {AllHtmlEntities} from 'html-entities';
 import request from 'request-promise';
 import cheerio from 'cheerio';
 
