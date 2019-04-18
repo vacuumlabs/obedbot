@@ -10,8 +10,6 @@ import {slack, logger} from './resources';
 import config from '../config';
 import {createRecord, listRecords} from './airtable';
 
-const htmlEntities = new AllHtmlEntities();
-
 /**
  * Returns string with pretty printed json object
  *
@@ -333,10 +331,11 @@ export async function getAllMenus() {
 }
 
 function parsePrestoMenuRow($, row) {
-  return $('td', row)
-      .map((index, col) => {
-        if (typeof (col.children[0]) !== 'undefined') {
-          return col.children[0].data;
+  return $(row)
+      .find('td')
+      .map((ind, cell) => {
+        if (cell.children[0]) {
+          return cell.children[0].data;
         }
       })
       .get()
@@ -348,25 +347,25 @@ export function parseTodaysPrestoMenu(rawMenu) {
   const today = getMomentForMenu().day();
 
   const $ = cheerio.load(rawMenu);
-  const dayTitle = slovakDays[today];
-  const menuTable = $('tr');
-  let menuStartNew = -1, menuEndNew = -1;
+  const weekMenuTable = $('tr');
+  let menuStart = -1, menuEnd = -1;
 
-  for (let row = 0; row < menuTable.length; row++) {
-    if ($('tr.first b', menuTable[row]) &&
-        ($('b', menuTable[row]).text()).includes(slovakDays[today])) {
-      menuStartNew = row;
+  weekMenuTable.each((ind, row) => {
+    if ($(row).find('tr.first b') &&
+        ($(row).find('b').text()).includes(slovakDays[today])) {
+      menuStart = ind + 1;
     }
-    if ($('tr.first b', menuTable[row]) &&
-        ($('b', menuTable[row]).text()).includes(slovakDays[today + 1])) {
-      menuEndNew = row;
-    }
-  }
-  const meals = menuTable.map((ind, row) => {
-    if (ind > menuStartNew && menuEndNew > ind) {
-      return parsePrestoMenuRow($, row);
+    if ($(row).find('tr.first b') &&
+        ($(row).find('b').text()).includes(slovakDays[today + 1])) {
+      menuEnd = ind;
     }
   });
+  if (menuStart === -1 || menuEnd === -1) throw new Error('Parsing Presto menu: unable to find menu for today');
+
+  const dayTitle = slovakDays[today];
+  const meals = weekMenuTable
+      .map((ind, row) => parsePrestoMenuRow($, row))
+      .slice(menuStart, menuEnd);
 
   return [`${dayTitle}`, ...meals].join('\n');
 }
