@@ -329,14 +329,14 @@ export async function getAllMenus() {
   return `*Presto*\n${presto}\n\n*Veglife*\n${veglife}\n\n*Hamka*\n${hamka}\n\n*Click*\n${click}`;
 }
 
+function normalizeWhitespace(str) {
+  return str.split('\n').map((l) => l.trim()).filter((l) => l.length > 0).join(' ');
+}
+
 function parsePrestoMenuRow($, row) {
   return $(row)
       .find('td')
-      .map((ind, cell) => {
-        if (cell.children[0]) {
-          return cell.children[0].data;
-        }
-      })
+      .map((ind, cell) => normalizeWhitespace($(cell).text()))
       .get()
       .join(' ');
 }
@@ -346,25 +346,11 @@ export function parseTodaysPrestoMenu(rawMenu) {
   const today = getMomentForMenu().day();
 
   const $ = cheerio.load(rawMenu);
-  const weekMenuTable = $('tr');
-  let menuStart = -1, menuEnd = -1;
-
-  weekMenuTable.each((ind, row) => {
-    if ($(row).find('tr.first b') &&
-        ($(row).find('b').text()).includes(slovakDays[today])) {
-      menuStart = ind + 1;
-    }
-    if ($(row).find('tr.first b') &&
-        ($(row).find('b').text()).includes(slovakDays[today + 1])) {
-      menuEnd = ind;
-    }
-  });
-  if (menuStart === -1 || menuEnd === -1) throw new Error('Parsing Presto menu: unable to find menu for today');
 
   const dayTitle = slovakDays[today];
-  const meals = weekMenuTable
-      .map((ind, row) => parsePrestoMenuRow($, row))
-      .slice(menuStart, menuEnd);
+  const meals = $(`tr.first:contains('${slovakDays[today]}')`)
+      .nextUntil('tr.first')
+      .map((_, row) => parsePrestoMenuRow($, row));
 
   return [`${dayTitle}`, ...meals].join('\n');
 }
@@ -408,10 +394,6 @@ export function parseTodaysHamkaMenu(rawMenu) {
     .replace(/<p[^>]*>(.*?)<\/p>/g, '$1\n')
     .replace(/<[^>]*>/g, '');
   return menu;
-}
-
-function normalizeWhitespace(str) {
-  return str.split('\n').map((l) => l.trim()).filter((l) => l.length > 0).join(' ');
 }
 
 function parseClickList($, listElement) {
