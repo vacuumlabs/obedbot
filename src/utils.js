@@ -363,7 +363,7 @@ export function parseTodaysPrestoMenu(rawMenu) {
 }
 
 export function parseTodaysVeglifeMenu(rawMenu) {
-  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOT'];
+  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOTA'];
   const today = getMomentForMenu().day();
   const menuStart = rawMenu.indexOf(slovakDays[today]);
   const menuEnd = rawMenu.indexOf(slovakDays[today + 1]);
