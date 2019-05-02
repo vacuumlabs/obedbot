@@ -348,7 +348,7 @@ export function parseTodaysPrestoMenu(rawMenu) {
   const $ = cheerio.load(rawMenu);
 
   const dayTitle = slovakDays[today];
-  const meals = $(`tr.first:contains('${slovakDays[today]}')`)
+  const meals = $(`tr.first:contains('${dayTitle}')`)
       .nextUntil('tr.first')
       .map((_, row) => parsePrestoMenuRow($, row));
 
