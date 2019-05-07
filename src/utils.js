@@ -397,33 +397,19 @@ export function parseTodaysVeglifeMenu(rawMenu) {
     'PIATOK',
     'SOBOTA',
   ]
+  const $ = cheerio.load(rawMenu)
   const today = getMomentForMenu().day()
-  const menuStart = rawMenu.indexOf(slovakDays[today])
-  const menuEnd = rawMenu.indexOf(slovakDays[today + 1])
-  if (menuStart === -1 || menuEnd === -1) {
-    throw new Error('Parsing Veglife menu: unable to find menu for today')
-  }
-  let menu = rawMenu
-    .substring(menuStart, menuEnd)
-    // delete all HTML tags
-    .replace(/<[^>]*>/g, '')
-    .split('\n')
-    .map(row => row.trim())
-    // delete empty lines
-    .filter(row => row.length)
-    .join('\n')
-    // replace all multiple whitespaces with single space
-    .replace(/\s\s+/g, ' ')
-
-  let infoIndex = menu.indexOf('+ Pestrá')
-  if (infoIndex === -1) {
-    infoIndex = menu.indexOf('Nemôžete prísť?')
-  }
-  if (infoIndex !== -1) {
-    // delete unnecessary part
-    menu = menu.substring(0, infoIndex)
-  }
-  return menu
+  const dayTitle = slovakDays[today]
+  const menuTitle = $(`h1:contains('${dayTitle}')`)
+    .clone()
+    .children()
+    .remove()
+    .end()
+    .text()
+  const menu = $(`h1:contains('${dayTitle}')`)
+    .nextUntil("p:contains('Pestrá')")
+    .map((_, tag) => normalizeWhitespace($(tag).text()))
+  return [menuTitle, ...menu].join('\n')
 }
 
 export function parseTodaysHamkaMenu(rawMenu) {
