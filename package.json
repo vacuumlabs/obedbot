@@ -5,9 +5,10 @@
   "scripts": {
     "start": "node -- server.js",
     "dev": "babel-watch server.js",
-    "test": "eslint src/**",
+    "test": "eslint *.js src/**/*.js && prettier --check *.js src/**/*.js",
     "build": "babel src/ -d build/ -s",
-    "eslint": "eslint src/**",
+    "eslint": "eslint *.js src/**/*.js",
+    "prettier": "prettier --write *.js src/**/*.js",
     "deploy-now": "now `sed 's/#.*$//;/^\\s*$/d;s/^/-e /' .env` && now alias obedbot.vacuumlabs.com"
   },
   "author": "Jakub Simo",
@@ -38,9 +39,11 @@
     "babel-register": "^6.26.0",
     "babel-watch": "^2.0.7",
     "eslint": "^6.0.1",
+    "eslint-config-prettier": "^6.0.0",
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-babel": "^5.3.0",
-    "eslint-plugin-import": "^2.18.0"
+    "eslint-plugin-import": "^2.18.0",
+    "prettier": "^1.18.2"
   },
   "resolutions": {
     "**/marked": "^0.3.9"
