@@ -1,7 +1,6 @@
 import Promise from 'bluebird';
 import {find, get} from 'lodash';
 import moment from 'moment';
-import {AllHtmlEntities} from 'html-entities';
 import request from 'request-promise';
 import cheerio from 'cheerio';
 
@@ -9,8 +8,6 @@ import {getTodaysMessages, processMessages} from './slack';
 import {slack, logger} from './resources';
 import config from '../config';
 import {createRecord, listRecords} from './airtable';
-
-const htmlEntities = new AllHtmlEntities();
 
 /**
  * Returns string with pretty printed json object
@@ -332,38 +329,34 @@ export async function getAllMenus() {
   return `*Presto*\n${presto}\n\n*Veglife*\n${veglife}\n\n*Hamka*\n${hamka}\n\n*Click*\n${click}`;
 }
 
+function normalizeWhitespace(str) {
+  return str.split('\n').map((l) => l.trim()).filter((l) => l.length > 0).join(' ');
+}
+
+function parsePrestoMenuRow($, row) {
+  return $(row)
+      .find('td')
+      .map((ind, cell) => normalizeWhitespace($(cell).text()))
+      .get()
+      .join(' ');
+}
+
 export function parseTodaysPrestoMenu(rawMenu) {
   const slovakDays = ['', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
   const today = getMomentForMenu().day();
 
-  let menu = htmlEntities.decode(rawMenu);
-  const menuStart = menu.indexOf(slovakDays[today]);
-  const menuEnd = menu.indexOf(slovakDays[today + 1]);
-  if (menuStart === -1 || menuEnd === -1) throw new Error('Parsing Presto menu: unable to find menu for today');
-  // presto has the whole menu on single page, cut out only today
-  menu = menu.substring(menuStart, menuEnd)
-    .split('\n')
-    .map((row) => row.trim())
-    .filter(Boolean)
-    .join('')
-    .split(/<tr>/)
-    .slice(1)
-    .map((row) =>
-      row
-        .split(/<\/td><td[^>]*>/)
-        .map((part) => part.replace(/<[^>]*>/g, ''))
-        .filter(Boolean)
-        .join(', ')
-    )
-    .join('\n')
-    // replace all multiple whitespaces with single space
-    .replace(/\s\s+/g, ' ');
+  const $ = cheerio.load(rawMenu);
 
-  return menu;
+  const dayTitle = slovakDays[today];
+  const meals = $(`tr.first:contains('${dayTitle}')`)
+      .nextUntil('tr.first')
+      .map((_, row) => parsePrestoMenuRow($, row));
+
+  return [`${dayTitle}`, ...meals].join('\n');
 }
 
 export function parseTodaysVeglifeMenu(rawMenu) {
-  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOT'];
+  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOTA'];
   const today = getMomentForMenu().day();
   const menuStart = rawMenu.indexOf(slovakDays[today]);
   const menuEnd = rawMenu.indexOf(slovakDays[today + 1]);
@@ -401,10 +394,6 @@ export function parseTodaysHamkaMenu(rawMenu) {
     .replace(/<p[^>]*>(.*?)<\/p>/g, '$1\n')
     .replace(/<[^>]*>/g, '');
   return menu;
-}
-
-function normalizeWhitespace(str) {
-  return str.split('\n').map((l) => l.trim()).filter((l) => l.length > 0).join(' ');
 }
 
 function parseClickList($, listElement) {
