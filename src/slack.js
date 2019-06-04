@@ -9,7 +9,7 @@ import config from '../config';
 import {listRecords, updateRecord} from './airtable';
 
 export function loadUsers() {
-  slack.web.channels.info(config.slack.lunchChannelId)
+  slack.web.channels.info({channel: config.slack.lunchChannelId})
     .then(async ({channel: {members}}) => {
       for (const member of members) {
         if (member === config.slack.botId) {
@@ -38,12 +38,11 @@ export async function getTodaysMessages() {
   lastNoon.minutes(0);
   lastNoon.seconds(0);
 
-  const timeRange = {
+  return (await slack.web.channels.history({
+    channel: config.slack.lunchChannelId,
     latest: now.valueOf() / 1000,
     oldest: lastNoon.valueOf() / 1000,
-  };
-
-  return (await slack.web.channels.history(config.slack.lunchChannelId, timeRange)).messages;
+  })).messages;
 }
 
 export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
@@ -58,13 +57,13 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
     [restaurants.shop]: 'obchodu',
   };
 
-  slack.web.chat.postMessage(
-    config.slack.lunchChannelId,
-    willThereBeFood
+  slack.web.chat.postMessage({
+    channel: config.slack.lunchChannelId,
+    text: willThereBeFood
       ? `Prišli obedy z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
       : `Dneska bohužiaľ obedy z ${restaurantNames[callRestaurant]} neprídu :disappointed:`,
-    {as_user: true}
-  );
+    as_user: true,
+  });
 
   for (let message of messages) {
     if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
@@ -82,7 +81,7 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
         : `Dneska bohužiaľ obed z ${restaurantNames[callRestaurant]} nepríde :disappointed:`;
 
       if (userChannelId) {
-        slack.web.chat.postMessage(userChannelId, notification, {as_user: true});
+        slack.web.chat.postMessage({channel: userChannelId, text: notification, as_user: true});
       }
     }
   }
@@ -96,29 +95,33 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
  */
 
 function confirmOrder(ts) {
-  slack.web.reactions.add(
-    config.orderReaction,
-    {channel: config.slack.lunchChannelId, timestamp: ts}
-  );
+  slack.web.reactions.add({
+    name: config.orderReaction,
+    channel: config.slack.lunchChannelId,
+    timestamp: ts,
+  });
 }
 
 function unknownOrder(ts) {
-  slack.web.reactions.add(
-    config.orderUnknownReaction,
-    {channel: config.slack.lunchChannelId, timestamp: ts}
-  );
-  slack.web.chat.postMessage(
-    config.slack.lunchChannelId,
-    config.messages.unknownOrder,
-    {as_user: true, thread_ts: ts}
-  );
+  slack.web.reactions.add({
+    name: config.orderUnknownReaction,
+    channel: config.slack.lunchChannelId,
+    timestamp: ts,
+  });
+  slack.web.chat.postMessage({
+    channel: config.slack.lunchChannelId,
+    text: config.messages.unknownOrder,
+    as_user: true,
+    thread_ts: ts,
+  });
 }
 
 function removeConfirmation(ts) {
-  slack.web.reactions.remove(
-    config.orderReaction,
-    {channel: config.slack.lunchChannelId, timestamp: ts}
-  );
+  slack.web.reactions.remove({
+    name: config.orderReaction,
+    channel: config.slack.lunchChannelId,
+    timestamp: ts,
+  });
 }
 
 /**
@@ -127,11 +130,11 @@ function removeConfirmation(ts) {
  * @param {string} userChannel - IM channel of the user
  */
 function privateIsDeprecated(userChannel) {
-  slack.web.chat.postMessage(
-    userChannel,
-    config.messages.privateIsDeprecated,
-    {as_user: true}
-  );
+  slack.web.chat.postMessage({
+    channel: userChannel,
+    text: config.messages.privateIsDeprecated,
+    as_user: true,
+  });
 }
 
 /**
@@ -141,17 +144,17 @@ function privateIsDeprecated(userChannel) {
  */
 export async function changeMute(userChannel, notifications) {
   return await updateRecord(userChannel, notifications).then(() => {
-    slack.web.chat.postMessage(
-      userChannel,
-      `Notifikácie ${notifications ? 'zapnuté' : 'vypnuté'}`,
-      {as_user: true}
-    );
+    slack.web.chat.postMessage({
+      channel: userChannel,
+      text: `Notifikácie ${notifications ? 'zapnuté' : 'vypnuté'}`,
+      as_user: true,
+    });
   }).catch(() => {
-    slack.web.chat.postMessage(
-      userChannel,
-      'Stala sa chyba, skús operáciu vykonať znovu, poprípade kontaktuj administrátora',
-      {as_user: true}
-    );
+    slack.web.chat.postMessage({
+      channel: userChannel,
+      text: 'Stala sa chyba, skús operáciu vykonať znovu, poprípade kontaktuj administrátora',
+      as_user: true,
+    });
   });
 }
 
@@ -285,7 +288,7 @@ export async function makeLastCall() {
 
   for (let user of users) {
     if (!find(messages, ({text, user: userId}) => userId === user.user_id && isOrder(text))) {
-      slack.web.chat.postMessage(user.channel_id, message, {as_user: true});
+      slack.web.chat.postMessage({channel: user.channel_id, text: message, as_user: true});
     }
   }
 }

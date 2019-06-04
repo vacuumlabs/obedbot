@@ -130,19 +130,19 @@ export function getOrderFromMessage(msg, restaurant) {
 export function saveUser(userId) {
   logger.devLog('Saving user ' + userId);
 
-  slack.web.im.open(userId)
+  slack.web.im.open({user: userId})
     .then(({channel: {id: channelId}}) => {
       if (!config.dev) {
-        slack.web.chat.postMessage(
-          channelId,
-          'Ahoj, volám sa obedbot a všimol som si ťa na kanáli #ba-obedy ' +
-          'ale nemal som ťa ešte v mojom zápisníčku, tak si ťa poznamenávam, ' +
-          'budem ti odteraz posielať last cally, pokiaľ v daný deň nemáš nič objednané :)',
-          {as_user: true}
-        );
+        slack.web.chat.postMessage({
+          channel: channelId,
+          text: 'Ahoj, volám sa obedbot a všimol som si ťa na kanáli #ba-obedy ' +
+            'ale nemal som ťa ešte v mojom zápisníčku, tak si ťa poznamenávam, ' +
+            'budem ti odteraz posielať last cally, pokiaľ v daný deň nemáš nič objednané :)',
+          as_user: true,
+        });
       }
 
-      slack.web.users.info(userId)
+      slack.web.users.info({user: userId})
         .then((userInfo) => {
           const realname = userInfo.user.profile.real_name;
           const filter = '({channel_id} = \'' + channelId + '\')';
@@ -156,12 +156,12 @@ export function saveUser(userId) {
               }).then(() => {
                 logger.devLog(`User ${realname} has been added to database`);
                 if (!config.dev) {
-                  slack.web.chat.postMessage(
-                    channelId,
-                    'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
-                    '#ba-obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
-                    {as_user: true}
-                  );
+                  slack.web.chat.postMessage({
+                    channel: channelId,
+                    text: 'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
+                      '#ba-obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
+                    as_user: true,
+                  });
                 }
               }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
             }

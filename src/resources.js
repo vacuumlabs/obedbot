@@ -1,11 +1,11 @@
-import {RtmClient} from '@slack/rtm-api';
+import {RTMClient, LogLevel} from '@slack/rtm-api';
 import {WebClient} from '@slack/web-api';
 import moment from 'moment';
 
 import config from '../config';
 
 export const slack = {
-  rtm: new RtmClient(config.slack.token, {logLevel: 'error'}),
+  rtm: new RTMClient(config.slack.token, {logLevel: LogLevel.ERROR}),
   web: new WebClient(config.slack.token),
 };
 
