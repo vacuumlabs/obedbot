@@ -1,4 +1,5 @@
-import {RtmClient, WebClient} from '@slack/client';
+import {RtmClient} from '@slack/rtm-api';
+import {WebClient} from '@slack/web-api';
 import moment from 'moment';
 
 import config from '../config';
