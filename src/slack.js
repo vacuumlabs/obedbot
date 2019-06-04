@@ -1,6 +1,5 @@
 import moment from 'moment';
 import {isNil, find} from 'lodash';
-import {RTM_MESSAGE_SUBTYPES} from '@slack/client';
 
 import {slack, logger} from './resources';
 import {userExists, saveUser, isObedbotMentioned, stripMention, identifyRestaurant,
@@ -195,7 +194,7 @@ export async function messageReceived(msg) {
         changeMute(channel, false);
       }
     }
-  } else if (msg.subtype === RTM_MESSAGE_SUBTYPES.MESSAGE_CHANGED) {
+  } else if (msg.subtype === 'message_changed') {
     logger.devLog('Message type: edited message\n');
     logger.devLog(prettyPrint(msg));
 

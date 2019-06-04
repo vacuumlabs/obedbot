@@ -1,4 +1,3 @@
-import {RTM_EVENTS, CLIENT_EVENTS} from '@slack/client';
 import schedule from 'node-schedule';
 import moment from 'moment-timezone';
 
@@ -55,9 +54,9 @@ export function runServer() {
   logger.log('Starting Slack RTM client');
   rtm.start();
 
-  rtm.on(RTM_EVENTS.MESSAGE, messageReceived);
+  rtm.on('message', messageReceived);
 
-  rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
+  rtm.on('connected', () => {
     // the timeout is here to go around a bug where connection is opened, but not properly established
     logger.log('Slack RTM client connected');
     setTimeout(loadTodayOrders, 3000);
