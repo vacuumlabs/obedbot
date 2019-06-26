@@ -5,6 +5,7 @@
     "import/ignore": ["node_modules", "assets", "\\.(scss|less|css)$"],
   },
   "rules": {
+    "arrow-parens": [2, "always"],
     "block-spacing": [2, "never"],
     "brace-style": [2, "1tbs", {"allowSingleLine": true}],
     "comma-dangle": [2, "always-multiline"],
@@ -127,7 +128,7 @@
     "semi-spacing": [2, {"before": false, "after": true}],
     "keyword-spacing": [2, {"before": true, "after": true, "overrides": {}}],
     "space-before-blocks": [2, "always"],
-    "space-before-function-paren": [2, "never"],
+    "space-before-function-paren": [2, {"named": "never", "asyncArrow": "always"}],
     "space-infix-ops": 2,
     "object-curly-spacing": [2, "never"],
     "array-bracket-spacing": [2, "never"],
@@ -153,8 +154,6 @@
     "import/default": 0,
     "import/export": 2,
     "import/imports-first": 2,
-    // Babel
-    "babel/arrow-parens": [2, "always"],
   },
   "plugins": [
     "import",
@@ -169,7 +168,10 @@
     "Map": true,
     "Set": true,
   },
-  "ecmaFeatures": {
-    "jsx": true
-  }
+  "parserOptions": {
+    "ecmaFeatures": {
+        "jsx": true,
+        "modules": true
+    }
+  },
 }
