@@ -168,8 +168,8 @@ export function saveUser(userId) {
           });
         });
     }).catch(
-    () => logger.error(`Trying to save bot or disabled user ${userId}`)
-  );
+      () => logger.error(`Trying to save bot or disabled user ${userId}`)
+    );
 }
 
 export async function userExists(userId) {
@@ -335,10 +335,10 @@ function normalizeWhitespace(str) {
 
 function parsePrestoMenuRow($, row) {
   return $(row)
-      .find('td')
-      .map((ind, cell) => normalizeWhitespace($(cell).text()))
-      .get()
-      .join(' ');
+    .find('td')
+    .map((ind, cell) => normalizeWhitespace($(cell).text()))
+    .get()
+    .join(' ');
 }
 
 export function parseTodaysPrestoMenu(rawMenu) {
@@ -349,8 +349,8 @@ export function parseTodaysPrestoMenu(rawMenu) {
 
   const dayTitle = slovakDays[today];
   const meals = $(`tr.first:contains('${dayTitle}')`)
-      .nextUntil('tr.first')
-      .map((_, row) => parsePrestoMenuRow($, row));
+    .nextUntil('tr.first')
+    .map((_, row) => parsePrestoMenuRow($, row));
 
   return [`${dayTitle}`, ...meals].join('\n');
 }
