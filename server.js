@@ -1,12 +1,12 @@
-const config = require('./config');
+const config = require('./config')
 
-let serverScript;
+let serverScript
 if (config.dev) {
-  require('babel-register');
-  serverScript = './src/server';
+  require('babel-register')
+  serverScript = './src/server'
 } else {
-  serverScript = './build/server';
+  serverScript = './build/server'
 }
 
-const {runServer} = require(serverScript);
-runServer();
+const { runServer } = require(serverScript)
+runServer()

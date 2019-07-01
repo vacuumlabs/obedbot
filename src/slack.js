@@ -1,61 +1,76 @@
-import moment from 'moment';
-import {isNil, find} from 'lodash';
+import moment from 'moment'
+import { isNil, find } from 'lodash'
 
-import {slack, logger} from './resources';
-import {userExists, saveUser, isObedbotMentioned, stripMention, identifyRestaurant,
-  restaurants, prettyPrint, isChannelPublic, alreadyReacted, isOrder, getAllMenus,
-} from './utils';
-import config from '../config';
-import {listRecords, updateRecord} from './airtable';
+import { slack, logger } from './resources'
+import {
+  userExists,
+  saveUser,
+  isObedbotMentioned,
+  stripMention,
+  identifyRestaurant,
+  restaurants,
+  prettyPrint,
+  isChannelPublic,
+  alreadyReacted,
+  isOrder,
+  getAllMenus,
+} from './utils'
+import config from '../config'
+import { listRecords, updateRecord } from './airtable'
 
 export function loadUsers() {
-  slack.web.channels.info({channel: config.slack.lunchChannelId})
-    .then(async ({channel: {members}}) => {
+  slack.web.channels
+    .info({ channel: config.slack.lunchChannelId })
+    .then(async ({ channel: { members } }) => {
       for (const member of members) {
         if (member === config.slack.botId) {
-          logger.devLog('Skipping member obedbot');
-          continue;
+          logger.devLog('Skipping member obedbot')
+          continue
         }
         if (!(await userExists(member))) {
-          saveUser(member);
+          saveUser(member)
         }
       }
-    });
+    })
 }
 
 export async function getTodaysMessages() {
-  let lastNoon = moment();
-  let now = moment();
+  let lastNoon = moment()
+  let now = moment()
 
   // set the date to last Friday if it is Saturday (6), Sunday (0) or Monday (1)
-  if (now.day() === 0 || (now.day() === 1 && now.hours() < 13) || now.day() === 6) {
-    lastNoon.day(lastNoon.day() >= 5 ? 5 : -2);
+  if (
+    now.day() === 0 ||
+    (now.day() === 1 && now.hours() < 13) ||
+    now.day() === 6
+  ) {
+    lastNoon.day(lastNoon.day() >= 5 ? 5 : -2)
   } else if (now.hours() < 13) {
-    lastNoon.subtract(1, 'day');
+    lastNoon.subtract(1, 'day')
   }
 
-  lastNoon.hours(13);
-  lastNoon.minutes(0);
-  lastNoon.seconds(0);
+  lastNoon.hours(13)
+  lastNoon.minutes(0)
+  lastNoon.seconds(0)
 
   return (await slack.web.channels.history({
     channel: config.slack.lunchChannelId,
     latest: now.valueOf() / 1000,
     oldest: lastNoon.valueOf() / 1000,
-  })).messages;
+  })).messages
 }
 
 export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
-  logger.devLog('Notifying about food arrival', callRestaurant);
-  const messages = await getTodaysMessages();
-  const users = await listRecords();
+  logger.devLog('Notifying about food arrival', callRestaurant)
+  const messages = await getTodaysMessages()
+  const users = await listRecords()
   const restaurantNames = {
     [restaurants.presto]: 'Pizza Presto',
     [restaurants.hamka]: 'Hamka',
     [restaurants.click]: 'Click',
     [restaurants.veglife]: 'Veglife',
     [restaurants.shop]: 'obchodu',
-  };
+  }
 
   slack.web.chat.postMessage({
     channel: config.slack.lunchChannelId,
@@ -63,25 +78,37 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
       ? `Prišli obedy z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
       : `Dneska bohužiaľ obedy z ${restaurantNames[callRestaurant]} neprídu :disappointed:`,
     as_user: true,
-  });
+  })
 
   for (let message of messages) {
     if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
-      continue;
+      continue
     }
-    const text = stripMention(message.text).toLowerCase().trim();
-    const restaurant = identifyRestaurant(text);
+    const text = stripMention(message.text)
+      .toLowerCase()
+      .trim()
+    const restaurant = identifyRestaurant(text)
 
     // FIXME merge presto and pizza restaurants into one
-    if (restaurant === callRestaurant ||
-      (callRestaurant === restaurants.presto && restaurant === restaurants.pizza)) {
-      const userChannelId = find(users, ({user_id}) => user_id === message.user).channel_id;
+    if (
+      restaurant === callRestaurant ||
+      (callRestaurant === restaurants.presto &&
+        restaurant === restaurants.pizza)
+    ) {
+      const userChannelId = find(
+        users,
+        ({ user_id }) => user_id === message.user,
+      ).channel_id
       const notification = willThereBeFood
         ? `Prišiel ti obed ${text} z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
-        : `Dneska bohužiaľ obed z ${restaurantNames[callRestaurant]} nepríde :disappointed:`;
+        : `Dneska bohužiaľ obed z ${restaurantNames[callRestaurant]} nepríde :disappointed:`
 
       if (userChannelId) {
-        slack.web.chat.postMessage({channel: userChannelId, text: notification, as_user: true});
+        slack.web.chat.postMessage({
+          channel: userChannelId,
+          text: notification,
+          as_user: true,
+        })
       }
     }
   }
@@ -99,7 +126,7 @@ function confirmOrder(ts) {
     name: config.orderReaction,
     channel: config.slack.lunchChannelId,
     timestamp: ts,
-  });
+  })
 }
 
 function unknownOrder(ts) {
@@ -107,13 +134,13 @@ function unknownOrder(ts) {
     name: config.orderUnknownReaction,
     channel: config.slack.lunchChannelId,
     timestamp: ts,
-  });
+  })
   slack.web.chat.postMessage({
     channel: config.slack.lunchChannelId,
     text: config.messages.unknownOrder,
     as_user: true,
     thread_ts: ts,
-  });
+  })
 }
 
 function removeConfirmation(ts) {
@@ -121,7 +148,7 @@ function removeConfirmation(ts) {
     name: config.orderReaction,
     channel: config.slack.lunchChannelId,
     timestamp: ts,
-  });
+  })
 }
 
 /**
@@ -134,7 +161,7 @@ function privateIsDeprecated(userChannel) {
     channel: userChannel,
     text: config.messages.privateIsDeprecated,
     as_user: true,
-  });
+  })
 }
 
 /**
@@ -143,19 +170,22 @@ function privateIsDeprecated(userChannel) {
  * @param {boolean} notifications - new notifications status for the user
  */
 export async function changeMute(userChannel, notifications) {
-  return await updateRecord(userChannel, notifications).then(() => {
-    slack.web.chat.postMessage({
-      channel: userChannel,
-      text: `Notifikácie ${notifications ? 'zapnuté' : 'vypnuté'}`,
-      as_user: true,
-    });
-  }).catch(() => {
-    slack.web.chat.postMessage({
-      channel: userChannel,
-      text: 'Stala sa chyba, skús operáciu vykonať znovu, poprípade kontaktuj administrátora',
-      as_user: true,
-    });
-  });
+  return await updateRecord(userChannel, notifications)
+    .then(() => {
+      slack.web.chat.postMessage({
+        channel: userChannel,
+        text: `Notifikácie ${notifications ? 'zapnuté' : 'vypnuté'}`,
+        as_user: true,
+      })
+    })
+    .catch(() => {
+      slack.web.chat.postMessage({
+        channel: userChannel,
+        text:
+          'Stala sa chyba, skús operáciu vykonať znovu, poprípade kontaktuj administrátora',
+        as_user: true,
+      })
+    })
 }
 
 /**
@@ -164,110 +194,109 @@ export async function changeMute(userChannel, notifications) {
  */
 
 export async function messageReceived(msg) {
-  logger.devLog('Message received');
+  logger.devLog('Message received')
 
   if (isNil(msg.subtype)) {
-    logger.devLog('Message type: new message\n');
-    logger.devLog(prettyPrint(msg));
+    logger.devLog('Message type: new message\n')
+    logger.devLog(prettyPrint(msg))
 
-    const {text: messageText, ts: timestamp, channel, user} = msg;
+    const { text: messageText, ts: timestamp, channel, user } = msg
 
     if (user === config.slack.botId) {
-      logger.devLog('Message was from obedbot');
-      return;
+      logger.devLog('Message was from obedbot')
+      return
     }
 
     if (!(await userExists(user))) {
-      saveUser(user);
+      saveUser(user)
     }
 
     if (isChannelPublic(channel) && isObedbotMentioned(messageText)) {
       if (isOrder(messageText)) {
-        confirmOrder(timestamp);
+        confirmOrder(timestamp)
       } else {
-        unknownOrder(timestamp);
+        unknownOrder(timestamp)
       }
     } else if (channel.charAt(0) === 'D') {
       // if the user sent order into private channel, notify him this feature is deprecated
       if (isOrder(messageText)) {
-        privateIsDeprecated(channel);
+        privateIsDeprecated(channel)
       } else if (messageText.includes('unmute')) {
-        changeMute(channel, true);
+        changeMute(channel, true)
       } else if (messageText.includes('mute')) {
-        changeMute(channel, false);
+        changeMute(channel, false)
       }
     }
   } else if (msg.subtype === 'message_changed') {
-    logger.devLog('Message type: edited message\n');
-    logger.devLog(prettyPrint(msg));
+    logger.devLog('Message type: edited message\n')
+    logger.devLog(prettyPrint(msg))
 
     const {
-      previous_message: {
-        text: previousMessageText,
-      },
-      message: {
-        text: messageText,
-        ts: timestamp,
-        user,
-      },
+      previous_message: { text: previousMessageText },
+      message: { text: messageText, ts: timestamp, user },
       channel,
-    } = msg;
+    } = msg
 
     if (user === config.slack.botId) {
-      logger.devLog('Message was from obedbot');
-      return;
+      logger.devLog('Message was from obedbot')
+      return
     }
 
     if (!(await userExists(user))) {
-      saveUser(user);
+      saveUser(user)
     }
 
-    slack.web.reactions.get({channel: config.slack.lunchChannelId, timestamp: timestamp})
-      .then(({message: {reactions = []}}) => {
+    slack.web.reactions
+      .get({ channel: config.slack.lunchChannelId, timestamp: timestamp })
+      .then(({ message: { reactions = [] } }) => {
         if (isChannelPublic(channel)) {
           if (isObedbotMentioned(messageText) && isOrder(messageText)) {
             if (!alreadyReacted(reactions)) {
-              confirmOrder(timestamp);
+              confirmOrder(timestamp)
             }
-          } else if (isObedbotMentioned(previousMessageText) && isOrder(previousMessageText)) {
+          } else if (
+            isObedbotMentioned(previousMessageText) &&
+            isOrder(previousMessageText)
+          ) {
             if (alreadyReacted(reactions)) {
-              removeConfirmation(timestamp);
+              removeConfirmation(timestamp)
             }
           }
         } else if (channel.charAt(0) === 'D') {
           // if the user sent order into private channel, notify him this feature is deprecated
           if (isOrder(messageText)) {
-            privateIsDeprecated(channel);
+            privateIsDeprecated(channel)
           }
         }
-      }).catch((err) => logger.error('Error during loading of reactions:', err));
+      })
+      .catch(err => logger.error('Error during loading of reactions:', err))
   } else {
-    logger.devLog('Message type: probably deleted message\n');
+    logger.devLog('Message type: probably deleted message\n')
   }
 }
 
 export async function processMessages(messages) {
   for (let message of messages) {
-    logger.devLog('Processing message');
-    logger.devLog(prettyPrint(message));
+    logger.devLog('Processing message')
+    logger.devLog(prettyPrint(message))
 
-    const {text: messageText, ts: timestamp, user, reactions} = message;
+    const { text: messageText, ts: timestamp, user, reactions } = message
 
     if (user === config.slack.botId) {
-      logger.devLog('Message was from obedbot');
-      return;
+      logger.devLog('Message was from obedbot')
+      return
     }
 
     if (!(await userExists(user))) {
-      saveUser(user);
+      saveUser(user)
     }
 
     if (isObedbotMentioned(messageText) && isOrder(messageText)) {
       if (!alreadyReacted(reactions)) {
-        confirmOrder(timestamp);
+        confirmOrder(timestamp)
       }
     } else if (alreadyReacted(reactions)) {
-      removeConfirmation(timestamp);
+      removeConfirmation(timestamp)
     }
   }
 }
@@ -277,22 +306,34 @@ export async function processMessages(messages) {
  */
 export async function makeLastCall() {
   if (config.dev) {
-    return;
+    return
   }
-  logger.devLog('Making last call');
+  logger.devLog('Making last call')
 
-  const messages = await getTodaysMessages();
-  const filter = '({notifications} = 1)';
-  const users = await listRecords(filter);
-  const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${await getAllMenus()}`;
+  const messages = await getTodaysMessages()
+  const filter = '({notifications} = 1)'
+  const users = await listRecords(filter)
+  const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${await getAllMenus()}`
 
   for (let user of users) {
-    if (!find(messages, ({text, user: userId}) => userId === user.user_id && isOrder(text))) {
-      slack.web.chat.postMessage({channel: user.channel_id, text: message, as_user: true});
+    if (
+      !find(
+        messages,
+        ({ text, user: userId }) => userId === user.user_id && isOrder(text),
+      )
+    ) {
+      slack.web.chat.postMessage({
+        channel: user.channel_id,
+        text: message,
+        as_user: true,
+      })
     }
   }
 }
 
 export function endOfOrders(restaurant) {
-  slack.rtm.sendMessage(`Koniec objednávok ${restaurant}`, config.slack.lunchChannelId);
+  slack.rtm.sendMessage(
+    `Koniec objednávok ${restaurant}`,
+    config.slack.lunchChannelId,
+  )
 }
