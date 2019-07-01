@@ -1,4 +1,4 @@
-var readFileSync = require('fs').readFileSync
+const readFileSync = require('fs').readFileSync
 
 module.exports = {
   help: readFileSync('./messages/help.txt').toString(),

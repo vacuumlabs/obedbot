@@ -400,8 +400,9 @@ export function parseTodaysVeglifeMenu(rawMenu) {
   const today = getMomentForMenu().day()
   const menuStart = rawMenu.indexOf(slovakDays[today])
   const menuEnd = rawMenu.indexOf(slovakDays[today + 1])
-  if (menuStart === -1 || menuEnd === -1)
+  if (menuStart === -1 || menuEnd === -1) {
     throw new Error('Parsing Veglife menu: unable to find menu for today')
+  }
   let menu = rawMenu
     .substring(menuStart, menuEnd)
     // delete all HTML tags
@@ -427,10 +428,13 @@ export function parseTodaysVeglifeMenu(rawMenu) {
 
 export function parseTodaysHamkaMenu(rawMenu) {
   const menuStart = rawMenu.indexOf('<p class')
-  if (menuStart === -1)
+  if (menuStart === -1) {
     throw new Error('Parsing Hamka menu: "<p class" not found')
+  }
   const menuEnd = rawMenu.indexOf('</div>', menuStart)
-  if (menuEnd === -1) throw new Error('Parsing Hamka menu: "</div>" not found')
+  if (menuEnd === -1) {
+    throw new Error('Parsing Hamka menu: "</div>" not found')
+  }
   const menu = rawMenu
     .substring(menuStart, menuEnd)
     .replace(/<p[^>]*>(.*?)<\/p>/g, '$1\n')
