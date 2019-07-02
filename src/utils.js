@@ -428,9 +428,9 @@ export function parseTodaysVeglifeMenu(rawMenu) {
 
 export function parseTodaysHamkaMenu(rawMenu) {
   const $ = cheerio.load(rawMenu)
-  const menu = $('p.strong')
-    .nextUntil('div')
-    .addBack()
+  const menu = $(`p:contains("${getMomentForMenu().format('DD.MM.YYYY')}")`)
+    .parent()
+    .children()
     .map((_, tag) => normalizeWhitespace($(tag).text()))
   return [...menu].join('\n')
 }
