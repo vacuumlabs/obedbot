@@ -354,6 +354,7 @@ function normalizeWhitespace(str) {
     .split('\n')
     .map(l => l.trim())
     .filter(l => l.length > 0)
+    .map(l => l.replace(/\s\s+/g, ' ')) // replace multiple whitespaces with a single space
     .join(' ')
 }
 
@@ -388,42 +389,15 @@ export function parseTodaysPrestoMenu(rawMenu) {
 }
 
 export function parseTodaysVeglifeMenu(rawMenu) {
-  const slovakDays = [
-    '',
-    'PONDELOK',
-    'UTOROK',
-    'STREDA',
-    'ŠTVRTOK',
-    'PIATOK',
-    'SOBOTA',
-  ]
-  const today = getMomentForMenu().day()
-  const menuStart = rawMenu.indexOf(slovakDays[today])
-  const menuEnd = rawMenu.indexOf(slovakDays[today + 1])
-  if (menuStart === -1 || menuEnd === -1) {
-    throw new Error('Parsing Veglife menu: unable to find menu for today')
-  }
-  let menu = rawMenu
-    .substring(menuStart, menuEnd)
-    // delete all HTML tags
-    .replace(/<[^>]*>/g, '')
-    .split('\n')
-    .map(row => row.trim())
-    // delete empty lines
-    .filter(row => row.length)
-    .join('\n')
-    // replace all multiple whitespaces with single space
-    .replace(/\s\s+/g, ' ')
-
-  let infoIndex = menu.indexOf('+ Pestrá')
-  if (infoIndex === -1) {
-    infoIndex = menu.indexOf('Nemôžete prísť?')
-  }
-  if (infoIndex !== -1) {
-    // delete unnecessary part
-    menu = menu.substring(0, infoIndex)
-  }
-  return menu
+  const $ = cheerio.load(rawMenu)
+  const date = getMomentForMenu().format('DD.MM.YYYY')
+  // Due to unclosed h1 tag, it looks like h1 is inside another h1
+  const menuTitle = normalizeWhitespace($(`h1 > h1:contains('${date}')`).text())
+  const menu = $(`h1:contains('${date}')`)
+    .nextUntil("p:contains('Dezert')")
+    .map((_, tag) => normalizeWhitespace($(tag).text()))
+    .filter((_, s) => s.length > 0)
+  return [menuTitle, ...menu].join('\n')
 }
 
 export function parseTodaysHamkaMenu(rawMenu) {
