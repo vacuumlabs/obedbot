@@ -16,6 +16,7 @@ jobs:
           key: v2-yarn-cache-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
+      - run: yarn build
       - run: yarn test
 
   deploy:

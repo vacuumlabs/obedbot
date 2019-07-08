@@ -1,8 +1,8 @@
 // load .env variables into process.env
-require('dotenv').config();
+require('dotenv').config()
 
 const config = {
-  dev: (process.env.OBEDBOT_DEV === 'true') || false,
+  dev: process.env.OBEDBOT_DEV === 'true' || false,
   port: process.env.OBEDBOT_PORT || 4000,
   airtable: {
     apiKey: process.env.OBEDBOT_API_KEY || '',
@@ -31,7 +31,7 @@ const config = {
   orderReaction: 'taco',
   orderUnknownReaction: 'question',
   messages: require('./messages'),
-};
+}
 
 const requiredConfig = [
   config.slack.token,
@@ -43,12 +43,12 @@ const requiredConfig = [
   config.airtable.apiKey,
   config.airtable.baseId,
   config.airtable.tableName,
-];
+]
 
-if (requiredConfig.some((value) => !value)) {
-  console.error('Missing env variables!');
-  process.exit(1);
+if (requiredConfig.some(value => !value)) {
+  console.error('Missing env variables!')
+  process.exit(1)
 }
 
-module.exports = config;
-module.exports.default = config;
+module.exports = config
+module.exports.default = config

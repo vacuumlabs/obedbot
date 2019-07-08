@@ -1,13 +1,13 @@
-import Promise from 'bluebird';
-import {find, get} from 'lodash';
-import moment from 'moment';
-import request from 'request-promise';
-import cheerio from 'cheerio';
+import Promise from 'bluebird'
+import { find, get } from 'lodash'
+import moment from 'moment'
+import request from 'request-promise'
+import cheerio from 'cheerio'
 
-import {getTodaysMessages, processMessages} from './slack';
-import {slack, logger} from './resources';
-import config from '../config';
-import {createRecord, listRecords} from './airtable';
+import { getTodaysMessages, processMessages } from './slack'
+import { slack, logger } from './resources'
+import config from '../config'
+import { createRecord, listRecords } from './airtable'
 
 /**
  * Returns string with pretty printed json object
@@ -17,7 +17,7 @@ import {createRecord, listRecords} from './airtable';
  */
 
 export function prettyPrint(json) {
-  return JSON.stringify(json, null, 2);
+  return JSON.stringify(json, null, 2)
 }
 
 /**
@@ -29,24 +29,25 @@ export function prettyPrint(json) {
 
 export function stripMention(order) {
   //check if user used full colon after @obedbot
-  const orderStart = (order.charAt(12) === ':') ? 14 : 13;
+  const orderStart = order.charAt(12) === ':' ? 14 : 13
 
-  return order.substring(orderStart);
+  return order.substring(orderStart)
 }
 
 export function isObedbotMentioned(order) {
-  return new RegExp(`<@${config.slack.botId}>:?`).test(order);
+  return new RegExp(`<@${config.slack.botId}>:?`).test(order)
 }
 
 export function isChannelPublic(channel) {
-  return channel === config.slack.lunchChannelId;
+  return channel === config.slack.lunchChannelId
 }
 
 export function alreadyReacted(reactions) {
   return !!find(
     reactions,
-    ({name, users}) => name === config.orderReaction && users.includes(config.slack.botId)
-  );
+    ({ name, users }) =>
+      name === config.orderReaction && users.includes(config.slack.botId),
+  )
 }
 
 /**
@@ -56,34 +57,34 @@ export function alreadyReacted(reactions) {
  * @returns {bool} - true if order matches, false if not identified
  */
 export function isOrder(order) {
-  const regexes = config.orderRegex;
+  const regexes = config.orderRegex
   if (isObedbotMentioned(order)) {
-    order = stripMention(order);
+    order = stripMention(order)
   }
-  order = order.toLowerCase().trim();
+  order = order.toLowerCase().trim()
 
-  logger.devLog('Checking order: ' + order);
+  logger.devLog('Checking order: ' + order)
 
   for (let regexKey in regexes) {
     if (regexes.hasOwnProperty(regexKey)) {
       if (regexes[regexKey].test(order)) {
-        logger.devLog(`Order type is ${regexKey}`);
-        return true;
+        logger.devLog(`Order type is ${regexKey}`)
+        return true
       }
     }
   }
 
-  logger.devLog('Message is not an order');
-  return false;
+  logger.devLog('Message is not an order')
+  return false
 }
 
 /**
  * Loads the orders since the last noon
  */
 export function loadTodayOrders() {
-  logger.devLog('Loading today\'s orders');
+  logger.devLog("Loading today's orders")
 
-  getTodaysMessages().then(processMessages);
+  getTodaysMessages().then(processMessages)
 }
 
 /**
@@ -100,82 +101,90 @@ export const restaurants = {
   hamka: 'hamka',
   click: 'click',
   shop: 'shop',
-};
+}
 
 export function identifyRestaurant(order) {
-  const regexes = config.orderRegex;
+  const regexes = config.orderRegex
   const values = [
-    {regex: regexes.presto, name: restaurants.presto},
-    {regex: regexes.pizza, name: restaurants.pizza},
-    {regex: regexes.veglife, name: restaurants.veglife},
-    {regex: regexes.hamka, name: restaurants.hamka},
-    {regex: regexes.click, name: restaurants.click},
-    {regex: regexes.shop, name: restaurants.shop},
-  ];
-  let ans;
+    { regex: regexes.presto, name: restaurants.presto },
+    { regex: regexes.pizza, name: restaurants.pizza },
+    { regex: regexes.veglife, name: restaurants.veglife },
+    { regex: regexes.hamka, name: restaurants.hamka },
+    { regex: regexes.click, name: restaurants.click },
+    { regex: regexes.shop, name: restaurants.shop },
+  ]
+  let ans
 
-  values.forEach((restaurant) => {
+  values.forEach(restaurant => {
     if (restaurant.regex.test(order)) {
-      ans = restaurant.name;
+      ans = restaurant.name
     }
-  });
-  return ans;
+  })
+  return ans
 }
 
 export function getOrderFromMessage(msg, restaurant) {
-  const regex = config.orderRegex[restaurant];
-  return msg.match(regex)[0];
+  const regex = config.orderRegex[restaurant]
+  return msg.match(regex)[0]
 }
 
 export function saveUser(userId) {
-  logger.devLog('Saving user ' + userId);
+  logger.devLog('Saving user ' + userId)
 
-  slack.web.im.open({user: userId})
-    .then(({channel: {id: channelId}}) => {
+  slack.web.im
+    .open({ user: userId })
+    .then(({ channel: { id: channelId } }) => {
       if (!config.dev) {
         slack.web.chat.postMessage({
           channel: channelId,
-          text: 'Ahoj, volám sa obedbot a všimol som si ťa na kanáli #ba-obedy ' +
+          text:
+            'Ahoj, volám sa obedbot a všimol som si ťa na kanáli #ba-obedy ' +
             'ale nemal som ťa ešte v mojom zápisníčku, tak si ťa poznamenávam, ' +
             'budem ti odteraz posielať last cally, pokiaľ v daný deň nemáš nič objednané :)',
           as_user: true,
-        });
+        })
       }
 
-      slack.web.users.info({user: userId})
-        .then((userInfo) => {
-          const realname = userInfo.user.profile.real_name;
-          const filter = '({channel_id} = \'' + channelId + '\')';
-          listRecords(filter).then((records) => {
-            if (!records[0]) {
-              createRecord({
-                user_id: userId,
-                channel_id: channelId,
-                username: realname,
-                notifications: true,
-              }).then(() => {
-                logger.devLog(`User ${realname} has been added to database`);
+      slack.web.users.info({ user: userId }).then(userInfo => {
+        const realname = userInfo.user.profile.real_name
+        const filter = "({channel_id} = '" + channelId + "')"
+        listRecords(filter).then(records => {
+          if (!records[0]) {
+            createRecord({
+              user_id: userId,
+              channel_id: channelId,
+              username: realname,
+              notifications: true,
+            })
+              .then(() => {
+                logger.devLog(`User ${realname} has been added to database`)
                 if (!config.dev) {
                   slack.web.chat.postMessage({
                     channel: channelId,
-                    text: 'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
+                    text:
+                      'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
                       '#ba-obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
                     as_user: true,
-                  });
+                  })
                 }
-              }).catch((err) => logger.error(`User ${realname} is already in the database`, err));
-            }
-          });
-        });
-    }).catch(
-      () => logger.error(`Trying to save bot or disabled user ${userId}`)
-    );
+              })
+              .catch(err =>
+                logger.error(
+                  `User ${realname} is already in the database`,
+                  err,
+                ),
+              )
+          }
+        })
+      })
+    })
+    .catch(() => logger.error(`Trying to save bot or disabled user ${userId}`))
 }
 
 export async function userExists(userId) {
-  const filter = '({user_id} = \'' + userId + '\')';
-  const records = await listRecords(filter);
-  return !!records[0];
+  const filter = "({user_id} = '" + userId + "')"
+  const records = await listRecords(filter)
+  return !!records[0]
 }
 
 export function parseOrders() {
@@ -183,78 +192,82 @@ export function parseOrders() {
     soups: {},
     meals: Array(7).fill(0),
     pizza: {},
-  };
-  let hamka = Array(5 + 1).fill(0).map(() => ([]));
+  }
+  let hamka = Array(5 + 1)
+    .fill(0)
+    .map(() => [])
   let veglife = {
     meals: Array(4).fill(0),
     soups: 0,
     salads: 0,
-  };
+  }
   let click = {
     soups: {},
     meals: Array(6).fill(0),
-  };
-  let shop = [];
+  }
+  let shop = []
 
-  logger.devLog('Parsing orders for webpage display');
+  logger.devLog('Parsing orders for webpage display')
 
-  return getTodaysMessages()
-    .then((messages) => {
-      for (let message of messages) {
-        if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
-          continue;
-        }
-        const text = stripMention(message.text).toLowerCase().trim();
-
-        const restaurant = identifyRestaurant(text);
-        const order = getOrderFromMessage(text, restaurant);
-
-        logger.devLog(`Message ${text} is from ${restaurant}, order ${order}`);
-
-        if (restaurant === restaurants.presto) {
-          const mainMealNum = parseInt(order.charAt(6), 10) - 1;
-          const soup = order.substring(8);
-
-          presto.meals[mainMealNum]++;
-          if (soup) {
-            presto.soups[soup] = get(presto.soups, soup, 0) + 1;
-          }
-        } else if (restaurant === restaurants.pizza) {
-          const pizzaNum = order.match(/\d+/g)[0];
-          const pizzaSize = order.match(/\d+/g)[1];
-          const key = (!pizzaSize || pizzaSize === '33')
-            ? pizzaNum
-            : `${pizzaNum} veľkosti ${pizzaSize}`;
-
-          presto.pizza[key] = get(presto.pizza, key, 0) + 1;
-        } else if (restaurant === restaurants.veglife) {
-          const mainMealNum = parseInt(order.charAt(3), 10) - 1;
-          const saladOrSoup = order.charAt(order.length - 1);
-
-          veglife.meals[mainMealNum]++;
-          if (saladOrSoup === 's') {
-            veglife.salads++;
-          } else {
-            veglife.soups++;
-          }
-        } else if (restaurant === restaurants.hamka) {
-          const number = parseInt(order.charAt(3), 10);
-          const note = order.slice(order.charAt(4) === 'p' ? 5 : 4).trim();
-          hamka[number].push(note);
-        } else if (restaurant === restaurants.click) {
-          const mainMealNum = parseInt(order.charAt(5), 10) - 1;
-          const soup = order.substring(7);
-          click.meals[mainMealNum]++;
-          if (soup) {
-            click.soups[soup] = get(click.soups, soup, 0) + 1;
-          }
-        } else if (restaurant === restaurants.shop) {
-          shop.push(order.substring(6));
-        }
+  return getTodaysMessages().then(messages => {
+    for (let message of messages) {
+      if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
+        continue
       }
+      const text = stripMention(message.text)
+        .toLowerCase()
+        .trim()
 
-      return Promise.resolve({presto, hamka, click, veglife, shop});
-    });
+      const restaurant = identifyRestaurant(text)
+      const order = getOrderFromMessage(text, restaurant)
+
+      logger.devLog(`Message ${text} is from ${restaurant}, order ${order}`)
+
+      if (restaurant === restaurants.presto) {
+        const mainMealNum = parseInt(order.charAt(6), 10) - 1
+        const soup = order.substring(8)
+
+        presto.meals[mainMealNum]++
+        if (soup) {
+          presto.soups[soup] = get(presto.soups, soup, 0) + 1
+        }
+      } else if (restaurant === restaurants.pizza) {
+        const pizzaNum = order.match(/\d+/g)[0]
+        const pizzaSize = order.match(/\d+/g)[1]
+        const key =
+          !pizzaSize || pizzaSize === '33'
+            ? pizzaNum
+            : `${pizzaNum} veľkosti ${pizzaSize}`
+
+        presto.pizza[key] = get(presto.pizza, key, 0) + 1
+      } else if (restaurant === restaurants.veglife) {
+        const mainMealNum = parseInt(order.charAt(3), 10) - 1
+        const saladOrSoup = order.charAt(order.length - 1)
+
+        veglife.meals[mainMealNum]++
+        if (saladOrSoup === 's') {
+          veglife.salads++
+        } else {
+          veglife.soups++
+        }
+      } else if (restaurant === restaurants.hamka) {
+        const number = parseInt(order.charAt(3), 10)
+        const note = order.slice(order.charAt(4) === 'p' ? 5 : 4).trim()
+        hamka[number].push(note)
+      } else if (restaurant === restaurants.click) {
+        const mainMealNum = parseInt(order.charAt(5), 10) - 1
+        const soup = order.substring(7)
+        click.meals[mainMealNum]++
+        if (soup) {
+          click.soups[soup] = get(click.soups, soup, 0) + 1
+        }
+      } else if (restaurant === restaurants.shop) {
+        shop.push(order.substring(6))
+      }
+    }
+
+    return Promise.resolve({ presto, hamka, click, veglife, shop })
+  })
 }
 
 export function parseOrdersNamed() {
@@ -265,56 +278,63 @@ export function parseOrdersNamed() {
     hamka: [],
     click: [],
     shop: [],
-  };
-  let messages;
+  }
+  let messages
 
   return getTodaysMessages()
-    .then((history) => {
-      messages = history;
-      return listRecords();
-    }).then((users) => {
+    .then(history => {
+      messages = history
+      return listRecords()
+    })
+    .then(users => {
       for (let message of messages) {
         if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
-          continue;
+          continue
         }
-        const text = stripMention(message.text).toLowerCase().trim();
+        const text = stripMention(message.text)
+          .toLowerCase()
+          .trim()
 
-        const restaurant = identifyRestaurant(text);
+        const restaurant = identifyRestaurant(text)
         const order = {
-          user: find(users, {user_id: message.user}).username,
+          user: find(users, { user_id: message.user }).username,
           order: getOrderFromMessage(text, restaurant),
-        };
+        }
 
         if (restaurant === restaurants.shop) {
-          order.order = order.order.substring(6);
+          order.order = order.order.substring(6)
         }
-        orders[restaurant].push(order);
+        orders[restaurant].push(order)
       }
-      logger.devLog(`Orders for named display on webpage: ${orders}`);
-      return Promise.resolve(orders);
-    });
+      logger.devLog(`Orders for named display on webpage: ${orders}`)
+      return Promise.resolve(orders)
+    })
 }
 
 function getMomentForMenu() {
-  let mom;
+  let mom
 
   // if it is Saturday, Sunday or Friday afternoon, set day to Monday
-  for (mom = moment(); mom.day() === 0 || mom.day() === 6 || mom.hours() > 13; mom.add(1, 'days').startOf('day'));
-  return mom;
+  for (
+    mom = moment();
+    mom.day() === 0 || mom.day() === 6 || mom.hours() > 13;
+    mom.add(1, 'days').startOf('day')
+  );
+  return mom
 }
 
 export async function getMenu(link, parseMenu) {
-  const block = '```';
+  const block = '```'
   try {
     if (link.endsWith('date=')) {
-      const date = getMomentForMenu().format('DD.MM.YYYY');
-      link = `${link}${date}`;
+      const date = getMomentForMenu().format('DD.MM.YYYY')
+      link = `${link}${date}`
     }
-    const body = await request(link);
-    return `${block}${parseMenu(body)}${block}`;
+    const body = await request(link)
+    return `${block}${parseMenu(body)}${block}`
   } catch (e) {
-    logger.error(e);
-    return `${block}Chyba počas načítavania menu :disappointed:${block}`;
+    logger.error(e)
+    return `${block}Chyba počas načítavania menu :disappointed:${block}`
   }
 }
 
@@ -324,13 +344,17 @@ export async function getAllMenus() {
     getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu),
     getMenu(config.menuLinks.hamka, parseTodaysHamkaMenu),
     getMenu(config.menuLinks.click, parseTodaysClickMenu),
-  ]);
+  ])
 
-  return `*Presto*\n${presto}\n\n*Veglife*\n${veglife}\n\n*Hamka*\n${hamka}\n\n*Click*\n${click}`;
+  return `*Presto*\n${presto}\n\n*Veglife*\n${veglife}\n\n*Hamka*\n${hamka}\n\n*Click*\n${click}`
 }
 
 function normalizeWhitespace(str) {
-  return str.split('\n').map((l) => l.trim()).filter((l) => l.length > 0).join(' ');
+  return str
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0)
+    .join(' ')
 }
 
 function parsePrestoMenuRow($, row) {
@@ -338,85 +362,130 @@ function parsePrestoMenuRow($, row) {
     .find('td')
     .map((ind, cell) => normalizeWhitespace($(cell).text()))
     .get()
-    .join(' ');
+    .join(' ')
 }
 
 export function parseTodaysPrestoMenu(rawMenu) {
-  const slovakDays = ['', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
-  const today = getMomentForMenu().day();
+  const slovakDays = [
+    '',
+    'Pondelok',
+    'Utorok',
+    'Streda',
+    'Štvrtok',
+    'Piatok',
+    'Sobota',
+  ]
+  const today = getMomentForMenu().day()
 
-  const $ = cheerio.load(rawMenu);
+  const $ = cheerio.load(rawMenu)
 
-  const dayTitle = slovakDays[today];
+  const dayTitle = slovakDays[today]
   const meals = $(`tr.first:contains('${dayTitle}')`)
     .nextUntil('tr.first')
-    .map((_, row) => parsePrestoMenuRow($, row));
+    .map((_, row) => parsePrestoMenuRow($, row))
 
-  return [`${dayTitle}`, ...meals].join('\n');
+  return [`${dayTitle}`, ...meals].join('\n')
 }
 
 export function parseTodaysVeglifeMenu(rawMenu) {
-  const slovakDays = ['', 'PONDELOK', 'UTOROK', 'STREDA', 'ŠTVRTOK', 'PIATOK', 'SOBOTA'];
-  const today = getMomentForMenu().day();
-  const menuStart = rawMenu.indexOf(slovakDays[today]);
-  const menuEnd = rawMenu.indexOf(slovakDays[today + 1]);
-  if (menuStart === -1 || menuEnd === -1) throw new Error('Parsing Veglife menu: unable to find menu for today');
+  const slovakDays = [
+    '',
+    'PONDELOK',
+    'UTOROK',
+    'STREDA',
+    'ŠTVRTOK',
+    'PIATOK',
+    'SOBOTA',
+  ]
+  const today = getMomentForMenu().day()
+  const menuStart = rawMenu.indexOf(slovakDays[today])
+  const menuEnd = rawMenu.indexOf(slovakDays[today + 1])
+  if (menuStart === -1 || menuEnd === -1) {
+    throw new Error('Parsing Veglife menu: unable to find menu for today')
+  }
   let menu = rawMenu
     .substring(menuStart, menuEnd)
     // delete all HTML tags
     .replace(/<[^>]*>/g, '')
     .split('\n')
-    .map((row) => row.trim())
+    .map(row => row.trim())
     // delete empty lines
-    .filter((row) => row.length)
+    .filter(row => row.length)
     .join('\n')
     // replace all multiple whitespaces with single space
-    .replace(/\s\s+/g, ' ');
+    .replace(/\s\s+/g, ' ')
 
-  let infoIndex = menu.indexOf('+ Pestrá');
+  let infoIndex = menu.indexOf('+ Pestrá')
   if (infoIndex === -1) {
-    infoIndex = menu.indexOf('Nemôžete prísť?');
+    infoIndex = menu.indexOf('Nemôžete prísť?')
   }
   if (infoIndex !== -1) {
     // delete unnecessary part
-    menu = menu.substring(0, infoIndex);
+    menu = menu.substring(0, infoIndex)
   }
-  return menu;
+  return menu
 }
 
 export function parseTodaysHamkaMenu(rawMenu) {
-  const menuStart = rawMenu.indexOf('<p class');
-  if (menuStart === -1) throw new Error('Parsing Hamka menu: "<p class" not found');
-  const menuEnd = rawMenu.indexOf('</div>', menuStart);
-  if (menuEnd === -1) throw new Error('Parsing Hamka menu: "</div>" not found');
+  const menuStart = rawMenu.indexOf('<p class')
+  if (menuStart === -1) {
+    throw new Error('Parsing Hamka menu: "<p class" not found')
+  }
+  const menuEnd = rawMenu.indexOf('</div>', menuStart)
+  if (menuEnd === -1) {
+    throw new Error('Parsing Hamka menu: "</div>" not found')
+  }
   const menu = rawMenu
     .substring(menuStart, menuEnd)
     .replace(/<p[^>]*>(.*?)<\/p>/g, '$1\n')
-    .replace(/<[^>]*>/g, '');
-  return menu;
+    .replace(/<[^>]*>/g, '')
+  return menu
 }
 
 function parseClickList($, listElement) {
   return $(listElement)
     .find('li')
     .map((index, el) => {
-      const name = normalizeWhitespace($(el).find('.product-name').text());
-      const description = normalizeWhitespace($(el).find('.product-description').text());
-      const weight = normalizeWhitespace($(el).find('.product-bar span').first().text());
-      const price = normalizeWhitespace($(el).find('.product-price').text());
-      return `${index + 1}. ${name}: ${description}, ${weight}, ${price}`;
+      const name = normalizeWhitespace(
+        $(el)
+          .find('.product-name')
+          .text(),
+      )
+      const description = normalizeWhitespace(
+        $(el)
+          .find('.product-description')
+          .text(),
+      )
+      const weight = normalizeWhitespace(
+        $(el)
+          .find('.product-bar span')
+          .first()
+          .text(),
+      )
+      const price = normalizeWhitespace(
+        $(el)
+          .find('.product-price')
+          .text(),
+      )
+      return `${index + 1}. ${name}: ${description}, ${weight}, ${price}`
     })
-    .get();
+    .get()
 }
 
 export function parseTodaysClickMenu(rawMenu) {
-  const $ = cheerio.load(rawMenu);
+  const $ = cheerio.load(rawMenu)
 
-  const mainMenu = $('.panel').first();
-  const dayTitle = normalizeWhitespace($(mainMenu).find('.title').text());
+  const mainMenu = $('.panel').first()
+  const dayTitle = normalizeWhitespace(
+    $(mainMenu)
+      .find('.title')
+      .text(),
+  )
 
-  const main = parseClickList($, mainMenu);
-  const soups = parseClickList($, $('#kategoria-polievky'));
+  const main = parseClickList($, mainMenu)
+  const soups = parseClickList($, $('#kategoria-polievky'))
 
-  return [`${dayTitle}`, 'Polievky:', ...soups, 'Hlavné jedlo:', ...main].join('\n');
+  return [`${dayTitle}`, 'Polievky:', ...soups, 'Hlavné jedlo:', ...main].join(
+    '\n',
+  )
 }
