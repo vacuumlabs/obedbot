@@ -1,3 +1,3 @@
-import {runServer} from './server.js';
+import { runServer } from './server.js'
 
-runServer();
+runServer()
