@@ -23,7 +23,7 @@
     "cheerio": "^0.22.0",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "moment": "^2.14.1",
     "moment-timezone": "^0.5.11",
     "node-schedule": "^1.2.0",
