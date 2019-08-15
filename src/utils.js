@@ -337,7 +337,7 @@ export async function getMenu(link, parseMenu) {
       link = `${link}${date}`
     }
     const body = await request(link)
-    return `${block}${parseMenu(body)}${block}`
+    return `${block}${parseMenu(body).formatted}${block}`
   } catch (e) {
     logger.error(e)
     return `${block}Chyba počas načítavania menu :disappointed:${block}`
@@ -386,11 +386,16 @@ export function parseTodaysPrestoMenu(rawMenu) {
   const $ = cheerio.load(rawMenu)
 
   const dayTitle = slovakDays[today]
-  const meals = $(`tr.first:contains('${dayTitle}')`)
+  const menu = $(`tr.first:contains('${dayTitle}')`)
     .nextUntil('tr.first')
     .map((_, row) => parsePrestoMenuRow($, row))
+    .toArray()
 
-  return [`${dayTitle}`, ...meals].join('\n')
+  return {
+    formatted: [`${dayTitle}`, ...menu].join('\n'),
+    soups: [menu[0]],
+    mainCourses: menu.slice(1),
+  }
 }
 
 export function parseTodaysVeglifeMenu(rawMenu) {
@@ -402,7 +407,14 @@ export function parseTodaysVeglifeMenu(rawMenu) {
     .nextUntil("p:contains('Dezert')")
     .map((_, tag) => normalizeWhitespace($(tag).text()))
     .filter((_, s) => s.length > 0)
-  return [menuTitle, ...menu].join('\n')
+    .toArray()
+
+  return {
+    formatted: [menuTitle, ...menu].join('\n'),
+    soups: [menu[0]],
+    mainCourses: menu.slice(1, -1),
+    salad: menu.slice(-1),
+  }
 }
 
 function parseClickList($, listElement) {
@@ -445,10 +457,18 @@ export function parseTodaysClickMenu(rawMenu) {
       .text(),
   )
 
-  const main = parseClickList($, mainMenu)
+  const mainCourses = parseClickList($, mainMenu)
   const soups = parseClickList($, $('#kategoria-polievky'))
 
-  return [`${dayTitle}`, 'Polievky:', ...soups, 'Hlavné jedlo:', ...main].join(
-    '\n',
-  )
+  return {
+    formatted: [
+      `${dayTitle}`,
+      'Polievky:',
+      ...soups,
+      'Hlavné jedlo:',
+      ...mainCourses,
+    ].join('\n'),
+    soups,
+    mainCourses,
+  }
 }
