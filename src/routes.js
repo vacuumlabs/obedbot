@@ -2,7 +2,7 @@ import express from 'express'
 
 import {
   restaurants,
-  parseOrders,
+  generateSummary,
   parseOrdersNamed,
   getMenu,
   getAllMenus,
@@ -16,7 +16,7 @@ import config from '../config'
 import { listRecords } from './airtable'
 
 async function renderOrders(req, res) {
-  const { presto, veglife, click, shop } = await parseOrders()
+  const { presto, veglife, click, shop } = await generateSummary()
 
   res.render('index', {
     title: 'Dnešné objednávky',

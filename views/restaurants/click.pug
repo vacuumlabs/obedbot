@@ -22,5 +22,8 @@ table.table.table-sm
   tbody
     each amount, soupNumber in click.soups
       tr
-        td=soupNumber
-        td=amount
+        td=soupNumber + 1
+        if amount
+          td=amount
+        else
+          td

@@ -3,8 +3,8 @@ table.table.table-sm
   thead.thead-light
     tr
       - var i = 0;
-      while i++ < 4
-        th= i
+      while i < veglife.meals.length
+        th= ++i
   tbody
     tr
       each amount in veglife.meals

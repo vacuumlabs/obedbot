@@ -1,5 +1,5 @@
 import Promise from 'bluebird'
-import { find, get } from 'lodash'
+import { find } from 'lodash'
 import moment from 'moment'
 import request from 'request-promise'
 import cheerio from 'cheerio'
@@ -201,22 +201,71 @@ export async function userExists(userId) {
   return !!userData
 }
 
-export function parseOrders() {
-  let presto = {
-    soups: {},
-    meals: Array(7).fill(0),
-    pizza: {},
+function parseOrder(restaurant, order) {
+  const result = {}
+
+  result.restaurant = restaurant
+  if (restaurant === restaurants.presto) {
+    const mainMealNum = parseInt(order.charAt(6), 10)
+    const soup = parseInt(order.substring(8), 10)
+
+    result.meal = mainMealNum
+    if (soup) {
+      result.soup = soup
+    }
+  } else if (restaurant === restaurants.pizza) {
+    const pizzaNum = order.match(/\d+/g)[0]
+    const pizzaSize = order.match(/\d+/g)[1]
+
+    result.restaurant = restaurants.presto
+    result.pizza =
+      !pizzaSize || pizzaSize === '33'
+        ? pizzaNum
+        : `${pizzaNum} veľkosti ${pizzaSize}`
+  } else if (restaurant === restaurants.veglife) {
+    const mainMealNum = parseInt(order.charAt(3), 10)
+    const saladOrSoup = order.charAt(order.length - 1)
+
+    result.meal = mainMealNum
+    if (saladOrSoup === 's') {
+      result.salad = true
+    } else {
+      result.soup = true
+    }
+  } else if (restaurant === restaurants.click) {
+    const mainMealNum = parseInt(order.charAt(5), 10)
+    const soup = parseInt(order.substring(7), 10)
+
+    result.meal = mainMealNum
+    if (soup) {
+      result.soup = soup
+    }
+  } else if (restaurant === restaurants.shop) {
+    result.item = order.substring(6)
   }
-  let veglife = {
-    meals: Array(4).fill(0),
-    soups: 0,
-    salads: 0,
+
+  return result
+}
+
+export function generateSummary() {
+  const summary = {
+    presto: {
+      meals: Array(5).fill(0),
+      soups: Array(2).fill(0),
+      pizza: {},
+    },
+    hamka: {},
+    veglife: {
+      meals: Array(4).fill(0),
+      soups: 0,
+      salads: 0,
+    },
+    click: {
+      soups: Array(2).fill(0),
+      meals: Array(6).fill(0),
+    },
+    shop: [],
   }
-  let click = {
-    soups: {},
-    meals: Array(6).fill(0),
-  }
-  let shop = []
 
   logger.devLog('Parsing orders for webpage display')
 
@@ -234,46 +283,35 @@ export function parseOrders() {
 
       logger.devLog(`Message ${text} is from ${restaurant}, order ${order}`)
 
-      if (restaurant === restaurants.presto) {
-        const mainMealNum = parseInt(order.charAt(6), 10) - 1
-        const soup = order.substring(8)
+      const data = parseOrder(restaurant, order)
 
-        presto.meals[mainMealNum]++
-        if (soup) {
-          presto.soups[soup] = get(presto.soups, soup, 0) + 1
-        }
-      } else if (restaurant === restaurants.pizza) {
-        const pizzaNum = order.match(/\d+/g)[0]
-        const pizzaSize = order.match(/\d+/g)[1]
-        const key =
-          !pizzaSize || pizzaSize === '33'
-            ? pizzaNum
-            : `${pizzaNum} veľkosti ${pizzaSize}`
+      if (data.restaurant === 'shop') {
+        summary.shop.push(data.item)
+      }
 
-        presto.pizza[key] = get(presto.pizza, key, 0) + 1
-      } else if (restaurant === restaurants.veglife) {
-        const mainMealNum = parseInt(order.charAt(3), 10) - 1
-        const saladOrSoup = order.charAt(order.length - 1)
+      if (data.meal) {
+        summary[data.restaurant].meals[data.meal - 1]++
+      }
 
-        veglife.meals[mainMealNum]++
-        if (saladOrSoup === 's') {
-          veglife.salads++
+      if (data.soup) {
+        if (data.restaurant === 'veglife') {
+          summary[data.restaurant].soups++
         } else {
-          veglife.soups++
+          summary[data.restaurant].soups[data.soup - 1]++
         }
-      } else if (restaurant === restaurants.click) {
-        const mainMealNum = parseInt(order.charAt(5), 10) - 1
-        const soup = order.substring(7)
-        click.meals[mainMealNum]++
-        if (soup) {
-          click.soups[soup] = get(click.soups, soup, 0) + 1
-        }
-      } else if (restaurant === restaurants.shop) {
-        shop.push(order.substring(6))
+      }
+
+      if (data.pizza) {
+        summary[data.restaurant].pizza[data.pizza] =
+          (summary[data.restaurant].pizza[data.pizza] || 0) + 1
+      }
+
+      if (data.salad) {
+        summary[data.restaurant].salads++
       }
     }
 
-    return Promise.resolve({ presto, click, veglife, shop })
+    return Promise.resolve(summary)
   })
 }
 
