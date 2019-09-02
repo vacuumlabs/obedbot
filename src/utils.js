@@ -201,7 +201,7 @@ export async function userExists(userId) {
   return !!userData
 }
 
-function parseOrder(restaurant, order) {
+export function parseOrder(restaurant, order) {
   const result = {}
 
   result.restaurant = restaurant
@@ -382,12 +382,15 @@ export async function getMenu(link, parseMenu) {
   }
 }
 
-export async function getAllMenus() {
-  const [presto, veglife, click] = await Promise.all([
+export function getAllMenus() {
+  return Promise.all([
     getMenu(config.menuLinks.presto, parseTodaysPrestoMenu),
     getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu),
     getMenu(config.menuLinks.click, parseTodaysClickMenu),
   ])
+}
+export async function getAllMenusSummary() {
+  const [presto, veglife, hamka, click] = await getAllMenus()
 
   return `*Presto*\n${presto}\n\n*Veglife*\n${veglife}\n\n*Click*\n${click}`
 }

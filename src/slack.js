@@ -16,6 +16,7 @@ import {
   alreadyReacted,
   isOrder,
   getAllMenus,
+  getAllMenusSummary,
 } from './utils'
 import config from '../config'
 import { listRecords, updateRecord } from './airtable'
@@ -88,6 +89,8 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
     [restaurants.veglife]: 'Veglife',
     [restaurants.shop]: 'obchodu',
   }
+  const menus = await getAllMenus()
+  console.log({ menus })
 
   slack.webBot.chat.postMessage({
     channel: config.slack.lunchChannelId,
@@ -119,6 +122,8 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
       const notification = willThereBeFood
         ? `Prišiel ti obed ${text} z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
         : `Dneska bohužiaľ obed z ${restaurantNames[callRestaurant]} nepríde :disappointed:`
+
+      console.log({ notification })
 
       if (userChannelId) {
         slack.webBot.chat.postMessage({
@@ -336,12 +341,12 @@ export async function makeLastCall() {
   }
   logger.devLog('Making last call')
 
-  const [messages, users, menus] = await Promise.all([
+  const [messages, users, menusSummary] = await Promise.all([
     getTodaysMessages(),
     getListeningUsers(),
-    getAllMenus(),
+    getAllMenusSummary(),
   ])
-  const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${menus}`
+  const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${menusSummary}`
 
   for (let user of users) {
     if (
