@@ -10,10 +10,6 @@ const utils = require('./build/utils')
     config.menuLinks.veglife,
     utils.parseTodaysVeglifeMenu,
   )
-  const hamka = await utils.getMenu(
-    config.menuLinks.hamka,
-    utils.parseTodaysHamkaMenu,
-  )
   const click = await utils.getMenu(
     config.menuLinks.click,
     utils.parseTodaysClickMenu,
@@ -21,6 +17,5 @@ const utils = require('./build/utils')
 
   console.log(veglife)
   console.log(presto)
-  console.log(hamka)
   console.log(click)
 })()

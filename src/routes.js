@@ -8,7 +8,6 @@ import {
   getAllMenus,
   parseTodaysPrestoMenu,
   parseTodaysVeglifeMenu,
-  parseTodaysHamkaMenu,
   parseTodaysClickMenu,
 } from './utils'
 import { notifyAllThatOrdered, changeMute } from './slack'
@@ -17,14 +16,13 @@ import config from '../config'
 import { listRecords } from './airtable'
 
 async function renderOrders(req, res) {
-  const { presto, veglife, hamka, click, shop } = await parseOrders()
+  const { presto, veglife, click, shop } = await parseOrders()
 
   res.render('index', {
     title: 'Dnešné objednávky',
     activePage: 'index',
     presto,
     veglife,
-    hamka,
     click,
     shop,
   })
@@ -82,16 +80,6 @@ export function startExpress() {
     res.redirect('/')
   })
 
-  app.get('/hamka', (req, res) => {
-    notifyAllThatOrdered(restaurants.hamka, true)
-    res.redirect('/')
-  })
-
-  app.get('/nohamka', (req, res) => {
-    notifyAllThatOrdered(restaurants.hamka, false)
-    res.redirect('/')
-  })
-
   app.get('/click', (req, res) => {
     notifyAllThatOrdered(restaurants.click, true)
     res.redirect('/')
@@ -122,11 +110,6 @@ export function startExpress() {
 
   app.get('/menuveglife', async (req, res) => {
     const menu = await getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu)
-    res.status(200).send(menu)
-  })
-
-  app.get('/menuhamka', async (req, res) => {
-    const menu = await getMenu(config.menuLinks.hamka, parseTodaysHamkaMenu)
     res.status(200).send(menu)
   })
 
