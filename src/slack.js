@@ -66,7 +66,6 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
   const users = await listRecords()
   const restaurantNames = {
     [restaurants.presto]: 'Pizza Presto',
-    [restaurants.hamka]: 'Hamka',
     [restaurants.click]: 'Click',
     [restaurants.veglife]: 'Veglife',
     [restaurants.shop]: 'obchodu',

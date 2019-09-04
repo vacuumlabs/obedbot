@@ -98,7 +98,6 @@ export const restaurants = {
   presto: 'presto',
   pizza: 'pizza',
   veglife: 'veglife',
-  hamka: 'hamka',
   click: 'click',
   shop: 'shop',
 }
@@ -109,7 +108,6 @@ export function identifyRestaurant(order) {
     { regex: regexes.presto, name: restaurants.presto },
     { regex: regexes.pizza, name: restaurants.pizza },
     { regex: regexes.veglife, name: restaurants.veglife },
-    { regex: regexes.hamka, name: restaurants.hamka },
     { regex: regexes.click, name: restaurants.click },
     { regex: regexes.shop, name: restaurants.shop },
   ]
@@ -193,9 +191,6 @@ export function parseOrders() {
     meals: Array(7).fill(0),
     pizza: {},
   }
-  let hamka = Array(5 + 1)
-    .fill(0)
-    .map(() => [])
   let veglife = {
     meals: Array(4).fill(0),
     soups: 0,
@@ -250,10 +245,6 @@ export function parseOrders() {
         } else {
           veglife.soups++
         }
-      } else if (restaurant === restaurants.hamka) {
-        const number = parseInt(order.charAt(3), 10)
-        const note = order.slice(order.charAt(4) === 'p' ? 5 : 4).trim()
-        hamka[number].push(note)
       } else if (restaurant === restaurants.click) {
         const mainMealNum = parseInt(order.charAt(5), 10) - 1
         const soup = order.substring(7)
@@ -266,7 +257,7 @@ export function parseOrders() {
       }
     }
 
-    return Promise.resolve({ presto, hamka, click, veglife, shop })
+    return Promise.resolve({ presto, click, veglife, shop })
   })
 }
 
@@ -275,7 +266,6 @@ export function parseOrdersNamed() {
     presto: [],
     pizza: [],
     veglife: [],
-    hamka: [],
     click: [],
     shop: [],
   }
@@ -339,14 +329,13 @@ export async function getMenu(link, parseMenu) {
 }
 
 export async function getAllMenus() {
-  const [presto, veglife, hamka, click] = await Promise.all([
+  const [presto, veglife, click] = await Promise.all([
     getMenu(config.menuLinks.presto, parseTodaysPrestoMenu),
     getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu),
-    getMenu(config.menuLinks.hamka, parseTodaysHamkaMenu),
     getMenu(config.menuLinks.click, parseTodaysClickMenu),
   ])
 
-  return `*Presto*\n${presto}\n\n*Veglife*\n${veglife}\n\n*Hamka*\n${hamka}\n\n*Click*\n${click}`
+  return `*Presto*\n${presto}\n\n*Veglife*\n${veglife}\n\n*Click*\n${click}`
 }
 
 function normalizeWhitespace(str) {
@@ -398,15 +387,6 @@ export function parseTodaysVeglifeMenu(rawMenu) {
     .map((_, tag) => normalizeWhitespace($(tag).text()))
     .filter((_, s) => s.length > 0)
   return [menuTitle, ...menu].join('\n')
-}
-
-export function parseTodaysHamkaMenu(rawMenu) {
-  const $ = cheerio.load(rawMenu)
-  const menu = $(`p:contains("${getMomentForMenu().format('DD.MM.YYYY')}")`)
-    .parent()
-    .children()
-    .map((_, tag) => normalizeWhitespace($(tag).text()))
-  return [...menu].join('\n')
 }
 
 function parseClickList($, listElement) {

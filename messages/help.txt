@@ -20,13 +20,6 @@ Do 9:40 je možné si nahlásiť veg+"číslo"+prípadná polievka alebo šalát
 Príklad: `@obedbot: veg4p` značí, že si dáte štvorku s polievkou z VegLife.
 Dúfame, že si v tom každý nájde svoje :slightly_smiling_face:
 
-*HAMKA*
-`http://hamka.sk/`
-Objednávať si môžte do 9:30 v tvare ham+"číslo", polievka je súčasťou
-každej objednávky. Pokiaľ je na výber viacero príloh, môžte to dopísať
-hneď za to.
-Príklad: `@obedbot: ham4 hranolky, tat. omáčka` - polievka a menu č. 4 s hranolkami a tat. omáčkou
-
 *CLICK*
 `https://clickfood.sk/`
 Objednávať si môžte do 10:00 v tvare click+"číslo"+p+"číslo polievky".
@@ -34,7 +27,7 @@ Príklad: `@obedbot: click4p3` - menu č. 4 a polievka č. 3.
 
 *MENU*
 Ak sa vám nechce hľadať menu na stránkach týchto reštaurácií, stačí ak do konverzácie na Slacku
-napíšete `/presto`, `/veglife` alebo `/hamka` a zobrazí sa vám menu danej reštaurácie na daný deň.
+napíšete `/presto` alebo `/veglife` a zobrazí sa vám menu danej reštaurácie na daný deň.
 Taktiež môžete použiť `/menu` aby sa vám zobrazili všetky reštaurácie naraz.
 Nikoho tým spamovať nebudete, pretože odpoveď je viditeľná iba pre vás :slightly_smiling_face:
 

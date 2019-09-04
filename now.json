@@ -20,7 +20,6 @@
         "OBEDBOT_TABLE_NAME": "Users",
         "OBEDBOT_PRESTO": "https://www.bizref.sk/sk/firmy/charopos-s-r-o/denne-menu/837/OBEDOVE-MENU/",
         "OBEDBOT_VEGLIFE": "http://www.veglife.sk/sk/menu-2/",
-        "OBEDBOT_HAMKA": "http://hamka.sk/print.php?menu=1&uid=3&date=",
         "OBEDBOT_CLICK": "http://m.clickfood.sk/sk/menu/"
     }
 }
