@@ -422,7 +422,7 @@ function parseClickList($, listElement) {
 export function parseTodaysClickMenu(rawMenu) {
   const $ = cheerio.load(rawMenu)
 
-  const mainMenu = $('.panel').first()
+  const mainMenu = $('[id^="kategoria-menu-"]').first()
   const dayTitle = normalizeWhitespace(
     $(mainMenu)
       .find('.title')
