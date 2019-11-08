@@ -7,7 +7,7 @@ import cheerio from 'cheerio'
 import { getTodaysMessages, processMessages } from './slack'
 import { slack, logger } from './resources'
 import config from '../config'
-import { createRecord, listRecords } from './airtable'
+import { createRecord, listRecords, updateChannelId } from './airtable'
 
 /**
  * Returns string with pretty printed json object
@@ -126,12 +126,23 @@ export function getOrderFromMessage(msg, restaurant) {
   return msg.match(regex)[0]
 }
 
+function getUserChannel(userId) {
+  return slack.web.im
+    .open({ user: userId })
+    .then(({ channel: { id: channelId } }) => channelId)
+}
+
+export async function saveUserChannel(recordId, userId) {
+  const channelId = await getUserChannel(userId)
+
+  return updateChannelId(recordId, channelId)
+}
+
 export function saveUser(userId) {
   logger.devLog('Saving user ' + userId)
 
-  slack.web.im
-    .open({ user: userId })
-    .then(({ channel: { id: channelId } }) => {
+  getUserChannel(userId)
+    .then(channelId => {
       if (!config.dev) {
         slack.web.chat.postMessage({
           channel: channelId,
@@ -179,10 +190,15 @@ export function saveUser(userId) {
     .catch(() => logger.error(`Trying to save bot or disabled user ${userId}`))
 }
 
-export async function userExists(userId) {
+export async function getUser(userId) {
   const filter = "({user_id} = '" + userId + "')"
   const records = await listRecords(filter)
-  return !!records[0]
+  return records[0]
+}
+
+export async function userExists(userId) {
+  const userData = await getUser(userId)
+  return !!userData
 }
 
 export function parseOrders() {

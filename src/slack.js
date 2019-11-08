@@ -3,7 +3,9 @@ import { isNil, find } from 'lodash'
 
 import { slack, logger } from './resources'
 import {
+  getUser,
   userExists,
+  saveUserChannel,
   saveUser,
   isObedbotMentioned,
   stripMention,
@@ -27,8 +29,11 @@ export function loadUsers() {
           logger.devLog('Skipping member obedbot')
           continue
         }
-        if (!(await userExists(member))) {
+        const userRecord = await getUser(member)
+        if (!userRecord) {
           saveUser(member)
+        } else if (!userRecord.channel_id) {
+          saveUserChannel(userRecord.id, member)
         }
       }
     })
