@@ -36,3 +36,8 @@ export async function updateRecord(userChannel, notifications) {
   await table.update(recordId, { notifications })
   logger.devLog('Notifications updated for channel ' + userChannel)
 }
+
+export async function updateChannelId(recordId, channelId) {
+  await table.update(recordId, { channel_id: channelId })
+  logger.devLog('Channel updated ' + channelId)
+}
