@@ -12,8 +12,9 @@
     "env": {
         "OBEDBOT_DEV": "false",
         "OBEDBOT_PORT": "8000",
+        "OBEDBOT_USER_TOKEN": "@obedbot-user-token",
         "OBEDBOT_BOT_TOKEN": "@obedbot-bot-token",
-        "OBEDBOT_BOT_ID": "UQDAG13CN",
+        "OBEDBOT_BOT_ID": "UQYCG2J4E",
         "OBEDBOT_CHANNEL_ID": "C0KBBCTT4",
         "OBEDBOT_API_KEY": "@obedbot-airtable-api-key",
         "OBEDBOT_BASE_ID": "appWu10LVjO0pMtuX",

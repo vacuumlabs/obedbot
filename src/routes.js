@@ -103,26 +103,26 @@ export function startExpress() {
   })
 
   // menu responses for slash commands
-  app.get('/menupresto', async (req, res) => {
+  app.post('/menupresto', async (req, res) => {
     const menu = await getMenu(config.menuLinks.presto, parseTodaysPrestoMenu)
     res.status(200).send(menu)
   })
 
-  app.get('/menuveglife', async (req, res) => {
+  app.post('/menuveglife', async (req, res) => {
     const menu = await getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu)
     res.status(200).send(menu)
   })
 
-  app.get('/menuclick', async (req, res) => {
+  app.post('/menuclick', async (req, res) => {
     const menu = await getMenu(config.menuLinks.click, parseTodaysClickMenu)
     res.status(200).send(menu)
   })
 
-  app.get('/menus', async (req, res) => {
+  app.post('/menus', async (req, res) => {
     res.status(200).send(await getAllMenus())
   })
 
-  app.get('/help', (req, res) => {
+  app.post('/help', (req, res) => {
     res.send(config.messages.help)
   })
 

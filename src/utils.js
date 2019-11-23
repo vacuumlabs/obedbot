@@ -127,7 +127,7 @@ export function getOrderFromMessage(msg, restaurant) {
 }
 
 function getUserChannel(userId) {
-  return slack.web.im
+  return slack.webBot.im
     .open({ user: userId })
     .then(({ channel: { id: channelId } }) => channelId)
 }
@@ -144,7 +144,7 @@ export function saveUser(userId) {
   getUserChannel(userId)
     .then(channelId => {
       if (!config.dev) {
-        slack.web.chat.postMessage({
+        slack.webBot.chat.postMessage({
           channel: channelId,
           text:
             'Ahoj, volám sa obedbot a všimol som si ťa na kanáli #ba-obedy ' +
@@ -154,7 +154,7 @@ export function saveUser(userId) {
         })
       }
 
-      slack.web.users.info({ user: userId }).then(userInfo => {
+      slack.webBot.users.info({ user: userId }).then(userInfo => {
         const realname = userInfo.user.profile.real_name
         const filter = "({channel_id} = '" + channelId + "')"
         listRecords(filter).then(records => {
@@ -168,7 +168,7 @@ export function saveUser(userId) {
               .then(() => {
                 logger.devLog(`User ${realname} has been added to database`)
                 if (!config.dev) {
-                  slack.web.chat.postMessage({
+                  slack.webBot.chat.postMessage({
                     channel: channelId,
                     text:
                       'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +

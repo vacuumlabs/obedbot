@@ -10,7 +10,8 @@ const config = {
     tableName: process.env.OBEDBOT_TABLE_NAME || '',
   },
   slack: {
-    token: process.env.OBEDBOT_BOT_TOKEN || '',
+    userToken: process.env.OBEDBOT_USER_TOKEN || '',
+    botToken: process.env.OBEDBOT_BOT_TOKEN || '',
     lunchChannelId: process.env.OBEDBOT_CHANNEL_ID || '',
     botId: process.env.OBEDBOT_BOT_ID || '',
   },
@@ -32,7 +33,8 @@ const config = {
 }
 
 const requiredConfig = [
-  config.slack.token,
+  config.slack.userToken,
+  config.slack.botToken,
   config.slack.lunchChannelId,
   config.slack.botId,
   config.menuLinks.presto,

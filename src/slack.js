@@ -20,23 +20,30 @@ import {
 import config from '../config'
 import { listRecords, updateRecord } from './airtable'
 
-export function loadUsers() {
-  slack.web.channels
-    .info({ channel: config.slack.lunchChannelId })
-    .then(async ({ channel: { members } }) => {
-      for (const member of members) {
-        if (member === config.slack.botId) {
-          logger.devLog('Skipping member obedbot')
-          continue
-        }
-        const userRecord = await getUser(member)
-        if (!userRecord) {
-          saveUser(member)
-        } else if (!userRecord.channel_id) {
-          saveUserChannel(userRecord.id, member)
-        }
-      }
-    })
+async function getUsersInLunchChannel(cursor) {
+  const { members, response_metadata: { next_cursor } } = await slack.webBot.conversations.members({
+    channel: config.slack.lunchChannelId,
+    cursor,
+  })
+
+  return [...members, ...(next_cursor ? await getUsersInLunchChannel(next_cursor) : [])]
+}
+
+export async function loadUsers() {
+  const members = await getUsersInLunchChannel()
+
+  for (const member of members) {
+    if (member === config.slack.botId) {
+      logger.devLog('Skipping member obedbot')
+      continue
+    }
+    const userRecord = await getUser(member)
+    if (!userRecord) {
+      saveUser(member)
+    } else if (!userRecord.channel_id) {
+      saveUserChannel(userRecord.id, member)
+    }
+  }
 }
 
 export async function getTodaysMessages() {
@@ -58,7 +65,7 @@ export async function getTodaysMessages() {
   lastNoon.minutes(0)
   lastNoon.seconds(0)
 
-  return (await slack.web.channels.history({
+  return (await slack.webUser.channels.history({
     channel: config.slack.lunchChannelId,
     latest: now.valueOf() / 1000,
     oldest: lastNoon.valueOf() / 1000,
@@ -76,7 +83,7 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
     [restaurants.shop]: 'obchodu',
   }
 
-  slack.web.chat.postMessage({
+  slack.webBot.chat.postMessage({
     channel: config.slack.lunchChannelId,
     text: willThereBeFood
       ? `Prišli obedy z ${restaurantNames[callRestaurant]} :slightly_smiling_face:`
@@ -108,7 +115,7 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
         : `Dneska bohužiaľ obed z ${restaurantNames[callRestaurant]} nepríde :disappointed:`
 
       if (userChannelId) {
-        slack.web.chat.postMessage({
+        slack.webBot.chat.postMessage({
           channel: userChannelId,
           text: notification,
           as_user: true,
@@ -126,7 +133,7 @@ export async function notifyAllThatOrdered(callRestaurant, willThereBeFood) {
  */
 
 function confirmOrder(ts) {
-  slack.web.reactions.add({
+  slack.webBot.reactions.add({
     name: config.orderReaction,
     channel: config.slack.lunchChannelId,
     timestamp: ts,
@@ -134,12 +141,12 @@ function confirmOrder(ts) {
 }
 
 function unknownOrder(ts) {
-  slack.web.reactions.add({
+  slack.webBot.reactions.add({
     name: config.orderUnknownReaction,
     channel: config.slack.lunchChannelId,
     timestamp: ts,
   })
-  slack.web.chat.postMessage({
+  slack.webBot.chat.postMessage({
     channel: config.slack.lunchChannelId,
     text: config.messages.unknownOrder,
     as_user: true,
@@ -148,7 +155,7 @@ function unknownOrder(ts) {
 }
 
 function removeConfirmation(ts) {
-  slack.web.reactions.remove({
+  slack.webBot.reactions.remove({
     name: config.orderReaction,
     channel: config.slack.lunchChannelId,
     timestamp: ts,
@@ -161,7 +168,7 @@ function removeConfirmation(ts) {
  * @param {string} userChannel - IM channel of the user
  */
 function privateIsDeprecated(userChannel) {
-  slack.web.chat.postMessage({
+  slack.webBot.chat.postMessage({
     channel: userChannel,
     text: config.messages.privateIsDeprecated,
     as_user: true,
@@ -176,14 +183,14 @@ function privateIsDeprecated(userChannel) {
 export async function changeMute(userChannel, notifications) {
   return await updateRecord(userChannel, notifications)
     .then(() => {
-      slack.web.chat.postMessage({
+      slack.webBot.chat.postMessage({
         channel: userChannel,
         text: `Notifikácie ${notifications ? 'zapnuté' : 'vypnuté'}`,
         as_user: true,
       })
     })
     .catch(() => {
-      slack.web.chat.postMessage({
+      slack.webBot.chat.postMessage({
         channel: userChannel,
         text:
           'Stala sa chyba, skús operáciu vykonať znovu, poprípade kontaktuj administrátora',
@@ -250,7 +257,7 @@ export async function messageReceived(msg) {
       saveUser(user)
     }
 
-    slack.web.reactions
+    slack.webBot.reactions
       .get({ channel: config.slack.lunchChannelId, timestamp: timestamp })
       .then(({ message: { reactions = [] } }) => {
         if (isChannelPublic(channel)) {
@@ -305,6 +312,15 @@ export async function processMessages(messages) {
   }
 }
 
+export async function getListeningUsers() {
+  const [users, members] = await Promise.all([
+    listRecords('({notifications} = 1)'),
+    getUsersInLunchChannel(),
+  ])
+
+  return users.filter(({ user_id }) => members.includes(user_id))
+}
+
 /**
  * Makes the last call for orders
  */
@@ -314,10 +330,12 @@ export async function makeLastCall() {
   }
   logger.devLog('Making last call')
 
-  const messages = await getTodaysMessages()
-  const filter = '({notifications} = 1)'
-  const users = await listRecords(filter)
-  const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${await getAllMenus()}`
+  const [messages, users, menus] = await Promise.all([
+    getTodaysMessages(),
+    getListeningUsers(),
+    getAllMenus(),
+  ])
+  const message = `Nezabudni si dnes objednať obed :slightly_smiling_face:\n${menus}`
 
   for (let user of users) {
     if (
@@ -326,7 +344,7 @@ export async function makeLastCall() {
         ({ text, user: userId }) => userId === user.user_id && isOrder(text),
       )
     ) {
-      slack.web.chat.postMessage({
+      slack.webBot.chat.postMessage({
         channel: user.channel_id,
         text: message,
         as_user: true,

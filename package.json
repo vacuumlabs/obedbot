@@ -9,7 +9,7 @@
     "build": "babel src/ -d build/ -s",
     "eslint": "eslint *.js src/**/*.js",
     "prettier": "prettier --write *.js src/**/*.js",
-    "deploy-now": "now `sed 's/#.*$//;/^\\s*$/d;s/^/-e /' .env` && now alias obedbot.vacuumlabs.com"
+    "deploy-now": "now && now alias obedbot.vacuumlabs.com"
   },
   "author": "Jakub Simo",
   "license": "ISC",
