@@ -21,12 +21,18 @@ import config from '../config'
 import { listRecords, updateRecord } from './airtable'
 
 async function getUsersInLunchChannel(cursor) {
-  const { members, response_metadata: { next_cursor } } = await slack.webBot.conversations.members({
+  const {
+    members,
+    response_metadata: { next_cursor },
+  } = await slack.webBot.conversations.members({
     channel: config.slack.lunchChannelId,
     cursor,
   })
 
-  return [...members, ...(next_cursor ? await getUsersInLunchChannel(next_cursor) : [])]
+  return [
+    ...members,
+    ...(next_cursor ? await getUsersInLunchChannel(next_cursor) : []),
+  ]
 }
 
 export async function loadUsers() {
