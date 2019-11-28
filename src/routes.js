@@ -1,49 +1,89 @@
 import express from 'express'
+import bodyParser from 'body-parser'
 
 import {
-  restaurants,
-  parseOrders,
-  parseOrdersNamed,
-  getMenu,
+  getRestaurantMenu,
   getAllMenus,
-  parseTodaysPrestoMenu,
-  parseTodaysVeglifeMenu,
-  parseTodaysClickMenu,
+  changeMute,
+  getUser,
 } from './utils'
-import { notifyAllThatOrdered, changeMute } from './slack'
+import {
+  parseOrders,
+  parseNamedOrders,
+  getHelp,
+  notifyAllThatOrdered,
+} from './actions'
 import { logger } from './resources'
 import config from '../config'
 import { listRecords } from './airtable'
+import offices, { getDefaultOffice, getOfficeById, getOfficeByChannel, getRestaurantById } from './offices'
+import { BASIC_TEXTS } from './texts'
+
+function getAdminOffice(req) {
+  const { officeId } = req.params
+
+  return officeId ? getOfficeById(officeId) : getDefaultOffice()
+}
+
+async function getSlashOffice(req) {
+  const { user_id, channel_id } = req.body
+
+  const officeByChannel = getOfficeByChannel(channel_id)
+
+  if (officeByChannel) {
+    return officeByChannel
+  }
+
+  const user = await getUser(user_id)
+
+  if (user) {
+    return getOfficeById(user.office)
+  }
+
+  return null
+}
+
+function getMenu(restaurantId, officeId) {
+  const office = getOfficeById(officeId)
+  const restaurant = getRestaurantById(office, restaurantId)
+
+  return getRestaurantMenu(office, restaurant)
+}
 
 async function renderOrders(req, res) {
-  const { presto, veglife, click, shop } = await parseOrders()
+  const office = getAdminOffice(req)
+  const restaurantOrders = await parseOrders(office)
 
   res.render('index', {
     title: 'Dnešné objednávky',
     activePage: 'index',
-    presto,
-    veglife,
-    click,
-    shop,
+    office,
+    offices,
+    restaurantViews: restaurantOrders.map(restaurant => restaurant.view()),
   })
 }
 
 async function renderOrdersNamed(req, res) {
-  const allOrders = await parseOrdersNamed()
+  const office = getAdminOffice(req)
+  const restaurantOrders = await parseNamedOrders(office)
 
   res.render('namedOrders', {
     title: 'Objednávky s menami',
     activePage: 'named',
-    allOrders,
+    office,
+    offices,
+    restaurantOrders,
   })
 }
 
 async function renderNotifications(req, res) {
   const users = await listRecords()
+
   res.render('notifications', {
     title: 'Stav notifikácií',
     activePage: 'notifications',
     users,
+    offices,
   })
 }
 
@@ -54,76 +94,92 @@ export function startExpress() {
   app.set('view engine', 'pug')
   app.use('/public', express.static('public'))
 
-  app.get('/', renderOrders)
-  app.get('/named', renderOrdersNamed)
+  app.use(bodyParser.json())
+  app.use(bodyParser.urlencoded({ extended: false }))
+
+  app.param('officeId', (req, res, next, value) => {
+    const office = value ? getOfficeById(value) : getDefaultOffice()
+
+    if (!office) {
+      if (req.method === 'GET') {
+        res.redirect('/')
+      } else {
+        res.status(400).json({ error: 'Unknown office' })
+      }
+      return
+    }
+
+    next()
+  })
 
   app.get('/notifications', renderNotifications)
 
+  app.get('/mute', async (req, res) => {
+    await changeMute(req.query.channel, false)
+
+    res.redirect('/notifications')
+  })
+
+  app.get('/unmute', async (req, res) => {
+    await changeMute(req.query.channel, true)
+
+    res.redirect('/notifications')
+  })
+
+  app.get('/:officeId?', renderOrders)
+  app.get('/:officeId/named', renderOrdersNamed)
+
   // notification messages that food has arrived or won't arrive
-  app.get('/veglife', (req, res) => {
-    notifyAllThatOrdered(restaurants.veglife, true)
-    res.redirect('/')
-  })
+  app.post('/:officeId/notify', async (req, res) => {
+    const office = getAdminOffice(req)
+    const restaurant = office && office.restaurants.find(r => r.id === req.body.restaurant)
 
-  app.get('/noveglife', (req, res) => {
-    notifyAllThatOrdered(restaurants.veglife, false)
-    res.redirect('/')
-  })
+    if (!office || !restaurant) {
+      res.status(400).json({ error: 'Unknown office or restaurant' })
+      return
+    }
 
-  app.get('/presto', (req, res) => {
-    notifyAllThatOrdered(restaurants.presto, true)
-    res.redirect('/')
-  })
+    await notifyAllThatOrdered(office, restaurant, Boolean(req.body.arrived))
 
-  app.get('/nopresto', (req, res) => {
-    notifyAllThatOrdered(restaurants.presto, false)
-    res.redirect('/')
-  })
-
-  app.get('/click', (req, res) => {
-    notifyAllThatOrdered(restaurants.click, true)
-    res.redirect('/')
-  })
-
-  app.get('/noclick', (req, res) => {
-    notifyAllThatOrdered(restaurants.click, false)
-    res.redirect('/')
-  })
-
-  app.get('/mute', (req, res) => {
-    changeMute(req.query.channel, false).then(() =>
-      res.redirect('/notifications'),
-    )
-  })
-
-  app.get('/unmute', (req, res) => {
-    changeMute(req.query.channel, true).then(() =>
-      res.redirect('/notifications'),
-    )
+    res.status(200).json({ msg: 'Users notified' })
   })
 
   // menu responses for slash commands
-  app.get('/menupresto', async (req, res) => {
-    const menu = await getMenu(config.menuLinks.presto, parseTodaysPrestoMenu)
+  app.post('/menupresto', async (req, res) => {
+    const menu = await getMenu('presto')
     res.status(200).send(menu)
   })
 
-  app.get('/menuveglife', async (req, res) => {
-    const menu = await getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu)
+  app.post('/menuveglife', async (req, res) => {
+    const menu = await getMenu('veglife')
     res.status(200).send(menu)
   })
 
-  app.get('/menuclick', async (req, res) => {
-    const menu = await getMenu(config.menuLinks.click, parseTodaysClickMenu)
+  app.post('/menuclick', async (req, res) => {
+    const menu = await getMenu('click')
     res.status(200).send(menu)
   })
 
-  app.get('/menus', async (req, res) => {
-    res.status(200).send(await getAllMenus())
+  app.post('/menus', async (req, res) => {
+    const office = await getSlashOffice(req)
+
+    if (!office) {
+      res.status(200).send(BASIC_TEXTS.UNKNOWN_OFFICE)
+      return
+    }
+
+    res.status(200).send(await getAllMenus(office))
   })
 
-  app.get('/help', (req, res) => {
-    res.send(config.messages.help)
+  app.post('/help', async (req, res) => {
+    const office = await getSlashOffice(req)
+
+    if (!office) {
+      res.status(200).send(BASIC_TEXTS.UNKNOWN_OFFICE)
+      return
+    }
+
+    res.send(getHelp(office))
   })
 
   app.listen(port, () => {

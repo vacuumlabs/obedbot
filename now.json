@@ -12,14 +12,13 @@
     "env": {
         "OBEDBOT_DEV": "false",
         "OBEDBOT_PORT": "8000",
+        "OBEDBOT_USER_TOKEN": "@obedbot-user-token",
         "OBEDBOT_BOT_TOKEN": "@obedbot-bot-token",
-        "OBEDBOT_BOT_ID": "UQDAG13CN",
+        "OBEDBOT_BOT_ID": "UQYCG2J4E",
         "OBEDBOT_CHANNEL_ID": "C0KBBCTT4",
+        "OBEDBOT_CHANNEL_ID_KE": "CQZLB976Z",
         "OBEDBOT_API_KEY": "@obedbot-airtable-api-key",
         "OBEDBOT_BASE_ID": "appWu10LVjO0pMtuX",
-        "OBEDBOT_TABLE_NAME": "Users",
-        "OBEDBOT_PRESTO": "https://www.bizref.sk/sk/firmy/charopos-s-r-o/denne-menu/837/OBEDOVE-MENU/",
-        "OBEDBOT_VEGLIFE": "http://www.veglife.sk/sk/menu-2/",
-        "OBEDBOT_CLICK": "http://m.clickfood.sk/sk/menu/"
+        "OBEDBOT_TABLE_NAME": "Users"
     }
 }

@@ -5,8 +5,9 @@ import moment from 'moment'
 import config from '../config'
 
 export const slack = {
-  rtm: new RTMClient(config.slack.token, { logLevel: LogLevel.ERROR }),
-  web: new WebClient(config.slack.token),
+  rtm: new RTMClient(config.slack.botToken, { logLevel: LogLevel.ERROR }),
+  webUser: new WebClient(config.slack.userToken),
+  webBot: new WebClient(config.slack.botToken),
 }
 
 function getTime() {

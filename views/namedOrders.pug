@@ -6,16 +6,16 @@ html
     include includes/navbar.pug
     .container
       .row
-        each orders, restaurant in allOrders
+        each restaurant in restaurantOrders
           .col-md-6.col-xs-12
-            h3= restaurant.charAt(0).toUpperCase() + restaurant.slice(1)
+            h3= restaurant.name
             table.table.table-sm
               thead.thead-light
                 tr
                   th='Meno'
                   th='Objednávka'
               tbody
-                each order in orders
+                each order in restaurant.orders
                   tr
-                    td= order.user
-                    td= order.order
+                    td= order.userName
+                    td= order.text

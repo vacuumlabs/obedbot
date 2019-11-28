@@ -1,31 +1,20 @@
-import Promise from 'bluebird'
-import { find, get } from 'lodash'
 import moment from 'moment'
-import request from 'request-promise'
-import cheerio from 'cheerio'
 
-import { getTodaysMessages, processMessages } from './slack'
-import { slack, logger } from './resources'
+import {
+  getUsersInChannel,
+  getTodaysMessages,
+  addPost,
+  getUserInfo,
+  getUserChannel,
+  addReaction,
+  removeReaction,
+  getReactions,
+} from './slack'
+import { logger } from './resources'
 import config from '../config'
-import { createRecord, listRecords, updateChannelId } from './airtable'
-
-/**
- * Returns string with pretty printed json object
- *
- * @param {Object} json - json object
- * @returns {string} - pretty printed json string
- */
-
-export function prettyPrint(json) {
-  return JSON.stringify(json, null, 2)
-}
-
-/**
- * Strips the @obedbot part of the message
- *
- * @param {string} order - message with the order
- * @returns {string} - order message without the @obedbot mention
- */
+import { createRecord, listRecords, updateChannelId, updateRecord } from './airtable'
+import { TEXTS, BASIC_TEXTS } from './texts'
+import { getDefaultOffice, getOfficeByChannel, getOfficeByOrder } from './offices'
 
 export function stripMention(order) {
   //check if user used full colon after @obedbot
@@ -38,98 +27,128 @@ export function isObedbotMentioned(order) {
   return new RegExp(`<@${config.slack.botId}>:?`).test(order)
 }
 
-export function isChannelPublic(channel) {
-  return channel === config.slack.lunchChannelId
+export async function getUsersMap() {
+  const users = await listRecords()
+
+  return users.filter(user => user.channel_id).reduce((acc, user) => {
+    acc[user.user_id] = user
+    return acc
+  }, {})
 }
 
-export function alreadyReacted(reactions) {
-  return !!find(
-    reactions,
-    ({ name, users }) =>
-      name === config.orderReaction && users.includes(config.slack.botId),
+export function isOrder(text, office, restaurant) {
+  return isObedbotMentioned(text) && (
+    restaurant
+      ? restaurant.isOrder(text)
+      : office.restaurants.some(instRestaurant => instRestaurant.isOrder(text))
   )
 }
 
-/**
- * Checks if the given message is an order
- *
- * @param {string} order - order message
- * @returns {bool} - true if order matches, false if not identified
- */
-export function isOrder(order) {
-  const regexes = config.orderRegex
-  if (isObedbotMentioned(order)) {
-    order = stripMention(order)
+export async function getTodaysOrders(office, restaurant) {
+  const messages = await getTodaysMessages(office.lunchChannelId)
+
+  return messages
+    .filter(({ text }) => isOrder(text, office, restaurant))
+    .map(({ text, ...other }) => ({
+      ...other,
+      text: stripMention(text).trim(),
+    }))
+}
+
+export async function getListeningUsers(office) {
+  const [users, members] = await Promise.all([
+    listRecords('({notifications} = 1)'),
+    getUsersInChannel(office.lunchChannelId),
+  ])
+
+  return users.filter(({ user_id }) => members.includes(user_id))
+}
+
+function confirmOrder(office, ts) {
+  return addReaction(config.orderReaction, office.lunchChannelId, ts)
+}
+
+function removeConfirmation(office, ts) {
+  return removeReaction(config.orderReaction, office.lunchChannelId, ts)
+}
+
+function unknownOrder(office, ts) {
+  return Promise.all([
+    addReaction(config.orderUnknownReaction, office.lunchChannelId, ts).catch(() => null),
+    addPost(
+      office.lunchChannelId,
+      office.getText(TEXTS.UNKNOWN_ORDER),
+      ts,
+    ),
+  ])
+}
+
+function alreadyReacted(reactions) {
+  return reactions.some(({ name, users }) =>
+    name === config.orderReaction && users.includes(config.slack.botId),
+  )
+}
+
+export async function changeMute(userChannel, notifications) {
+  try {
+    await updateRecord(userChannel, notifications)
+    await addPost(userChannel, notifications ? BASIC_TEXTS.NOTIFICATIONS_ON : BASIC_TEXTS.NOTIFICATIONS_OFF)
+  } catch (err) {
+    await addPost(userChannel, BASIC_TEXTS.ERROR)
   }
-  order = order.toLowerCase().trim()
+}
 
-  logger.devLog('Checking order: ' + order)
+export async function processMessage(channel, message) {
+  const { text, ts: timestamp, user, reactions } = message
 
-  for (let regexKey in regexes) {
-    if (regexes.hasOwnProperty(regexKey)) {
-      if (regexes[regexKey].test(order)) {
-        logger.devLog(`Order type is ${regexKey}`)
-        return true
-      }
+  if (user === config.slack.botId) {
+    logger.devLog('Message was from obedbot')
+    return
+  }
+
+  const office = getOfficeByChannel(channel)
+
+  if (!(await userExists(user))) {
+    await saveUser(office || getDefaultOffice(), user)
+  }
+
+  if (office) {
+    if (!isObedbotMentioned(text)) {
+      return
+    }
+
+    const realReactions = reactions || await getReactions(channel, timestamp)
+
+    if (isOrder(text, office)) {
+      return !alreadyReacted(realReactions) && confirmOrder(office, timestamp)
+    }
+
+    if (alreadyReacted(realReactions)) {
+      await removeConfirmation(office, timestamp)
+    }
+
+    return unknownOrder(office, timestamp)
+  }
+
+  if (channel.charAt(0) === 'D') {
+    if (text.includes('unmute')) {
+      return changeMute(channel, true)
+    }
+
+    if (text.includes('mute')) {
+      return changeMute(channel, false)
+    }
+
+    const office = getOfficeByOrder(text)
+
+    if (office) {
+      return addPost(channel, office.getText(TEXTS.NO_DM))
     }
   }
-
-  logger.devLog('Message is not an order')
-  return false
 }
 
-/**
- * Loads the orders since the last noon
- */
-export function loadTodayOrders() {
-  logger.devLog("Loading today's orders")
-
-  getTodaysMessages().then(processMessages)
-}
-
-/**
- * Returns the name of the restaurant to which the order belongs to
- *
- * @param {string} order - message with the order
- * @returns {string} - name of the restaurant
- */
-
-export const restaurants = {
-  presto: 'presto',
-  pizza: 'pizza',
-  veglife: 'veglife',
-  click: 'click',
-  shop: 'shop',
-}
-
-export function identifyRestaurant(order) {
-  const regexes = config.orderRegex
-  const values = [
-    { regex: regexes.presto, name: restaurants.presto },
-    { regex: regexes.pizza, name: restaurants.pizza },
-    { regex: regexes.veglife, name: restaurants.veglife },
-    { regex: regexes.click, name: restaurants.click },
-    { regex: regexes.shop, name: restaurants.shop },
-  ]
-  let ans
-
-  values.forEach(restaurant => {
-    if (restaurant.regex.test(order)) {
-      ans = restaurant.name
-    }
-  })
-  return ans
-}
-
-export function getOrderFromMessage(msg, restaurant) {
-  const regex = config.orderRegex[restaurant]
-  return msg.match(regex)[0]
-}
-
-function getUserChannel(userId) {
-  return slack.web.im
-    .open({ user: userId })
-    .then(({ channel: { id: channelId } }) => channelId)
+export function prettyPrint(json) {
+  return JSON.stringify(json, null, 2)
 }
 
 export async function saveUserChannel(recordId, userId) {
@@ -138,56 +157,52 @@ export async function saveUserChannel(recordId, userId) {
   return updateChannelId(recordId, channelId)
 }
 
-export function saveUser(userId) {
+export async function saveUser(office, userId) {
   logger.devLog('Saving user ' + userId)
 
-  getUserChannel(userId)
-    .then(channelId => {
-      if (!config.dev) {
-        slack.web.chat.postMessage({
-          channel: channelId,
-          text:
-            'Ahoj, volám sa obedbot a všimol som si ťa na kanáli #ba-obedy ' +
-            'ale nemal som ťa ešte v mojom zápisníčku, tak si ťa poznamenávam, ' +
-            'budem ti odteraz posielať last cally, pokiaľ v daný deň nemáš nič objednané :)',
-          as_user: true,
-        })
-      }
+  try {
+    const channelId = await getUserChannel(userId)
 
-      slack.web.users.info({ user: userId }).then(userInfo => {
-        const realname = userInfo.user.profile.real_name
-        const filter = "({channel_id} = '" + channelId + "')"
-        listRecords(filter).then(records => {
-          if (!records[0]) {
-            createRecord({
-              user_id: userId,
-              channel_id: channelId,
-              username: realname,
-              notifications: true,
-            })
-              .then(() => {
-                logger.devLog(`User ${realname} has been added to database`)
-                if (!config.dev) {
-                  slack.web.chat.postMessage({
-                    channel: channelId,
-                    text:
-                      'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
-                      '#ba-obedy tak, že napíšeš `@obedbot [tvoja objednávka]`',
-                    as_user: true,
-                  })
-                }
-              })
-              .catch(err =>
-                logger.error(
-                  `User ${realname} is already in the database`,
-                  err,
-                ),
-              )
-          }
-        })
+    if (!config.dev) {
+      addPost(
+        channelId,
+        office.getText(TEXTS.GREETING_NEW),
+      )
+    }
+
+    const userInfo = await getUserInfo(userId)
+    const realname = userInfo.user.profile.real_name
+    const filter = "({channel_id} = '" + channelId + "')"
+
+    const records = await listRecords(filter)
+
+    if (records[0]) {
+      return
+    }
+
+    try {
+      await createRecord({
+        user_id: userId,
+        channel_id: channelId,
+        username: realname,
+        notifications: true,
+        office: office.id,
       })
-    })
-    .catch(() => logger.error(`Trying to save bot or disabled user ${userId}`))
+    } catch (err) {
+      logger.error(`User ${realname} is already in the database`, err)
+    }
+
+    logger.devLog(`User ${realname} has been added to database`)
+
+    if (!config.dev) {
+      addPost(
+        channelId,
+        office.getText(TEXTS.GREETING_SAVED),
+      )
+    }
+  } catch (err) {
+    logger.error(`Trying to save bot or disabled user ${userId}`, err)
+  }
 }
 
 export async function getUser(userId) {
@@ -198,126 +213,10 @@ export async function getUser(userId) {
 
 export async function userExists(userId) {
   const userData = await getUser(userId)
-  return !!userData
+  return Boolean(userData)
 }
 
-export function parseOrders() {
-  let presto = {
-    soups: {},
-    meals: Array(7).fill(0),
-    pizza: {},
-  }
-  let veglife = {
-    meals: Array(4).fill(0),
-    soups: 0,
-    salads: 0,
-  }
-  let click = {
-    soups: {},
-    meals: Array(6).fill(0),
-  }
-  let shop = []
-
-  logger.devLog('Parsing orders for webpage display')
-
-  return getTodaysMessages().then(messages => {
-    for (let message of messages) {
-      if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
-        continue
-      }
-      const text = stripMention(message.text)
-        .toLowerCase()
-        .trim()
-
-      const restaurant = identifyRestaurant(text)
-      const order = getOrderFromMessage(text, restaurant)
-
-      logger.devLog(`Message ${text} is from ${restaurant}, order ${order}`)
-
-      if (restaurant === restaurants.presto) {
-        const mainMealNum = parseInt(order.charAt(6), 10) - 1
-        const soup = order.substring(8)
-
-        presto.meals[mainMealNum]++
-        if (soup) {
-          presto.soups[soup] = get(presto.soups, soup, 0) + 1
-        }
-      } else if (restaurant === restaurants.pizza) {
-        const pizzaNum = order.match(/\d+/g)[0]
-        const pizzaSize = order.match(/\d+/g)[1]
-        const key =
-          !pizzaSize || pizzaSize === '33'
-            ? pizzaNum
-            : `${pizzaNum} veľkosti ${pizzaSize}`
-
-        presto.pizza[key] = get(presto.pizza, key, 0) + 1
-      } else if (restaurant === restaurants.veglife) {
-        const mainMealNum = parseInt(order.charAt(3), 10) - 1
-        const saladOrSoup = order.charAt(order.length - 1)
-
-        veglife.meals[mainMealNum]++
-        if (saladOrSoup === 's') {
-          veglife.salads++
-        } else {
-          veglife.soups++
-        }
-      } else if (restaurant === restaurants.click) {
-        const mainMealNum = parseInt(order.charAt(5), 10) - 1
-        const soup = order.substring(7)
-        click.meals[mainMealNum]++
-        if (soup) {
-          click.soups[soup] = get(click.soups, soup, 0) + 1
-        }
-      } else if (restaurant === restaurants.shop) {
-        shop.push(order.substring(6))
-      }
-    }
-
-    return Promise.resolve({ presto, click, veglife, shop })
-  })
-}
-
-export function parseOrdersNamed() {
-  const orders = {
-    presto: [],
-    pizza: [],
-    veglife: [],
-    click: [],
-    shop: [],
-  }
-  let messages
-
-  return getTodaysMessages()
-    .then(history => {
-      messages = history
-      return listRecords()
-    })
-    .then(users => {
-      for (let message of messages) {
-        if (!(isObedbotMentioned(message.text) && isOrder(message.text))) {
-          continue
-        }
-        const text = stripMention(message.text)
-          .toLowerCase()
-          .trim()
-
-        const restaurant = identifyRestaurant(text)
-        const order = {
-          user: find(users, { user_id: message.user }).username,
-          order: getOrderFromMessage(text, restaurant),
-        }
-
-        if (restaurant === restaurants.shop) {
-          order.order = order.order.substring(6)
-        }
-        orders[restaurant].push(order)
-      }
-      logger.devLog(`Orders for named display on webpage: ${orders}`)
-      return Promise.resolve(orders)
-    })
-}
-
-function getMomentForMenu() {
+export function getMomentForMenu() {
   let mom
 
   // if it is Saturday, Sunday or Friday afternoon, set day to Monday
@@ -329,126 +228,51 @@ function getMomentForMenu() {
   return mom
 }
 
-export async function getMenu(link, parseMenu) {
-  const block = '```'
-  try {
-    if (link.endsWith('date=')) {
-      const date = getMomentForMenu().format('DD.MM.YYYY')
-      link = `${link}${date}`
-    }
-    const body = await request(link)
-    return `${block}${parseMenu(body)}${block}`
-  } catch (e) {
-    logger.error(e)
-    return `${block}Chyba počas načítavania menu :disappointed:${block}`
+export function getMomentForOrders() {
+  let lastNoon = moment()
+  let now = moment()
+
+  // set the date to last Friday if it is Saturday (6), Sunday (0) or Monday (1)
+  if (
+    now.day() === 0 ||
+    (now.day() === 1 && now.hours() < 13) ||
+    now.day() === 6
+  ) {
+    lastNoon.day(lastNoon.day() >= 5 ? 5 : -2)
+  } else if (now.hours() < 13) {
+    lastNoon.subtract(1, 'day')
   }
+
+  lastNoon.hours(13)
+  lastNoon.minutes(0)
+  lastNoon.seconds(0)
+
+  return lastNoon
 }
 
-export async function getAllMenus() {
-  const [presto, veglife, click] = await Promise.all([
-    getMenu(config.menuLinks.presto, parseTodaysPrestoMenu),
-    getMenu(config.menuLinks.veglife, parseTodaysVeglifeMenu),
-    getMenu(config.menuLinks.click, parseTodaysClickMenu),
-  ])
+export async function getRestaurantMenu(office, restaurant, today = getMomentForMenu()) {
+  if (!restaurant.getMenu) {
+    return null
+  }
 
-  return `*Presto*\n${presto}\n\n*Veglife*\n${veglife}\n\n*Click*\n${click}`
-}
+  const block = '```'
 
-function normalizeWhitespace(str) {
-  return str
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l.length > 0)
-    .map(l => l.replace(/\s\s+/g, ' ')) // replace multiple whitespaces with a single space
-    .join(' ')
-}
-
-function parsePrestoMenuRow($, row) {
-  return $(row)
-    .find('td')
-    .map((ind, cell) => normalizeWhitespace($(cell).text()))
-    .get()
-    .join(' ')
-}
-
-export function parseTodaysPrestoMenu(rawMenu) {
-  const slovakDays = [
-    '',
-    'Pondelok',
-    'Utorok',
-    'Streda',
-    'Štvrtok',
-    'Piatok',
-    'Sobota',
-  ]
-  const today = getMomentForMenu().day()
-
-  const $ = cheerio.load(rawMenu)
-
-  const dayTitle = slovakDays[today]
-  const meals = $(`tr.first:contains('${dayTitle}')`)
-    .nextUntil('tr.first')
-    .map((_, row) => parsePrestoMenuRow($, row))
-
-  return [`${dayTitle}`, ...meals].join('\n')
-}
-
-export function parseTodaysVeglifeMenu(rawMenu) {
-  const $ = cheerio.load(rawMenu)
-  const date = getMomentForMenu().format('DD.MM.YYYY')
-  // Due to unclosed h1 tag, it looks like h1 is inside another h1
-  const menuTitle = normalizeWhitespace($(`h1 > h1:contains('${date}')`).text())
-  const menu = $(`h1:contains('${date}')`)
-    .nextUntil("p:contains('Dezert')")
-    .map((_, tag) => normalizeWhitespace($(tag).text()))
-    .filter((_, s) => s.length > 0)
-  return [menuTitle, ...menu].join('\n')
-}
-
-function parseClickList($, listElement) {
-  return $(listElement)
-    .find('li')
-    .map((index, el) => {
-      const name = normalizeWhitespace(
-        $(el)
-          .find('.product-name')
-          .text(),
-      )
-      const description = normalizeWhitespace(
-        $(el)
-          .find('.product-description')
-          .text(),
-      )
-      const weight = normalizeWhitespace(
-        $(el)
-          .find('.product-bar span')
-          .first()
-          .text(),
-      )
-      const price = normalizeWhitespace(
-        $(el)
-          .find('.product-price')
-          .text(),
-      )
-      return `${index + 1}. ${name}: ${description}, ${weight}, ${price}`
+  const menu = await restaurant.getMenu(today).catch(err => {
+    logger.error(`Failed to get menu ${office.id}.${restaurant.id}`, err)
+    return office.getText(TEXTS.MENU_LOAD_FAILED, {
+      MENU_LINK: restaurant.getMenuLink(today),
     })
-    .get()
+  })
+
+  return `*${restaurant.name}*\n${block}${menu}${block}`
 }
 
-export function parseTodaysClickMenu(rawMenu) {
-  const $ = cheerio.load(rawMenu)
+export async function getAllMenus(office) {
+  const today = getMomentForMenu()
 
-  const mainMenu = $('[id^="kategoria-menu-"]').first()
-  const dayTitle = normalizeWhitespace(
-    $(mainMenu)
-      .find('.title')
-      .text(),
+  const menus = await Promise.all(
+    office.restaurants.map(restaurant => getRestaurantMenu(office, restaurant, today))
   )
 
-  const main = parseClickList($, mainMenu)
-  const soups = parseClickList($, $('#kategoria-polievky'))
-
-  return [`${dayTitle}`, 'Polievky:', ...soups, 'Hlavné jedlo:', ...main].join(
-    '\n',
-  )
+  return menus.filter(Boolean).join('\n\n')
 }

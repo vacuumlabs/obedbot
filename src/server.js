@@ -3,8 +3,8 @@ import moment from 'moment-timezone'
 
 import { slack, logger } from './resources'
 import { startExpress } from './routes'
-import { loadTodayOrders, restaurants } from './utils'
-import { loadUsers, messageReceived, endOfOrders, makeLastCall } from './slack'
+import { loadUsers, messageReceived, processTodaysOrders, endOfOrders, makeLastCall } from './actions'
+import offices from './offices'
 
 let wasDST = null
 let jobs = []
@@ -22,24 +22,21 @@ function reschedule() {
 
   jobs.forEach(j => j.cancel)
 
+  const getJob = (data, action) =>
+    schedule.scheduleJob(`${data.minute} ${data.hour - (isDST ? 2 : 1)} * * 1-5`, () => {
+      action()
+    })
+
   jobs = [
-    // set up last calls for each restaurant
-    schedule.scheduleJob(`15 ${isDST ? 7 : 8} * * 1-5`, () => {
-      makeLastCall()
-    }),
-    schedule.scheduleJob(`30 ${isDST ? 6 : 7} * * 1-5`, () => {
-      loadUsers()
-    }),
-    schedule.scheduleJob(`40 ${isDST ? 7 : 8} * * 1-5`, () => {
-      endOfOrders(restaurants.veglife)
-    }),
-    schedule.scheduleJob(`00 ${isDST ? 8 : 9} * * 1-5`, () => {
-      endOfOrders(restaurants.click)
-    }),
-    schedule.scheduleJob(`00 ${isDST ? 8 : 9} * * 1-5`, () => {
-      endOfOrders(restaurants.presto)
-    }),
-  ]
+    getJob({ hour: 8, minute: 30 }, loadUsers),
+    offices.map(office => [
+      office.lastCall && getJob(office.lastCall, makeLastCall.bind(null, office)),
+      office.restaurants.map(
+        restaurant => restaurant.endOfOrders &&
+          getJob(restaurant.endOfOrders, endOfOrders.bind(null, office, restaurant)),
+      ),
+    ]),
+  ].flat(Infinity).filter(Boolean)
 }
 
 /**
@@ -58,7 +55,7 @@ export function runServer() {
   rtm.on('connected', () => {
     // the timeout is here to go around a bug where connection is opened, but not properly established
     logger.log('Slack RTM client connected')
-    setTimeout(loadTodayOrders, 3000)
+    setTimeout(processTodaysOrders, 3000)
   })
 
   reschedule()
