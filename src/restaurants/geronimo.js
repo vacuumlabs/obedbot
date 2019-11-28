@@ -7,8 +7,7 @@ const id = 'geronimo'
 const name = 'Geronimo'
 const endOfOrders = { hour: 10, minute: 0 }
 const isNotifiable = true
-const help =
-`Objednávať si môžte do ${toHumanTime(endOfOrders)} v tvare:
+const help = `Objednávať si môžte do ${toHumanTime(endOfOrders)} v tvare:
 @Obedbot geronimoM - denné menu bez polievky
 geronimoMP+"číslo polievky" - denné menu s polievkou 1 (polievka dňa) alebo 2 (slepačia polievka)
 geronimoB - burger menu

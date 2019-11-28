@@ -42,7 +42,9 @@ export function getMenuCache(fn, ttlSec = 10 * 60) {
 }
 
 export function toHumanTime(time) {
-  return `${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}`
+  return `${time.hour
+    .toString()
+    .padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}`
 }
 
 export class OrdersCounter {

@@ -1,4 +1,10 @@
-import { loadHtml, normalizeWhitespace, getMenuCache, toHumanTime, OrdersCounter } from './utils'
+import {
+  loadHtml,
+  normalizeWhitespace,
+  getMenuCache,
+  toHumanTime,
+  OrdersCounter,
+} from './utils'
 
 const ORDER_PATTERN = /click(?<main>[1-6])(?:p(?<soup>[1-3]))?/i
 const MENU_LINK = 'http://m.clickfood.sk/sk/menu/'
@@ -7,8 +13,9 @@ const id = 'click'
 const name = 'Click'
 const endOfOrders = { hour: 10, minute: 0 }
 const isNotifiable = true
-const help =
-`Objednávať si môžte do ${toHumanTime(endOfOrders)} v tvare click+"číslo"+p+"číslo polievky".
+const help = `Objednávať si môžte do ${toHumanTime(
+  endOfOrders,
+)} v tvare click+"číslo"+p+"číslo polievky".
 *Príklad:* \`@Obedbot: click4p3\` - menu č. 4 a polievka č. 3.`
 
 function isOrder(msg) {

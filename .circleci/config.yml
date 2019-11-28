@@ -21,7 +21,7 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/node:8
+      - image: circleci/node:lts
     steps:
       - checkout
       - run: sudo yarn global add now

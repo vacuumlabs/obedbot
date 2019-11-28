@@ -7,7 +7,9 @@ const id = 'vedome'
 const name = 'Vedome'
 const endOfOrders = { hour: 10, minute: 0 }
 const isNotifiable = true
-const help = `Objednávať si môžte do ${toHumanTime(endOfOrders)} v tvare \`@Obedbot vedome\``
+const help = `Objednávať si môžte do ${toHumanTime(
+  endOfOrders,
+)} v tvare \`@Obedbot vedome\``
 
 function isOrder(msg) {
   return ORDER_PATTERN.test(msg)
