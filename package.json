@@ -17,7 +17,6 @@
     "@slack/rtm-api": "^5.0.1",
     "@slack/web-api": "^5.0.1",
     "airtable": "^0.5.8",
-    "babel-eslint": "^10.0.3",
     "body-parser": "^1.19.0",
     "cheerio": "^0.22.0",
     "dotenv": "^2.0.0",
@@ -45,5 +44,8 @@
   },
   "resolutions": {
     "**/marked": "^0.3.9"
+  },
+  "engines": {
+    "node": "10.x"
   }
 }
