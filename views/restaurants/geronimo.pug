@@ -1,0 +1,42 @@
+table.table.table-sm
+  thead.thead-light
+    tr
+      th Hlavné jedlo
+      th Počet
+  tbody
+    if mainM && mainM.M
+      tr
+        td Denné menu
+        td=mainM.M
+    if mainB && mainB.B
+      tr
+        td Burger
+        td=mainB.B
+    if mainS1 && mainS1.S1
+      tr
+        td Šalát 1
+        td=mainS1.S1
+    if mainS2 && mainS2.S2
+      tr
+        td Šalát 2
+        td=mainS2.S2
+    if mainF && mainF.F
+      tr
+        td Fit menu
+        td=mainF.F
+
+table.table.table-sm
+  thead.thead-light
+    tr
+      th Polievka
+      th Počet
+  tbody
+    if soup && soup.P1
+      tr
+        td Polievka dňa
+        td=soup.P1
+    if soup && soup.P2
+      tr
+        td Slepačia
+        td=soup.P2
+    

@@ -1,18 +1,15 @@
-h3='Presto '
-
 table.table.table-sm
   thead.thead-light
     tr
-      - var i = 0;
-      while i < presto.meals.length
-        th= ++i
+      - var i = 1;
+      while i <= totalMeals
+        th= i++
   tbody
     tr
-      each amount in presto.meals
-        if amount > 0
-          td=amount
-        else
-          td
+      - var i = 1;
+      while i <= totalMeals
+        td #{(main && main[i]) || ''}
+        - i++
 
 table.table.table-sm
   thead.thead-light
@@ -20,10 +17,11 @@ table.table.table-sm
       th Číslo polievky
       th Počet
   tbody
-    each amount, soupNumber in presto.soups
-      tr
-        td=soupNumber
-        td=amount
+    if soup
+      each amount, soupNumber in soup
+        tr
+          td=soupNumber
+          td=amount
 
 table.table.table-sm
   thead.thead-light
@@ -31,7 +29,8 @@ table.table.table-sm
       th Pizza
       th Počet
   tbody
-    each amount, pizzaType in presto.pizza
-      tr
-        td=pizzaType
-        td=amount
+    if pizza
+      each amount, pizzaType in pizza
+        tr
+          td=pizzaType
+          td=amount

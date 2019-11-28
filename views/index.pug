@@ -7,20 +7,10 @@ html
 
     .container
       .row
-        .col-md-3.col-xs-12
-          include restaurants/presto.pug
-          hr.d-block.d-sm-none
+        each restaurantView in restaurantViews
+          .col-md-3.col-xs-12 !{restaurantView}
+            hr.d-block.d-sm-none
 
-        .col-md-3.col-xs-12
-          include restaurants/veglife.pug
-          hr.d-block.d-sm-none
-
-        .col-md-3.col-xs-12
-          include restaurants/click.pug
-          hr.d-block.d-sm-none
-
-        .col-md-3.col-xs-12
-          include restaurants/shop.pug
     hr
     .container
       .row

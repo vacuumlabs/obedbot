@@ -11,12 +11,14 @@ html
           table.table.table-sm
             thead.thead-light
               th='Meno'
+              th='Office'
               th='Notifikácie'
               th=''
             tbody
               each user in users
                 tr
                   td=user.username
+                  td=user.office
                   td=user.notifications ? 'Zapnuté' : 'Vypnuté'
                   td
                     if user.notifications

@@ -1,6 +1,7 @@
+- var linkPrefix = office ? '/' + office.id : ''
 nav.navbar.navbar-expand-lg.navbar-dark.bg-dark.sticky-top
   div.container
-    a.navbar-brand(href='/')='Obedbot '
+    a.navbar-brand(href='/')='Obedbot ' + (office ? office.name : '') + ' '
       small=title
     button.navbar-toggler(
       type='button'
@@ -14,15 +15,24 @@ nav.navbar.navbar-expand-lg.navbar-dark.bg-dark.sticky-top
     #navbarToggle.collapse.navbar-collapse
       ul.nav.navbar-nav.ml-auto
         li.nav-item
-          a.nav-link(
-            href='/'
-            class=`${activePage === 'index' ? 'active' : ''}`
-          )='Čísla'
-        li.nav-item
-          a.nav-link(
-            href='/named'
-            class=`${activePage === 'named' ? 'active' : ''}`
-          )='Mená'
+          select(
+            onchange="changeOffice(this.value)"
+          )
+            if !office
+              option(selected)
+            each ofc in offices
+              option(value=ofc.id, selected=office && office.id === ofc.id)=ofc.name
+        if office
+          li.nav-item
+            a.nav-link(
+              href=linkPrefix + '/'
+              class=`${activePage === 'index' ? 'active' : ''}`
+            )='Čísla'
+          li.nav-item
+            a.nav-link(
+              href=linkPrefix + '/named'
+              class=`${activePage === 'named' ? 'active' : ''}`
+            )='Mená'
         li.nav-item
           a.nav-link(
             href='/notifications'

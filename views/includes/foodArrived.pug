@@ -3,15 +3,12 @@ h3='Prišlo jedlo!'
 .row
   .col
     .btn-group
-      a.btn.btn-warning(
-        href="/presto"
-        onclick='return confirm(\'Are you sure?\')'
-      ) Presto
-      a.btn.btn-success(
-        href="/veglife"
-        onclick='return confirm(\'Are you sure?\')'
-      ) Veglife
-      a.btn.btn-secondary(
-        href="/click"
-        onclick='return confirm(\'Are you sure?\')'
-      ) Click
+      - var btns = ['warning', 'success', 'secondary', 'primary']
+      - var activeBtn = 0
+      each restaurant in office.restaurants
+        if restaurant.isNotifiable
+          a(
+            class="btn btn-"+btns[activeBtn++]
+            onclick=`notifyOrdered('${office.id}', '${restaurant.id}', true, this)`
+          )=restaurant.name
+          - if (activeBtn === btns.length) activeBtn = 0
