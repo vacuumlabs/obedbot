@@ -6,7 +6,6 @@
     "start": "node -- server.js",
     "test": "eslint *.js src/**/*.js && prettier --check *.js src/**/*.js",
     "build": "babel src/ -d build/",
-    "build:dev": "yarn build -w",
     "eslint": "eslint *.js src/**/*.js",
     "prettier": "prettier --write *.js src/**/*.js",
     "deploy-now": "now && now alias obedbot.vacuumlabs.com"
@@ -19,6 +18,7 @@
     "airtable": "^0.5.8",
     "body-parser": "^1.19.0",
     "cheerio": "^0.22.0",
+    "core-js": "^3.4.5",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
     "lodash": "^4.17.13",
@@ -45,8 +45,5 @@
   },
   "resolutions": {
     "**/marked": "^0.3.9"
-  },
-  "engines": {
-    "node": "10.x"
   }
 }
