@@ -1,4 +1,10 @@
-import { toHumanTime, OrdersCounter, loadHtml, normalizeWhitespace, getMenuCache } from './utils'
+import {
+  toHumanTime,
+  OrdersCounter,
+  loadHtml,
+  normalizeWhitespace,
+  getMenuCache,
+} from './utils'
 
 const ORDER_PATTERN = /geronimo(((?<mainM>M)(?<soup>P[1-2])?)|(?<mainB>B)|(?<mainS>S[1-2])|(?<mainF>F))/
 const MENU_LINK = 'https://geronimoexpress.sk/menu/'
@@ -26,28 +32,36 @@ function getMenuLink(date) {
 async function loadMenu(date) {
   const { $ } = await loadHtml(getMenuLink(date))
 
-  const tabs = [
-    '',
-    'tab_po_0',
-    'tab_ut_1',
-    'tab_st_2',
-    'tab_st_3',
-    'tab_pi_4',
-  ]
+  const tabs = ['', 'tab_po_0', 'tab_ut_1', 'tab_st_2', 'tab_st_3', 'tab_pi_4']
   const today = date.day()
 
   const $dayTab = $(`#${tabs[today]}`)
-  const dayTitle = $dayTab.find('h1').eq(1).text()
-  const pArr = $dayTab.find('p').toArray().map(p => $(p))
+  const dayTitle = $dayTab
+    .find('h1')
+    .eq(1)
+    .text()
+  const pArr = $dayTab
+    .find('p')
+    .toArray()
+    .map(p => $(p))
   const soupOfTheDay = pArr[0].text()
   const mainMenu = pArr[1].text()
-  const burger = pArr.find(p => p.text().includes('ŠPECIÁL MENU BURGER')).next('p').text()
+  const burger = pArr
+    .find(p => p.text().includes('ŠPECIÁL MENU BURGER'))
+    .next('p')
+    .text()
   const saladTitle = pArr.find(p => p.text().includes('ŠALÁT TÝŽDŇA'))
   const salads = [
     saladTitle.next('p').text(),
-    saladTitle.next('p').next('p').text(),
+    saladTitle
+      .next('p')
+      .next('p')
+      .text(),
   ]
-  const fitMenu = pArr.find(p => p.text().includes('FIT MENU')).next('p').text()
+  const fitMenu = pArr
+    .find(p => p.text().includes('FIT MENU'))
+    .next('p')
+    .text()
 
   return [
     dayTitle,
@@ -63,7 +77,9 @@ async function loadMenu(date) {
     `S2: ${salads[1]}`,
     'Fit menu:',
     `F: ${fitMenu}`,
-  ].map(normalizeWhitespace).join('\n')
+  ]
+    .map(normalizeWhitespace)
+    .join('\n')
 }
 
 const getMenu = getMenuCache(loadMenu)
