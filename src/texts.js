@@ -50,7 +50,7 @@ const DATA = {
     [TEXTS.NO_DM]:
       'Objednávanie v súkromných kanáloch bolo vypnuté, ' +
       'pošli prosím svoju objednávku do <CHANNEL> :slightly_smiling_face:',
-    [TEXTS.MENU_LOAD_FAILED]: 'Chyba počas načítavania menu :disappointed:',
+    [TEXTS.MENU_LOAD_FAILED]: 'Chyba počas načítavania menu :disappointed: Menu nájdeš tu: <MENU_LINK>',
     [TEXTS.HELP_COMMANDS]: loadText('help', 'sk'),
   },
 }

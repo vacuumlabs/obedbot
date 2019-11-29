@@ -26,6 +26,10 @@ th + th {
   margin: 0 auto;
 }
 
+.navbar .nav {
+  align-items: center;
+}
+
 .container {
   margin: 2rem auto;
 }

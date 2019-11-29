@@ -39,6 +39,7 @@ async function loadMenu(date) {
     .nextUntil("p:contains('Dezert')")
     .map((_, tag) => normalizeWhitespace($(tag).text()))
     .filter((_, s) => s.length > 0)
+    .toArray()
 
   return [menuTitle, ...menu].join('\n')
 }

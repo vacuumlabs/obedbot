@@ -1,7 +1,7 @@
 - var linkPrefix = office ? '/' + office.id : ''
 nav.navbar.navbar-expand-lg.navbar-dark.bg-dark.sticky-top
   div.container
-    a.navbar-brand(href='/')='Obedbot ' + (office ? office.name : '') + ' '
+    a.navbar-brand(href=linkPrefix)='Obedbot ' + (office ? office.name : '') + ' '
       small=title
     button.navbar-toggler(
       type='button'

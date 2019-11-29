@@ -78,7 +78,9 @@ const getMenu = getMenuCache(loadMenu)
 
 function getOrdersCounter() {
   return new OrdersCounter(id, name, ORDER_PATTERN, {
-    totalMeals: 6,
+    viewData: {
+      totalMeals: 6,
+    },
   })
 }
 

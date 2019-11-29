@@ -59,6 +59,7 @@ async function loadMenu(date) {
   const meals = $(`tr.first:contains('${dayTitle}')`)
     .nextUntil('tr.first')
     .map((_, row) => parseMenuRow($, row))
+    .toArray()
 
   return [`${dayTitle}`, ...meals].join('\n')
 }

@@ -1,4 +1,4 @@
-import { toHumanTime, OrdersCounter } from './utils'
+import { toHumanTime, OrdersCounter, loadHtml, normalizeWhitespace, getMenuCache } from './utils'
 
 const ORDER_PATTERN = /vedome/
 const MENU_LINK = 'https://www.facebook.com/vedome.veganbistro/'
@@ -19,9 +19,15 @@ function getMenuLink(date) {
   return MENU_LINK
 }
 
-async function getMenu(date) {
-  return `Menu nájdeš tu: ${getMenuLink(date)}`
+async function loadMenu(date) {
+  const { $ } = await loadHtml(MENU_LINK)
+
+  const data = $('[data-testid="post_message"]').first().text()
+
+  return normalizeWhitespace(data.replace('...', '').replace('See More', ''))
 }
+
+const getMenu = getMenuCache(loadMenu)
 
 function getOrdersCounter() {
   return new OrdersCounter(id, name, ORDER_PATTERN, {

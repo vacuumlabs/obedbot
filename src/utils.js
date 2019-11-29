@@ -264,7 +264,10 @@ export async function getRestaurantMenu(office, restaurant, today = getMomentFor
     })
   })
 
-  return `*${restaurant.name}*\n${block}${menu}${block}`
+  return [
+    `*${restaurant.name}* ${restaurant.getMenuLink(today)}`,
+    `${block}${menu}${block}`,
+  ].join('\n')
 }
 
 export async function getAllMenus(office) {

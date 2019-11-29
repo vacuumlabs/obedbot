@@ -145,8 +145,12 @@ export function getHelp(office) {
   const today = getMomentForMenu()
 
   const restaurantsHelp = office.restaurants.map(restaurant =>
-    `${restaurant.getMenuLink ? `${restaurant.getMenuLink(today)}\n` : ''}${restaurant.help}`
-  ).filter(Boolean).join('\n\n')
+    [
+      `*${restaurant.name}*`,
+      restaurant.getMenuLink && restaurant.getMenuLink(today),
+      restaurant.help,
+    ].filter(Boolean).join('\n'),
+  ).join('\n\n')
 
   return `${office.help}\n\n${restaurantsHelp}\n\n${office.getText(TEXTS.HELP_COMMANDS)}`
 }
