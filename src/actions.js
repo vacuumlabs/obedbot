@@ -86,14 +86,14 @@ export async function notifyAllThatOrdered(office, restaurant, willThereBeFood) 
     ),
   )
 
-  return Promise.all(orders.map(({ user, text }) => {
+  return Promise.all(orders.map(({ user, orderText }) => {
     const userChannelId = usersMap[user] && usersMap[user].channel_id
 
     return userChannelId && addPost(
       userChannelId,
       office.getText(
         willThereBeFood ? TEXTS.YOUR_FOOD_ARRIVED : TEXTS.YOUR_FOOD_WILL_NOT_ARRIVE,
-        { RESTAURANT: restaurant.name, ORDER: text },
+        { RESTAURANT: restaurant.name, ORDER: orderText },
       ),
     )
   }))
@@ -160,8 +160,8 @@ export async function parseOrders(office) {
 
   const counters = office.restaurants.map(restaurant => restaurant.getOrdersCounter())
 
-  orders.forEach(({ text }) => {
-    counters.some(counter => counter.add(text))
+  orders.forEach(({ orderText }) => {
+    counters.some(counter => counter.add(orderText))
   })
 
   return counters
@@ -182,11 +182,11 @@ export async function parseNamedOrders(office) {
     return acc
   }, {})
 
-  orders.forEach(({ text, user, ...rest }) => {
+  orders.forEach(({ orderText, user, ...rest }) => {
     office.restaurants.some(restaurant => {
-      if (restaurant.isOrder(text)) {
+      if (restaurant.isOrder(orderText)) {
         restaurantData[restaurant.id].orders.push({
-          text,
+          text: orderText,
           userName: usersMap[user] ? usersMap[user].username : '???',
         })
 

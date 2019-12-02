@@ -7,7 +7,7 @@ import {
 } from './utils'
 
 // eslint-disable-next-line max-len
-const ORDER_PATTERN = /((?<typePresto>presto)(?<main>[1-7])(?<soup>p[1-2])?)|((?<typePizza>pizza)(?<pizza>[0-9]{1,2})(v(?<size>((33)|(40)|(50))))?)/i
+const ORDER_PATTERN = /^((?<typePresto>presto)(?<main>[1-7])(?<soup>p[1-2])?)|((?<typePizza>pizza)(?<pizza>[0-9]{1,2})(v(?<size>((33)|(40)|(50))))?)$/i
 const MENU_LINK =
   'https://www.bizref.sk/sk/firmy/charopos-s-r-o/denne-menu/837/OBEDOVE-MENU/'
 const DEFAULT_PIZZA_SIZE = '33'

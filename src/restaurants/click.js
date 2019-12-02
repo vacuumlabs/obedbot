@@ -6,7 +6,7 @@ import {
   OrdersCounter,
 } from './utils'
 
-const ORDER_PATTERN = /click(?<main>[1-6])(?:p(?<soup>[1-3]))?/i
+const ORDER_PATTERN = /^click(?<main>[1-6])(?:p(?<soup>[1-3]))?$/i
 const MENU_LINK = 'http://m.clickfood.sk/sk/menu/'
 
 const id = 'click'

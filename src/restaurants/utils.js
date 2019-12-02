@@ -79,6 +79,10 @@ export class OrdersCounter {
     const groups = this.options.getGroups(result)
 
     Object.entries(groups).forEach(([key, value]) => {
+      if (value === undefined) {
+        return
+      }
+
       if (!this.data[key]) {
         this.data[key] = {}
       }

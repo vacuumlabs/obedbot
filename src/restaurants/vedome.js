@@ -6,7 +6,7 @@ import {
   getMenuCache,
 } from './utils'
 
-const ORDER_PATTERN = /vedome/
+const ORDER_PATTERN = /^vedome$/
 const MENU_LINK = 'https://www.facebook.com/vedome.veganbistro/'
 
 const id = 'vedome'
