@@ -5,25 +5,25 @@ html
   body
     include includes/navbar.pug
 
-    .container
-      .row
-        .col
-          table.table.table-sm
-            thead.thead-light
-              th='Meno'
-              th='Office'
-              th='Notifikácie'
-              th=''
-            tbody
-              each user in users
-                tr
-                  td=user.username
-                  td=user.office
-                  td=user.notifications ? 'Zapnuté' : 'Vypnuté'
-                  td
-                    if user.notifications
-                      a(href='/mute?channel=' + user.channel_id)
-                        ='OFF'
-                    else
-                      a(href='/unmute?channel=' + user.channel_id)
-                        ='ON'
+    each office in offices
+      .container
+        .row
+          .col-2
+            h3= office.name
+          .col-10
+            table.table.table-sm
+              thead.thead-light
+                th='Meno'
+                th='Notifikácie'
+              tbody
+                each user in users
+                  if user.office === office.id
+                    tr
+                      td=user.username
+                      td
+                        if user.notifications
+                          a(href='/mute?channel=' + user.channel_id)
+                            ='ON'
+                        else
+                          a(href='/unmute?channel=' + user.channel_id)
+                            ='OFF'
