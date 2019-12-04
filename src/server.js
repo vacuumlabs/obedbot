@@ -5,6 +5,7 @@ import { slack, logger } from './resources'
 import { startExpress } from './routes'
 import { loadUsers, messageReceived, processTodaysOrders, endOfOrders, makeLastCall } from './actions'
 import offices from './offices'
+import { loadTexts, LANG } from './texts'
 
 let wasDST = null
 let jobs = []
@@ -42,7 +43,10 @@ function reschedule() {
 /**
  * Starts the bot server
  */
-export function runServer() {
+export async function runServer() {
+
+  await loadTexts(LANG.SK)
+
   startExpress()
 
   loadUsers()

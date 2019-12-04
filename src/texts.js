@@ -1,8 +1,19 @@
-import { readFileSync } from 'fs'
+import { readFileSync, readFile } from 'fs'
+import lodash from 'lodash'
 
-export function loadText(message, lang) {
-  return readFileSync(`messages/${message}.${lang}.txt`).toString()
+async function loadTextAsync(path, lang, name) {
+  return new Promise((resolve, reject) => {
+    readFile(path, (err, data) => {
+      if (err != null) {
+        reject(err)
+      } else {
+        resolve({[lang]: {[name]: data.toString()}})
+      }
+    })
+  })
 }
+
+const PATH_TO_MESSAGE_FILES = 'messages/';
 
 export const BASIC_TEXTS = {
   NOTIFICATIONS_ON: 'Notifikácie zapnuté',
@@ -31,44 +42,6 @@ export const TEXTS = {
   HELP_COMMANDS: 'HELP_COMMANDS',
 }
 
-const DATA = {
-  [LANG.SK]: {
-    [TEXTS.LAST_CALL]: 'Nezabudni si dnes objednať obed :slightly_smiling_face:',
-    [TEXTS.GREETING_NEW]:
-      'Ahoj, volám sa obedbot a všimol som si ťa na kanáli <CHANNEL> ' +
-      'ale nemal som ťa ešte v mojom zápisníčku, tak si ťa poznamenávam, ' +
-      'budem ti odteraz posielať last cally, pokiaľ v daný deň nemáš nič objednané :)',
-    [TEXTS.GREETING_SAVED]:
-      'Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál ' +
-      '<CHANNEL> tak, že napíšeš `@Obedbot [tvoja objednávka]`',
-    [TEXTS.FOOD_ARRIVED]: 'Prišli obedy z <RESTAURANT> :slightly_smiling_face:',
-    [TEXTS.FOOD_WILL_NOT_ARRIVE]: 'Dneska bohužiaľ obedy z <RESTAURANT> neprídu :disappointed:',
-    [TEXTS.YOUR_FOOD_ARRIVED]: 'Prišiel ti obed <ORDER> z <RESTAURANT> :slightly_smiling_face:',
-    [TEXTS.YOUR_FOOD_WILL_NOT_ARRIVE]: 'Dneska bohužiaľ obed z <RESTAURANT> nepríde :disappointed:',
-    [TEXTS.END_OF_ORDERS]: 'Koniec objednávok <RESTAURANT>',
-    [TEXTS.UNKNOWN_ORDER]: 'Poslal/a si neznámy príkaz\nNapíš `/obedy` pre viac informácií',
-    [TEXTS.NO_DM]:
-      'Objednávanie v súkromných kanáloch bolo vypnuté, ' +
-      'pošli prosím svoju objednávku do <CHANNEL> :slightly_smiling_face:',
-    [TEXTS.MENU_LOAD_FAILED]: 'Chyba počas načítavania menu :disappointed: Menu nájdeš tu: <MENU_LINK>',
-    [TEXTS.HELP_COMMANDS]: loadText('help', 'sk'),
-  },
-}
-
-const missingData = []
-
-Object.values(LANG).forEach(lang => {
-  Object.values(TEXTS).forEach(text => {
-    if (!DATA[lang][text]) {
-      missingData.push(`${lang}.${text}`)
-    }
-  })
-})
-
-if (missingData.length > 0) {
-  throw new Error(`Missing texts:\n${missingData.join('\n')}`)
-}
-
 export function getText(lang, name, placeholders = {}) {
   const text = DATA[lang][name]
 
@@ -76,4 +49,33 @@ export function getText(lang, name, placeholders = {}) {
     (acc, [key, value]) => acc.replace(new RegExp(`<${key}>`, 'g'), value),
     text,
   )
+}
+
+let DATA = null;
+
+export async function loadTexts(lang = LANG.SK) {
+  const promises = [
+    {file: 'end_of_orders.txt', name: TEXTS.END_OF_ORDERS},
+    {file: 'food_arrived.txt', name: TEXTS.FOOD_ARRIVED},
+    {file: 'food_wont_arrive.txt', name: TEXTS.FOOD_WILL_NOT_ARRIVE},
+    {file: 'greetings_new.txt', name: TEXTS.GREETING_NEW},
+    {file: 'greetings_saved.txt', name: TEXTS.GREETING_SAVED},
+    {file: 'help.txt', name: TEXTS.HELP_COMMANDS},
+    {file: 'last_call.txt', name: TEXTS.LAST_CALL},
+    {file: 'load_failed.txt', name: TEXTS.MENU_LOAD_FAILED},
+    {file: 'no_dm.txt', name: TEXTS.NO_DM},
+    {file: 'unknown_order.txt', name: TEXTS.UNKNOWN_ORDER},
+    {file: 'your_food_arrived.txt', name: TEXTS.YOUR_FOOD_ARRIVED},
+    {file: 'your_food_wont_arrive.txt', name: TEXTS.YOUR_FOOD_WILL_NOT_ARRIVE},
+  ].map(({file, name}) => loadTextAsync(PATH_TO_MESSAGE_FILES + lang + '/' + file, lang, name))
+  
+  const datas = await Promise.all(promises)
+
+  DATA = lodash.merge(...datas)
+
+  return true;
+}
+
+export function getDATA() {
+  return DATA;
 }
