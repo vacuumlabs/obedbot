@@ -9,6 +9,7 @@ import {
   prettyPrint,
   processMessage,
   getMomentForMenu,
+  haveMenusChanged,
 } from './utils'
 import { getUsersInChannel, getTodaysMessages, addPost } from './slack'
 import { TEXTS } from './texts'
@@ -36,6 +37,18 @@ export async function loadUsers() {
   }
 }
 
+export async function loadMorningMenus(office) {
+  if (config.dev) {
+    return
+  }
+
+  logger.devLog(`Making first menu load (${office.id})`)
+
+  const menus = await getAllMenus(office)
+
+  office.restaurants.forEach((restaurant, index) => restaurant.morningMenu = menus[index]) 
+}
+
 export async function makeLastCall(office) {
   if (config.dev) {
     return
@@ -51,12 +64,23 @@ export async function makeLastCall(office) {
 
   const message = `${office.getText(TEXTS.LAST_CALL)}\n${menus}`
 
+  const changedMenus = haveMenusChanged(office.restaurants, menus)
+
+  const changedMenusMessage = `Pozor! Evidujeme zmeny v menu (oproti ${office.firstMenuLoad.hour}:${office.firstMenuLoad.minute}) v nasledujucich restauraciach: ${changedMenus.map(r => r.name).join(', ')}`
+
   for (let user of users) {
     if (!messages.some(({ user: userId }) => userId === user.user_id)) {
       addPost(
         user.channel_id,
         message,
       )
+    } else {
+      if (changedMenus.length) {
+        addPost(
+          user.channel_id,
+          changedMenusMessage
+        )
+      }
     }
   }
 }

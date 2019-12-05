@@ -26,6 +26,11 @@ const officesData = [
       hour: 9,
       minute: 15,
     },
+    firstMenuLoad: {
+      hour: 6,
+      minute: 0,
+    },
+    morningMenu: null,
     lang: LANG.SK,
     help: '',
   },
@@ -42,6 +47,10 @@ const officesData = [
     lastCall: {
       hour: 9,
       minute: 30,
+    },
+    firstMenuLoad: {
+      hour: 6,
+      minute: 0,
     },
     lang: LANG.SK,
     help: '',

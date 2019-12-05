@@ -284,3 +284,15 @@ export async function getAllMenus(office) {
 
   return menus.filter(Boolean).join('\n\n')
 }
+
+export function haveMenusChanged(restaurants, currentMenus) {
+  const changedRestaurantMenus = []
+
+  restaurants.forEach((restaurant, index) => {
+    if (restaurant.morningMenu !== currentMenus[index]) {
+      changedRestaurantMenus.push(restaurant)
+    }
+  })
+
+  return changedRestaurantMenus
+}

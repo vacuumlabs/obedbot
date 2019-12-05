@@ -3,7 +3,7 @@ import moment from 'moment-timezone'
 
 import { slack, logger } from './resources'
 import { startExpress } from './routes'
-import { loadUsers, messageReceived, processTodaysOrders, endOfOrders, makeLastCall } from './actions'
+import { loadUsers, messageReceived, processTodaysOrders, endOfOrders, makeLastCall, loadMorningMenus } from './actions'
 import offices from './offices'
 
 let wasDST = null
@@ -30,10 +30,10 @@ function reschedule() {
   jobs = [
     getJob({ hour: 8, minute: 30 }, loadUsers),
     offices.map(office => [
-      office.lastCall && getJob(office.lastCall, makeLastCall.bind(null, office)),
-      office.restaurants.map(
-        restaurant => restaurant.endOfOrders &&
-          getJob(restaurant.endOfOrders, endOfOrders.bind(null, office, restaurant)),
+      office.firstMenuLoad && getJob(office.firstMenuLoad, loadMorningMenus.bind(null, office)),
+      office.lastCall && getJob(office.lastCall, makeLastCall.bind(null, office)),  // TODO: send warnings if menus changes from 6:00 menus
+      office.restaurants.filter(r => !!r.endOfOrders).map(
+        restaurant => getJob(restaurant.endOfOrders, endOfOrders.bind(null, office, restaurant)),
       ),
     ]),
   ].flat(Infinity).filter(Boolean)
