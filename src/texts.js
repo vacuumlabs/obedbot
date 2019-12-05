@@ -1,10 +1,11 @@
-import { readFileSync, readFile } from 'fs'
+import { readFile } from 'fs'
 import lodash from 'lodash'
+import path from 'path'
 
-async function loadTextAsync(path, lang, name) {
+async function loadTextMessageAsync(path, lang, name) {
   return new Promise((resolve, reject) => {
     readFile(path, (err, data) => {
-      if (err != null) {
+      if (!!err) {
         reject(err)
       } else {
         resolve({[lang]: {[name]: data.toString()}})
@@ -13,7 +14,7 @@ async function loadTextAsync(path, lang, name) {
   })
 }
 
-const PATH_TO_MESSAGE_FILES = 'messages/';
+const PATH_TO_MESSAGE_FILES = 'messages';
 
 export const BASIC_TEXTS = {
   NOTIFICATIONS_ON: 'Notifikácie zapnuté',
@@ -42,16 +43,16 @@ export const TEXTS = {
   HELP_COMMANDS: 'HELP_COMMANDS',
 }
 
+let TEXT_MESSAGES = null;
+
 export function getText(lang, name, placeholders = {}) {
-  const text = DATA[lang][name]
+  const text = TEXT_MESSAGES[lang][name]
 
   return Object.entries(placeholders).reduce(
     (acc, [key, value]) => acc.replace(new RegExp(`<${key}>`, 'g'), value),
     text,
   )
 }
-
-let DATA = null;
 
 export async function loadTexts(lang = LANG.SK) {
   const promises = [
@@ -67,15 +68,11 @@ export async function loadTexts(lang = LANG.SK) {
     {file: 'unknown_order.txt', name: TEXTS.UNKNOWN_ORDER},
     {file: 'your_food_arrived.txt', name: TEXTS.YOUR_FOOD_ARRIVED},
     {file: 'your_food_wont_arrive.txt', name: TEXTS.YOUR_FOOD_WILL_NOT_ARRIVE},
-  ].map(({file, name}) => loadTextAsync(PATH_TO_MESSAGE_FILES + lang + '/' + file, lang, name))
-  
+  ].map(({file, name}) => loadTextMessageAsync(path.join(PATH_TO_MESSAGE_FILES, lang, file), lang, name))
+
   const datas = await Promise.all(promises)
 
-  DATA = lodash.merge(...datas)
+  TEXT_MESSAGES = lodash.merge(...datas)
 
   return true;
-}
-
-export function getDATA() {
-  return DATA;
 }
