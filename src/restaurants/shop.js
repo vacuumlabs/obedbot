@@ -6,7 +6,7 @@ const id = 'shop'
 const name = 'Obchod'
 const endOfOrders = null
 const isNotifiable = false
-const help = `Ak chcete, aby sa do kuchyne niečo dokúpilo, môžete to nahlásiť takto:
+const help = `Ak chcete, aby sa do kuchyne niečo dokúpilo, môžete to nahlásiť vo forme \`nakup <zoznam potravín>\`.
 *Príklad:* \`@Obedbot: nakup makadamové orechy\``
 
 function isOrder(msg) {

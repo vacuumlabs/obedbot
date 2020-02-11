@@ -6,7 +6,7 @@ import {
   OrdersCounter,
 } from './utils'
 
-const ORDER_PATTERN = /veg(?<main>[1-4])((?<soup>p)|(?<salad>s))?/i
+const ORDER_PATTERN = /^veg(?<main>[1-4])((?<soup>p)|(?<salad>s))?$/i
 const MENU_LINK = 'http://www.veglife.sk/sk/menu-2/'
 
 const id = 'veglife'
@@ -39,6 +39,7 @@ async function loadMenu(date) {
     .nextUntil("p:contains('Dezert')")
     .map((_, tag) => normalizeWhitespace($(tag).text()))
     .filter((_, s) => s.length > 0)
+    .toArray()
 
   return [menuTitle, ...menu].join('\n')
 }

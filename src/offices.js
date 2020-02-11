@@ -39,7 +39,10 @@ const officesData = [
       vedome,
       shop,
     ],
-    lastCall: null,
+    lastCall: {
+      hour: 9,
+      minute: 30,
+    },
     lang: LANG.SK,
     help: '',
   },

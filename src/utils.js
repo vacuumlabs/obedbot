@@ -16,11 +16,11 @@ import { createRecord, listRecords, updateChannelId, updateRecord } from './airt
 import { TEXTS, BASIC_TEXTS } from './texts'
 import { getDefaultOffice, getOfficeByChannel, getOfficeByOrder } from './offices'
 
-export function stripMention(order) {
+function clearOrderMsg(order) {
   //check if user used full colon after @obedbot
   const orderStart = order.charAt(12) === ':' ? 14 : 13
 
-  return order.substring(orderStart)
+  return order.substring(orderStart).trim()
 }
 
 export function isObedbotMentioned(order) {
@@ -37,11 +37,15 @@ export async function getUsersMap() {
 }
 
 export function isOrder(text, office, restaurant) {
-  return isObedbotMentioned(text) && (
-    restaurant
-      ? restaurant.isOrder(text)
-      : office.restaurants.some(instRestaurant => instRestaurant.isOrder(text))
-  )
+  if (!isObedbotMentioned(text)) {
+    return false
+  }
+
+  const textOrder = clearOrderMsg(text)
+
+  return restaurant
+    ? restaurant.isOrder(textOrder)
+    : office.restaurants.some(instRestaurant => instRestaurant.isOrder(textOrder))
 }
 
 export async function getTodaysOrders(office, restaurant) {
@@ -51,7 +55,8 @@ export async function getTodaysOrders(office, restaurant) {
     .filter(({ text }) => isOrder(text, office, restaurant))
     .map(({ text, ...other }) => ({
       ...other,
-      text: stripMention(text).trim(),
+      text,
+      orderText: clearOrderMsg(text),
     }))
 }
 
@@ -264,7 +269,10 @@ export async function getRestaurantMenu(office, restaurant, today = getMomentFor
     })
   })
 
-  return `*${restaurant.name}*\n${block}${menu}${block}`
+  return [
+    `*${restaurant.name}* ${restaurant.getMenuLink(today)}`,
+    `${block}${menu}${block}`,
+  ].join('\n')
 }
 
 export async function getAllMenus(office) {

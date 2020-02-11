@@ -3,7 +3,7 @@ const presets = [
     '@babel/env',
     {
       targets: {
-        node: '10',
+        node: '8',
       },
     },
   ],

@@ -6,7 +6,7 @@ import {
   OrdersCounter,
 } from './utils'
 
-const ORDER_PATTERN = /click(?<main>[1-6])(?:p(?<soup>[1-3]))?/i
+const ORDER_PATTERN = /^click(?<main>[1-6])(?:p(?<soup>[1-3]))?$/i
 const MENU_LINK = 'http://m.clickfood.sk/sk/menu/'
 
 const id = 'click'
@@ -78,7 +78,9 @@ const getMenu = getMenuCache(loadMenu)
 
 function getOrdersCounter() {
   return new OrdersCounter(id, name, ORDER_PATTERN, {
-    totalMeals: 6,
+    viewData: {
+      totalMeals: 6,
+    },
   })
 }
 

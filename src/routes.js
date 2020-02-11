@@ -43,8 +43,8 @@ async function getSlashOffice(req) {
   return null
 }
 
-function getMenu(restaurantId, officeId) {
-  const office = getOfficeById(officeId)
+function getMenu(restaurantId) {
+  const office = getDefaultOffice()
   const restaurant = getRestaurantById(office, restaurantId)
 
   return getRestaurantMenu(office, restaurant)

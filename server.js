@@ -1,3 +1,4 @@
+require('core-js/stable')
 const config = require('./config')
 
 let serverScript
