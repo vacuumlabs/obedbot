@@ -6,7 +6,7 @@ import {
   getMenuCache,
 } from './utils'
 
-const ORDER_PATTERN = /^geronimo((?<mainM>M)|(?<mainB>B)|(?<mainS>S[1-2])|(?<mainF>F))(?<soup>P[1-2])?$/
+const ORDER_PATTERN = /^geronimo((?<mainM>M)|(?<mainB>B)|(?<mainS>S[1-2])|(?<mainF>F))?(?<soup>P[1-2])?$/
 const MENU_LINK = 'https://geronimoexpress.sk/menu/'
 
 const id = 'geronimo'
@@ -21,6 +21,9 @@ geronimoF - fit menu
 Ku každému menu sa dá objednať polievka:
 P1 - polievka dňa
 P2 - slepačia polievka
+Polievka sa dá objednať aj bez hlavného jedla:
+geronimoP1
+geronimoP2
 *Príklad:* \`@Obedbot: geronimoMP1\` - denné menu s polievkou dňa`
 
 function isOrder(msg) {
