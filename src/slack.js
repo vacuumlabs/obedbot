@@ -19,10 +19,10 @@ export async function getUsersInChannel(channel, cursor) {
 export async function getTodaysMessages(channel, since = null) {
   const oldest = since || getMomentForOrders().valueOf() / 1000
 
-  const { has_more, messages } = await slack.webUser.channels.history({
+  const { has_more, messages } = await slack.webUser.conversations.history({
     channel,
     oldest,
-    count: 1000,
+    limit: 1000,
   })
 
   const validMessages = messages.filter(({ type, subtype }) =>
@@ -52,8 +52,8 @@ export function getUserInfo(user) {
 }
 
 export function getUserChannel(user) {
-  return slack.webBot.im
-    .open({ user })
+  return slack.webBot.conversations
+    .open({ users: user })
     .then(({ channel: { id: channelId } }) => channelId)
 }
 
