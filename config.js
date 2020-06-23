@@ -3,7 +3,7 @@ require('dotenv').config()
 
 const config = {
   dev: process.env.OBEDBOT_DEV === 'true' || false,
-  port: process.env.OBEDBOT_PORT || 4000,
+  port: process.env.PORT || process.env.OBEDBOT_PORT || 4000,
   airtable: {
     apiKey: process.env.OBEDBOT_API_KEY || '',
     baseId: process.env.OBEDBOT_BASE_ID || '',

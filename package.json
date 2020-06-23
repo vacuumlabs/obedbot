@@ -7,8 +7,7 @@
     "test": "eslint *.js src/**/*.js && prettier --check *.js src/**/*.js",
     "build": "babel src/ -d build/",
     "eslint": "eslint *.js src/**/*.js",
-    "prettier": "prettier --write *.js src/**/*.js",
-    "deploy-now": "now && now alias obedbot.vacuumlabs.com"
+    "prettier": "prettier --write *.js src/**/*.js"
   },
   "author": "Jakub Simo",
   "license": "ISC",
