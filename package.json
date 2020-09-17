@@ -14,7 +14,7 @@
   "dependencies": {
     "@slack/rtm-api": "^5.0.1",
     "@slack/web-api": "^5.0.1",
-    "airtable": "^0.5.8",
+    "airtable": "^0.7.2",
     "body-parser": "^1.19.0",
     "cheerio": "^0.22.0",
     "core-js": "^3.4.5",
