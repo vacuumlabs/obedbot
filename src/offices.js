@@ -3,10 +3,10 @@ import { LANG, getText } from './texts'
 
 import presto from './restaurants/presto'
 import veglife from './restaurants/veglife'
-import click from './restaurants/click'
+// import click from './restaurants/click'
 import shop from './restaurants/shop'
-import geronimo from './restaurants/geronimo'
-import vedome from './restaurants/vedome'
+// import geronimo from './restaurants/geronimo'
+// import vedome from './restaurants/vedome'
 
 export const DEFAULT_OFFICE_ID = 'BA'
 
@@ -19,7 +19,7 @@ const officesData = [
     restaurants: [
       presto,
       veglife,
-      click,
+      // click,
       shop,
     ],
     lastCall: {
@@ -29,23 +29,23 @@ const officesData = [
     lang: LANG.SK,
     help: '',
   },
-  {
-    id: 'KE',
-    name: 'Košice',
-    lunchChannelId: config.slack.lunchChannelIdKE,
-    lunchChannelName: '#ke-obedy',
-    restaurants: [
-      geronimo,
-      vedome,
-      shop,
-    ],
-    lastCall: {
-      hour: 9,
-      minute: 30,
-    },
-    lang: LANG.SK,
-    help: '',
-  },
+  // {
+  //   id: 'KE',
+  //   name: 'Košice',
+  //   lunchChannelId: config.slack.lunchChannelIdKE,
+  //   lunchChannelName: '#ke-obedy',
+  //   restaurants: [
+  //     geronimo,
+  //     vedome,
+  //     shop,
+  //   ],
+  //   lastCall: {
+  //     hour: 9,
+  //     minute: 30,
+  //   },
+  //   lang: LANG.SK,
+  //   help: '',
+  // },
 ]
 
 const offices = officesData.map(office => ({
