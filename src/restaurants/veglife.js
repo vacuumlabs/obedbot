@@ -11,7 +11,7 @@ const MENU_LINK = 'http://www.veglife.sk/sk/menu-2/'
 
 const id = 'veglife'
 const name = 'Veglife'
-const endOfOrders = { hour: 9, minute: 40 }
+const endOfOrders = { hour: 9, minute: 45 }
 const isNotifiable = true
 export const help = `Do ${toHumanTime(
   endOfOrders,
