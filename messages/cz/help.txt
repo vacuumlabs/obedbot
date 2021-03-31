@@ -1,0 +1,8 @@
+*MENU*
+Môžete použiť príkaz `/menu` aby sa vám zobrazili všetky reštaurácie naraz.
+Niektoré reštaurácie majú aj vlastné príkazy na zobrazenie dnešného menu iba z danej reštaurácie, napríklad `/presto` alebo `/veglife`
+Nikoho tým spamovať nebudete, pretože odpoveď je viditeľná iba pre vás :slightly_smiling_face:
+
+*NOTIFIKÁCIE*
+Ak si chcete zapnúť notifikácie, aby ste si nezabudli objednať obed, môžete to urobiť tak, že napíšete priamo obedbot-ovi do správy `mute` alebo `unmute`.
+Notifikácie budete dostávať iba ak ste členmi obedového channelu.

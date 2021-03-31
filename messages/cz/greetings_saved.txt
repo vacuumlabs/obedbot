@@ -1,0 +1,1 @@
+Dobre, už som si ťa zapísal :) Môžeš si teraz objednávať cez kanál <CHANNEL> tak, že napíšeš `@Obedbot [tvoja objednávka]`

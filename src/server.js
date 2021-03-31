@@ -46,6 +46,7 @@ function reschedule() {
 export async function runServer() {
 
   await loadTexts(LANG.SK)
+  await loadTexts(LANG.CZ)
 
   startExpress()
 
