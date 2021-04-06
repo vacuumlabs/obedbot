@@ -1,18 +1,30 @@
 import request from 'request-promise'
 import cheerio from 'cheerio'
 import pug from 'pug'
+import iconv from 'iconv-lite'
 
-export async function loadHtml(link) {
-  const raw = await request({
+export async function loadHtml(link, encoding = null) {
+  const requestData = {
     uri: link,
     headers: {
       'User-Agent':
         // eslint-disable-next-line max-len
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
     },
-  })
+  }
 
-  return { raw, $: cheerio.load(raw) }
+  if (encoding) {
+    const raw = await request(
+      { ...requestData, encoding: null },
+      (err, res, body) => {
+        if (!err) return iconv.decode(body, encoding)
+      },
+    )
+    return { raw, $: cheerio.load(iconv.decode(raw, encoding)) }
+  } else {
+    const raw = await request(requestData)
+    return { raw, $: cheerio.load(raw) }
+  }
 }
 
 export function normalizeWhitespace(str) {

@@ -7,6 +7,7 @@ import veglife from './restaurants/veglife'
 import shop from './restaurants/shop'
 // import geronimo from './restaurants/geronimo'
 // import vedome from './restaurants/vedome'
+import thalie from './restaurants/thalie'
 
 export const DEFAULT_OFFICE_ID = 'BA'
 
@@ -21,12 +22,33 @@ const officesData = [
       veglife,
       // click,
       shop,
+      thalie,
     ],
     lastCall: {
       hour: 9,
       minute: 15,
     },
     lang: LANG.SK,
+    help: '',
+  },
+  {
+    id: 'BR',
+    name: 'Brno',
+    lunchChannelId: config.slack.lunchChannelIdBR,
+    lunchChannelName: '#brno-food',
+    //lunchChannelName: '#obedy-test',
+    restaurants: [
+      thalie,
+    ],
+    postMenusInChannel: {
+      hour: 15,
+      minute: 0,
+    },
+    lastCall: {
+      hour: 8,
+      minute: 0,
+    },
+    lang: LANG.CZ,
     help: '',
   },
   // {

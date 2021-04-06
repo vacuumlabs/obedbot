@@ -26,6 +26,7 @@ export const BASIC_TEXTS = {
 
 export const LANG = {
   SK: 'sk',
+  CZ: 'cz',
 }
 
 export const TEXTS = {
@@ -72,7 +73,7 @@ export async function loadTexts(lang = LANG.SK) {
 
   const datas = await Promise.all(promises)
 
-  TEXT_MESSAGES = lodash.merge(...datas)
+  TEXT_MESSAGES = {...TEXT_MESSAGES, ...lodash.merge(...datas)}
 
   return true;
 }

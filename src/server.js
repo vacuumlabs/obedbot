@@ -3,7 +3,14 @@ import moment from 'moment-timezone'
 
 import { slack, logger } from './resources'
 import { startExpress } from './routes'
-import { loadUsers, messageReceived, processTodaysOrders, endOfOrders, makeLastCall } from './actions'
+import {
+  loadUsers,
+  messageReceived,
+  processTodaysOrders,
+  endOfOrders,
+  makeLastCall,
+  postMenusToChannel,
+} from './actions'
 import offices from './offices'
 import { loadTexts, LANG } from './texts'
 
@@ -32,6 +39,7 @@ function reschedule() {
     getJob({ hour: 8, minute: 30 }, loadUsers),
     offices.map(office => [
       office.lastCall && getJob(office.lastCall, makeLastCall.bind(null, office)),
+      office.postMenusInChannel && getJob(office.postMenusInChannel, postMenusToChannel.bind(null, office)),
       office.restaurants.map(
         restaurant => restaurant.endOfOrders &&
           getJob(restaurant.endOfOrders, endOfOrders.bind(null, office, restaurant)),
@@ -46,6 +54,7 @@ function reschedule() {
 export async function runServer() {
 
   await loadTexts(LANG.SK)
+  await loadTexts(LANG.CZ)
 
   startExpress()
 
