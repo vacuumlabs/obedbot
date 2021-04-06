@@ -36,6 +36,15 @@ export async function loadUsers() {
   }
 }
 
+export async function postMenusToChannel(office) {
+  logger.devLog(`Posting menus to channel (${office.id})`)
+
+  const menus = await getAllMenus(office)
+
+  addPost(office.lunchChannelId, menus)
+
+}
+
 export async function makeLastCall(office) {
   if (config.dev) {
     return

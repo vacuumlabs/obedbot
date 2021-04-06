@@ -26,7 +26,7 @@
     "moment-timezone": "^0.5.11",
     "node-schedule": "^1.2.0",
     "pug": "^2.0.4",
-    "request": "^2.81.0",
+    "request": "^2.88.2",
     "request-promise": "^4.2.1"
   },
   "devDependencies": {

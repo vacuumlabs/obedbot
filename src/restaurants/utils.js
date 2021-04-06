@@ -14,8 +14,12 @@ export async function loadHtml(link, encoding = null) {
   }
 
   if (encoding) {
-    const raw = await request({ ...requestData, encoding: null },
-      (err, res, body) => {if (!err) return iconv.decode(body, encoding)})
+    const raw = await request(
+      { ...requestData, encoding: null },
+      (err, res, body) => {
+        if (!err) return iconv.decode(body, encoding)
+      },
+    )
     return { raw, $: cheerio.load(iconv.decode(raw, encoding)) }
   } else {
     const raw = await request(requestData)
